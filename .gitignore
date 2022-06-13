@@ -1,0 +1,12 @@
+
+cmdln.txt
+extraction.ahk
+*.lnk
+*.csv
+AutoCorrect.exe
+r6random.exe
+bnc-gui.exe
+*.code-workspace
+
+AutoHotkey
+.vscode
