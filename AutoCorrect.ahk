@@ -7,9 +7,9 @@ codebase.Tool("Reloaded AutoCorrect.ahk", codebase.Tool.center, , , 15)
 
 ; ~This was first intended to be a class, but AHKv2 doesn't support using methods as SetTimer() callback functions (they are of course still function objects in the usual sense, but passing them as inputs to other functions doesn't work), which makes implementation as I intended impossible. This is likely due to AHKv2 not having any "guarantee" that the method's function object is still valid when the callback is attempted to be executed.~
 ; Turns out, though, I'm just fucking retarded and didn't know about ObjBindMethod(), so it _does_ work exactly as I wanted.
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
+;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
+;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
+;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
 
 /**
  * A `Rapidvar` is basically a counter with a specific maximum value. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
@@ -631,7 +631,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^+ü::
     {
         MsgBox(A_Clipboard := codebase.elemsOut(
-            
+            codebase.convertToNATOSpelling("Hello you asshole!")
         ))
     }
 

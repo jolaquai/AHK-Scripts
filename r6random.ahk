@@ -42,7 +42,7 @@ challengechance := 30
  * @note Operator `nickname`s specified here will not be included in "Excluding..." lists above picks.
  */
 hardcodedOmit := [
-    "Sens"
+    
 ]
 
 ; Operator Random Pick GUI

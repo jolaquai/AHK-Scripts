@@ -215,6 +215,17 @@ millisecondMonitor()
     global
     str := ""
     static robloxWasActive := 0
+    static colors := {
+        dark: "0x333B3E",
+        light: "0x454A50",
+        avg: "0x3C4347",
+        border: "0x1B2121",
+        tolerance: 10,
+        lx: 1671,
+        rx: 2262,
+        width: 591,
+        y: 1735
+    }
 
     if (!doTick)
     {
@@ -387,6 +398,31 @@ millisecondMonitor()
         MouseMove(x, y / 2, 0)
     }
     CoordMode("Mouse", old)
+
+    ; Dead By Daylight progress bar monitor
+    static prevprogress := "0.00"
+    if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
+    {
+        ; if (PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10)) ; White hand next to progress bar
+        if (PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, colors.border, 10)) ; Border progress bar
+        {
+            if (PixelSearch(&cx, &cy, colors.lx, colors.y, colors.rx, colors.y, colors.avg, 15))
+            {
+                ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
+                progress := Round((100 * (cx - colors.lx)) / colors.width, 2)
+                if (progress     !== prevprogress)
+                {
+                    prevprogress := progress
+                    ToolTip( , , , 16)
+                    ToolTip(progress . "%", 5, 5, 16)
+                }
+            }
+        }
+    }
+    else
+    {
+        ToolTip( , , , 16)
+    }
 }
 
 disClick(obj, *)

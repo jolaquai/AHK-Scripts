@@ -436,6 +436,66 @@ class codebase
     }
 
     /**
+     * Converts each letter in a string to its equivalent in the NATO spelling alphabet.
+     * @param str The string to convert.
+     * @returns The converted string.
+     */
+    static convertToNATOSpelling(str)
+    {
+        lookup := Map(
+            "a", "Alpha",
+            "b", "Bravo",
+            "c", "Charlie",
+            "d", "Delta",
+            "e", "Echo",
+            "f", "Foxtrot",
+            "g", "Golf",
+            "h", "Hotel",
+            "i", "India",
+            "j", "Juliett",
+            "k", "Kilo",
+            "l", "Lima",
+            "m", "Mike",
+            "n", "November",
+            "o", "Oscar",
+            "p", "Papa",
+            "q", "Quebec",
+            "r", "Romeo",
+            "s", "Sierra",
+            "t", "Tango",
+            "u", "Uniform",
+            "v", "Victor",
+            "w", "Whiskey",
+            "x", "X-ray",
+            "y", "Yankee",
+            "z", "Zulu"
+        )
+
+        str := StrLower(str)
+        words := StrSplit(str, ' ')
+        for in words
+        {
+            words[A_Index] := StrSplit(words[A_Index])
+        }
+
+        for in words
+        {
+            outer := A_Index
+            for in words[outer]
+            {
+                inner := A_Index
+                words[outer][inner] := lookup.Get(words[outer][inner], words[outer][inner])
+            }
+        }
+
+        for in words
+        {
+            words[A_Index] := codebase.stringOperations.strJoin(" ", , words[A_Index]*)
+        }
+        return codebase.stringOperations.strJoin(" \ ", , words*)
+    }
+
+    /**
      * A class to accumulate or handle run-time Errors.
      */
     class ErrorHandler
@@ -454,7 +514,7 @@ class codebase
          * @param mode How this `ErrorHandler` should react to an incoming error. Must be one of the following values:
          * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
          * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle it. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
+         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
          * - `codebase.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
          * - `codebase.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the thread.
          * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
@@ -1140,10 +1200,10 @@ class codebase
                     continue
                 }
 
-                try out .= str
+                try out .= str . sep
                 catch
                 {
-                    out .= str.ToString()
+                    out .= str.ToString() . sep
                 }
             }
             return StrLen(sep) ? SubStr(out, 1, -StrLen(sep)) : out
@@ -1535,42 +1595,10 @@ class codebase
             }
 
             /**
-             * Shifts an Array's elements, "removing" empty / missing elements.
-             * @param arr The Array to iterate over.
-             * @returns An Array with the same elements as `arr`, but with any empty / missing elements removed.
-             */
-            static removeEmpty(arr)
-            {
-                empty := []
-
-                for e in arr
-                {
-                    if (!IsSet(e))
-                    {
-                        empty.Push(A_Index)
-                    }
-                }
-
-                if (empty.Length)
-                {
-                    for i in empty
-                    {
-                        arr.RemoveAt(i)
-                        for in empty
-                        {
-                            empty[A_Index] -= 1
-                        }
-                    }
-                }
-
-                return arr
-            }
-
-            /**
-             * Shifts an Array's elements, "removing" empty / missing elements.
+             * Shifts an Array's elements, removing specific elements.
              * @param arr The Array to iterate over.
              * @param elems An Array of elements to remove from `arr`.
-             * @returns An Array with the same elements as `arr`, but with any empty / missing elements removed.
+             * @returns An Array with the same elements as `arr`, but with any elements matching the ones in `elems` removed.
              */
             static remove(arr, elems)
             {
@@ -1588,7 +1616,7 @@ class codebase
                 {
                     for i in rem
                     {
-                        if (i == 0)
+                        if (i <= 0)
                         {
                             continue
                         }
@@ -1605,8 +1633,29 @@ class codebase
             }
 
             /**
+             * Shifts an Array's elements, "removing" empty / missing / unset elements.
+             * @param arr The Array to iterate over.
+             * @returns An Array with the same elements as `arr`, but with any empty / missing / unset elements removed.
+             */
+            static removeEmpty(arr)
+            {
+                cpy := arr.Clone()
+                empty := []
+
+                for e in arr
+                {
+                    if (!IsSet(e))
+                    {
+                        cpy[A_Index] := "REM"
+                    }
+                }
+
+                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
+            }
+
+            /**
              * Removes duplicates from a series of values.
-             * @param elems Any number of values to remove duplicates from.
+             * @param arr An Array to remove duplicates from.
              * @returns An Array containing the original values with duplicates removed.
              */
             static removeDuplicates(arr)
@@ -1622,6 +1671,26 @@ class codebase
                 }
 
                 return out
+            }
+
+            /**
+             * Shifts an Array's elements, removing elements based on the return value of a function.
+             * @param arr The Array to iterate over.
+             * @param f The function to use when determining which elements to remove. Expected return values are:
+             * - Any value evaluating to `true`: the element is kept.
+             * - Any value evaluating to `false`: the element is removed.
+             */
+            static removeFunction(arr, f)
+            {
+                cpy := arr.Clone()
+                for val in arr
+                {
+                    if (!f(val))
+                    {
+                        cpy[A_Index] := "REM"
+                    }
+                }
+                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
             }
 
             /**
@@ -4924,7 +4993,7 @@ class codebase
                 {
                     out .= Chr(97 + (rm - 36))
                 }
-                dec //= base
+                dec := Integer(dec / base)
             }
 
             out := StrReplace(out, "-", "")
@@ -4994,8 +5063,6 @@ class codebase
          */
         static HexToDec(hex)
         {
-            lhex(h) => 
-
             res := 0
             hex := StrReplace(hex, "0x", "")
             hex := StrReplace(hex, "-", "", false, &neg)
@@ -5018,6 +5085,64 @@ class codebase
 
         class colors
         {
+            /**
+             * Calculates the average of a series of colors.
+             * @param colors The colors to average.
+             * @note The output always contains an Alpha component, even if the input colors do not. If an input color does not contain an Alpha component, it will be assumed to be `0xFF` or `255`. This will cause unexpected results if not all of the input colors have an Alpha component, so `SubStr()` the output to remove the Alpha component if you don't want it.
+             * @returns The average color.
+             */
+            static avgHex(colors*)
+            {
+                rvs := []
+                gvs := []
+                bvs := []
+                avs := []
+
+                for c in colors
+                {
+                    rvs.Push(codebase.convert.HexToDec(SubStr(c, 3, 2)))
+                    gvs.Push(codebase.convert.HexToDec(SubStr(c, 5, 2)))
+                    bvs.Push(codebase.convert.HexToDec(SubStr(c, 7, 2)))
+                    if ((alpha := SubStr(c, 9, 2)) !== "")
+                    {
+                        avs.Push(codebase.convert.HexToDec(alpha))
+                    }
+                    else
+                    {
+                        avs.Push(255)
+                    }
+                }
+
+                r := Round(codebase.math.avg(rvs*))
+                g := Round(codebase.math.avg(gvs*))
+                b := Round(codebase.math.avg(bvs*))
+                a := Round(codebase.math.avg(avs*))
+                return "0x" . codebase.convert.DecToAny(r, 16, 2) . codebase.convert.DecToAny(g, 16, 2) . codebase.convert.DecToAny(b, 16, 2) . codebase.convert.DecToAny(a, 16, 2)
+            }
+
+            /**
+             * Calculates the average of a series of colors.
+             * @param rvs An Array of the red components of the colors to average.
+             * @param gvs An Array of the green components of the colors to average.
+             * @param bvs An Array of the blue components of the colors to average.
+             * @param avs An Array of the alpha components of the colors to average. All input colors of `r`, `g` and `b` are assumed to Alpha value `255` if omitted.
+             * @returns An Array in the form `[r, g, b, a]` containing the components of the average color.
+             */
+            static avgRGB(rvs, gvs, bvs, avs := unset)
+            {
+                if (rvs.Length !== gvs.Length || rvs.Length !== bvs.Length || gvs.Length !== bvs.Length)
+                {
+                    throw ValueError("Invalid value for one of the input Arrays. Expected them all to be of the same length.")
+                }
+
+                return [
+                    codebase.math.avg(rvs*),
+                    codebase.math.avg(gvs*),
+                    codebase.math.avg(bvs*),
+                    (IsSet(avs) ? codebase.math.avg(avs*) : 255)
+                ]
+            }
+
             /**
              * Compares two color values (numerically), requiring only one rgb(a) component of the comparison color to be greater than the corresponding reference color's.
              * @param refColor The color to compare to.

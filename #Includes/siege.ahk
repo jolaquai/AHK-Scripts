@@ -62,10 +62,15 @@ class siege
             crosshairFlash_14: Integer(siege.misc.grenadeTimestampsSeconds.crosshairFlash_14 * 60),
             crosshairStopsFlashing: Integer(siege.misc.grenadeTimestampsSeconds.crosshairStopsFlashing * 60),
             explosion: Integer(siege.misc.grenadeTimestampsSeconds.explosion * 60),
-            damageIsDealt: Integer(siege.misc.grenadeTimestampsSeconds.damageIsDealt * 60),
+            damageIsDealt: Integer(siege.misc.grenadeTimestampsSeconds.damageIsDealt * 60)
         }
 
-        static longestOperatorName := (a := siege.defenders())
+        /**
+         * The Operator with the longest nickname in-game.
+         *
+         * Currently broken, returns Buck's object, when it should be Thunderbird's.
+         */
+        static longestOperatorNick := codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)[(a := codebase.collectionOperations.arrayOperations.evaluate((x) => StrLen(x.nickname), codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)))[codebase.collectionOperations.arrayOperations.arrayContains(a, Max(a*))[1]]]
     }
 
     class Operator
@@ -2660,7 +2665,7 @@ class siege
             "Sens",
             [
                 siege.Weapon(
-                    "POF9",
+                    "POF-9",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
                     35,
@@ -4781,7 +4786,7 @@ class siege
             siege.defenders.aruni,
             siege.defenders.thunderbird,
             siege.defenders.thorn,
-            siege.defenders.azami,
+            siege.defenders.azami
         ]
         __Enum(*) => siege.defenders.list.__Enum()
         __New(*) => siege.defenders.list.__Enum()
