@@ -215,17 +215,6 @@ millisecondMonitor()
     global
     str := ""
     static robloxWasActive := 0
-    static colors := {
-        dark: "0x333B3E",
-        light: "0x454A50",
-        avg: "0x3C4347",
-        border: "0x1B2121",
-        tolerance: 10,
-        lx: 1671,
-        rx: 2262,
-        width: 591,
-        y: 1735
-    }
 
     if (!doTick)
     {
@@ -377,52 +366,119 @@ millisecondMonitor()
             robloxAfk.Value := str
         }
     }
-
-    static tp := A_TickCount
-    static prev := DriveGetSpaceFree("C:")
-    now := DriveGetSpaceFree("C:")
-    tn := A_TickCount
-    if (!(prev == now))
-    {
-        ; OutputDebug(now . "`t(" . (now - prev) . ")`t" . Round((tn - tp) / 1000, 3) . "`n")
-        prev := now
-        tp := tn
-    }
-
+    
     ; Monitors
+    /* DISABLED UNTIL IT WORKS CORRECTLY
+    static dontmove, winlist
     old := A_CoordModeMouse
     CoordMode("Mouse", "Screen")
     MouseGetPos(&x, &y)
+    dontmove := false
+    winlist := WinGetList()
+    if (winlist.Length !== (new := WinGetList()).Length)
+    {
+        winlist := new
+
+        for win in winlist
+        {
+            ; If a window's client width and height are the monitor's resolution, it's a game running in Fullscreen or Windowed Borderless
+            try
+            {
+                WinGetClientPos(, , &w, &h, win)
+                if (WinActive(win) && w == 3840 && h == 2160)
+                {
+                    dontmove := true
+                }
+            }
+        }
+    }
     if (y >= 1080 && y !== 2159 && (x == 0 || x == 3839))
     {
-        MouseMove(x, y / 2, 0)
+        if (!dontmove)
+        {
+            MouseMove(x, y / 2, 0)
+        }
     }
     CoordMode("Mouse", old)
+    */
 
     ; Dead By Daylight progress bar monitor
-    static prevprogress := "0.00"
+    static dbdprev := "0.00"
+    static dbd_ttid_1 := 19
+    static dbd_ttid_2 := 20
+    static dbd_ttid := dbd_ttid_1
     if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
     {
-        ; if (PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10)) ; White hand next to progress bar
-        if (PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, colors.border, 10)) ; Border progress bar
+        if (true || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
         {
-            if (PixelSearch(&cx, &cy, colors.lx, colors.y, colors.rx, colors.y, colors.avg, 15))
+            if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 20))
             {
                 ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
-                progress := Round((100 * (cx - colors.lx)) / colors.width, 2)
-                if (progress     !== prevprogress)
+                percent := Round((100 * (cx - 1671)) / 591, 2)
+                c := [
+                    Round((80 * (cx - 1671)) / 591, 2) . "/80`t(Generator)",
+                    Round((20 * (cx - 1671)) / 591, 2) . "/20`t(Exit Gate)",
+                    Round((16 * (cx - 1671)) / 591, 2) . "/16`t(Heal)",
+                    Round((14 * (cx - 1671)) / 591, 2) . "/14`t(Totem)"
+                ]
+                if (percent !== dbdprev)
                 {
-                    prevprogress := progress
-                    ToolTip( , , , 16)
-                    ToolTip(progress . "%", 5, 5, 16)
+                    dbdprev := percent
+                    ToolTip( , , , (dbd_ttid == dbd_ttid_1 ? dbd_ttid_2 : dbd_ttid_1))
+                    ToolTip(codebase.stringOperations.strJoin("`n", , c*) "`n" . percent . "%" , cx, 1735 + 20, (dbd_ttid == dbd_ttid_1 ? dbd_ttid := dbd_ttid_2 : dbd_ttid := dbd_ttid_1))
                 }
             }
         }
     }
     else
     {
-        ToolTip( , , , 16)
+        ToolTip( , , , (dbd_ttid == dbd_ttid_1 ? dbd_ttid_2 : dbd_ttid_1))
     }
+
+    /*
+    static r6prev := "0.00"
+    static r6_ttid_1 := 17
+    static r6_ttid_2 := 18
+    static r6_ttid := r6_ttid_1
+    static r6_radiussubconst := 3
+    static indices := codebase.range(-86, 270, 4)
+    static colors := {
+        mi: SubStr(codebase.convert.colors.variation("0xCA1415", 30)[1], 1, 8),
+        rf: "0xCA1415",
+        ma: SubStr(codebase.convert.colors.variation("0xCA1415", 30)[2], 1, 8)
+    }
+    if (WinActive("ahk_exe RainbowSix.exe") || WinExist("ahk_exe vlc.exe"))
+    {
+        if (true)
+        {
+            for j in indices
+            {
+                searchx := 1920 + ((41 - r6_radiussubconst) * Cos((j / 360) * 2 * codebase.math.constants.pi))
+                searchy := 72 + ((42 - r6_radiussubconst) * Sin((j / 360) * 2 * codebase.math.constants.pi))
+                ToolTip((c := PixelGetColor(searchx, searchy)), searchx, searchy, 12)
+
+                if (c == "0x767676")
+                {
+                    continue
+                }
+                if (codebase.convert.colors.exclusiveCompare(c, "0xeeeeee"))
+                {
+                    timeleft := Round(45 * ((356 - (j + 90)) / 356), 2)
+                    OutputDebug(timeleft . "sec`n")
+                    if (timeleft !== r6prev)
+                    {
+                        r6prev := timeleft
+                    }
+                    break
+                }
+            }
+        }
+    }
+    else
+    {
+        ToolTip( , , , (r6_ttid == r6_ttid_1 ? r6_ttid_2 : r6_ttid_1))
+    }
+    */
 }
 
 disClick(obj, *)
@@ -654,10 +710,10 @@ functions()
     {
         try
         {
-            WinGetPos(&x, &y, &w, &h, "ahk_exe sndvol.exe")
+            WinGetPos(&searchx, &searchy, &w, &h, "ahk_exe sndvol.exe")
             if (w < 3000)
             {
-                WinMove(x, y, 3000, h, "ahk_exe sndvol.exe")
+                WinMove(searchx, searchy, 3000, h, "ahk_exe sndvol.exe")
             }
         }
     }
@@ -857,8 +913,8 @@ clipFetch()
     }
 }
 
-afkgui.GetPos(&x, &y, &w, &h)
-clipgui.Show("X-1915 Y" . y + h + 5 . " NoActivate Hide")
+afkgui.GetPos(&searchx, &searchy, &w, &h)
+clipgui.Show("X-1915 Y" . searchy + h + 5 . " NoActivate Hide")
 
 shgui := Gui( , "Show/Hide GUI")
 
@@ -904,7 +960,7 @@ shclip_Click(*)
 
 afkshown := false
 clipshown := false
-shgui.Show("X" . x + w + 5 . "Y5 NoActivate")
+shgui.Show("X" . searchx + w + 5 . "Y5 NoActivate")
 
 codebase.Tool("Reloaded Loops.ahk", true, , , 50)
 

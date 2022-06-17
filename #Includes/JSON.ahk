@@ -36,8 +36,8 @@ Jxon_Load(&src, args*) {
         memType := Type(obj)
         is_array := (memType = "Array") ? 1 : 0
         
-        if i := InStr("{[", ch) { ; start new object / map?
-            val := (i = 1) ? Map() : Array()    ; ahk v2
+        if j := InStr("{[", ch) { ; start new object / map?
+            val := (j = 1) ? Map() : Array()    ; ahk v2
             
             is_array ? obj.Push(val) : obj[key] := val
             stack.InsertAt(1,val)
@@ -52,16 +52,16 @@ Jxon_Load(&src, args*) {
             next := is_key ? q : q "{[0123456789-tfn"
         } else { ; string | number | true | false | null
             if (ch == q) { ; string
-                i := pos
-                while i := InStr(src, q,, i+1) {
-                    val := StrReplace(SubStr(src, pos+1, i-pos-1), "\\", "\u005C")
+                j := pos
+                while j := InStr(src, q,, j+1) {
+                    val := StrReplace(SubStr(src, pos+1, j-pos-1), "\\", "\u005C")
                     if (SubStr(val, -1) != "\")
                         break
                 }
-                if !i ? (pos--, next := "'") : 0
+                if !j ? (pos--, next := "'") : 0
                     continue
 
-                pos := i ; update pos
+                pos := j ; update pos
 
                 val := StrReplace(val, "\/", "/")
                 val := StrReplace(val, "\" . q, q)
@@ -71,14 +71,14 @@ Jxon_Load(&src, args*) {
                 , val := StrReplace(val, "\r", "`r")
                 , val := StrReplace(val, "\t", "`t")
 
-                i := 0
-                while i := InStr(val, "\",, i+1) {
-                    if (SubStr(val, i+1, 1) != "u") ? (pos -= StrLen(SubStr(val, i)), next := "\") : 0
+                j := 0
+                while j := InStr(val, "\",, j+1) {
+                    if (SubStr(val, j+1, 1) != "u") ? (pos -= StrLen(SubStr(val, j)), next := "\") : 0
                         continue 2
 
-                    xxxx := Abs("0x" . SubStr(val, i+2, 4)) ; \uXXXX - JSON unicode escape sequence
+                    xxxx := Abs("0x" . SubStr(val, j+2, 4)) ; \uXXXX - JSON unicode escape sequence
                     if (xxxx < 0x100)
-                        val := SubStr(val, 1, i-1) . Chr(xxxx) . SubStr(val, i+6)
+                        val := SubStr(val, 1, j-1) . Chr(xxxx) . SubStr(val, j+6)
                 }
                 
                 if is_key {
@@ -86,7 +86,7 @@ Jxon_Load(&src, args*) {
                     continue
                 }
             } else { ; number | true | false | null
-                val := SubStr(src, pos, i := RegExMatch(src, "[\]\},\s]|$",, pos)-pos)
+                val := SubStr(src, pos, j := RegExMatch(src, "[\]\},\s]|$",, pos)-pos)
                 
                 if IsInteger(val)
                     val += 0
@@ -101,7 +101,7 @@ Jxon_Load(&src, args*) {
                     continue
                 }
                 
-                pos += i-1
+                pos += j-1
             }
             
             is_array ? obj.Push(val) : obj[key] := val

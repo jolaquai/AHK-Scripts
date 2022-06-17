@@ -631,7 +631,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^+ü::
     {
         MsgBox(A_Clipboard := codebase.elemsOut(
-            codebase.convertToNATOSpelling("Hello you asshole!")
+            codebase.convert.colors.avgHex("0xFF0E0E", "0xFFFFFF")
         ))
     }
 
@@ -1669,7 +1669,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
 
             Send("{Blind}{LButton}")
-            Sleep(50)
+            Sleep(40)
         }
     }
 

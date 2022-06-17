@@ -11,7 +11,7 @@
  * - - Hotkey definitions such as `NumpadDot::.` (which would remap the `NumpadDot` key, which produces a `,` instead of a `.` in some locales, to `.` in all cases), which are marked as a `Unknown token '.'` severity 8 (`error`) problem. This is likely due to a change in the way control / accessor tokens such as a single dot character is interpreted.
  * - - Hotstring definitions such as `:*?:>\:§::>:3` (which would correct the sequence `>:§` to `>:3` immediately upon typing it), ~~which are marked as a `Unexpected ':'` severity 8 (`error`) problem. This is likely due to a change in the way key combinations and, as such, hotstring definitions are interpreted.~~ Update: some specific hotstring definitions are now marked as _multiple_ errors. How _do_ you fuck up that badly?
  * - - Function calls such as `Click(300, 400)`, which are marked as a `Expected 0-1 parameters, but got 2` severity 8 (`error`) problem. The shown syntax is valid and works.
- * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.Vector`).
+ * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
  *
  * The functions and some classes are annotated using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
@@ -306,18 +306,18 @@ class codebase
             return ""
         }
 
-        for x, y in elems
+        for searchx, searchy in elems
         {
-            if (!IsSet(y))
+            if (!IsSet(searchy))
             {
                 out .= "`n"
                 continue
             }
-            t := Type(y)
+            t := Type(searchy)
             if (t == "Array")
             {
                 out .= "[" . t . "]`n"
-                lines := StrSplit(Trim(codebase.elemsOut(y*), '`n '), '`n')
+                lines := StrSplit(Trim(codebase.elemsOut(searchy*), '`n '), '`n')
                 for line in lines
                 {
                     out .= indentStr . line . "`n"
@@ -326,7 +326,7 @@ class codebase
             else if (t == "Map")
             {
                 out .= "[" . t . "]`n"
-                for a, b in y
+                for a, b in searchy
                 {
                     out .= indentStr . "[Key-Value pair]`n"
                     out .= indentStr . indentStr . 'Key | ' . Trim(codebase.elemsOut(a), '`n ') . '`n'
@@ -335,33 +335,33 @@ class codebase
             }
             else if (t == "Func" || t == "Closure" || t == "BoundFunc")
             {
-                out .= (y.Name !== "" ? y.Name : "UnnamedFunc") . "({funcparameters})`n"
+                out .= (searchy.Name !== "" ? searchy.Name : "UnnamedFunc") . "({funcparameters})`n"
                 param := []
-                if (y.MinParams > 0)
+                if (searchy.MinParams > 0)
                 {
-                    for i in codebase.range(1, y.MinParams)
+                    for j in codebase.range(1, searchy.MinParams)
                     {
-                        param.Push("p" . i)
+                        param.Push("p" . j)
                     }
                 }
-                if (y.MinParams !== y.MaxParams)
+                if (searchy.MinParams !== searchy.MaxParams)
                 {
-                    for i in codebase.range(y.MinParams + 1, y.MaxParams)
+                    for j in codebase.range(searchy.MinParams + 1, searchy.MaxParams)
                     {
-                        param.Push("p" . i . "?")
+                        param.Push("p" . j . "?")
                     }
                 }
-                s := codebase.stringOperations.strJoin(", ", , param*) . (y.IsVariadic ? ", v*" : "")
+                s := codebase.stringOperations.strJoin(", ", , param*) . (searchy.IsVariadic ? ", v*" : "")
                 codebase.stringOperations.strComposite(&out, { funcparameters: s })
             }
-            else if (t == "String" || IsNumber(y))
+            else if (t == "String" || IsNumber(searchy))
             {
-                out .= y . "`n"
+                out .= searchy . "`n"
             }
-            else if (y is Object)
+            else if (searchy is Object)
             {
                 out .= "Object | [" . t . "]`n"
-                lines := StrSplit(Trim(y.ToString(), '`n ') . "`n", '`n')
+                lines := StrSplit(Trim(searchy.ToString(), '`n ') . "`n", '`n')
                 for line in lines
                 {
                     if (StrLen(line) == 0)
@@ -836,15 +836,15 @@ class codebase
                 if (InStr(read, '"'))
                 {
                     sub := StrSplit(read, '"', ' ')
-                    for x in sub
+                    for searchx in sub
                     {
-                        if (InStr(x, ' '))
+                        if (InStr(searchx, ' '))
                         {
-                            ret.Push(StrSplit(x, ' ')*)
+                            ret.Push(StrSplit(searchx, ' ')*)
                         }
                         else
                         {
-                            ret.Push(x)
+                            ret.Push(searchx)
                         }
                     }
                 }
@@ -939,9 +939,9 @@ class codebase
         __New(bits*)
         {
             this.bits := []
-            for x in (bits.Length == 1 ? (Type(bits[1]) == "String" ? StrSplit(bits[1]) : bits) : bits)
+            for searchx in (bits.Length == 1 ? (Type(bits[1]) == "String" ? StrSplit(bits[1]) : bits) : bits)
             {
-                this.bits.Push(!!x)
+                this.bits.Push(!!searchx)
             }
             this.DefineProp("Value", { Get: this.Value })
             return this.Value()
@@ -983,9 +983,9 @@ class codebase
             }
 
             ret := vals[1]
-            for i in codebase.range(2, vals.Length)
+            for j in codebase.range(2, vals.Length)
             {
-                ret &= vals[i]
+                ret &= vals[j]
             }
             return ret
         }
@@ -1004,9 +1004,9 @@ class codebase
             }
 
             ret := vals[1]
-            for i in codebase.range(2, vals.Length)
+            for j in codebase.range(2, vals.Length)
             {
-                ret |= vals[i]
+                ret |= vals[j]
             }
             return ret
         }
@@ -1493,9 +1493,9 @@ class codebase
             static getKeys(k)
             {
                 keys := []
-                for x in k
+                for searchx in k
                 {
-                    keys.Push(x)
+                    keys.Push(searchx)
                 }
                 return keys
             }
@@ -1508,9 +1508,9 @@ class codebase
             static getValues(k)
             {
                 values := []
-                for , y in k
+                for , searchy in k
                 {
-                    values.Push(y)
+                    values.Push(searchy)
                 }
                 return values
             }
@@ -1523,9 +1523,9 @@ class codebase
             static mapInvert(k)
             {
                 kNew := Map()
-                for x, y in k
+                for searchx, searchy in k
                 {
-                    kNew.Set(y, x)
+                    kNew.Set(searchy, searchx)
                 }
                 return kNew
             }
@@ -1606,22 +1606,22 @@ class codebase
 
                 for e in elems
                 {
-                    for i in codebase.collectionOperations.arrayOperations.arrayContains(arr, e)
+                    for j in codebase.collectionOperations.arrayOperations.arrayContains(arr, e)
                     {
-                        rem.Push(i)
+                        rem.Push(j)
                     }
                 }
 
                 if (rem.Length)
                 {
-                    for i in rem
+                    for j in rem
                     {
-                        if (i <= 0)
+                        if (j <= 0)
                         {
                             continue
                         }
 
-                        arr.RemoveAt(i)
+                        arr.RemoveAt(j)
                         for in rem
                         {
                             rem[A_Index] -= 1
@@ -1709,16 +1709,16 @@ class codebase
                     throw TypeError("Invalid type for ``array``. Received ``" . Type(arr) . "``, expected ``Array``.")
                 }
 
-                i := []
+                j := []
                 for elem in arr
                 {
                     if ((caseSense ? elem == item : elem = item))
                     {
-                        i.Push(A_Index)
+                        j.Push(A_Index)
                     }
                 }
 
-                return i
+                return j
             }
 
             /**
@@ -1738,12 +1738,12 @@ class codebase
                     throw TypeError("Invalid type for ``array``. Received ``" . Type(arr) . "``, expected ``Array``.")
                 }
 
-                i := []
+                j := []
                 for elem in arr
                 {
                     if ((caseSense ? elem == item : elem = item))
                     {
-                        i.Push(A_Index)
+                        j.Push(A_Index)
                         continue
                     }
 
@@ -1751,7 +1751,7 @@ class codebase
                     {
                         if (InStr(elem, item, caseSense))
                         {
-                            i.Push(A_Index)
+                            j.Push(A_Index)
                             continue
                         }
                     }
@@ -1761,14 +1761,14 @@ class codebase
                         {
                             if (InStr(elem.ToString(), item, caseSense))
                             {
-                                i.Push(A_Index)
+                                j.Push(A_Index)
                                 continue
                             }
                         }
                     }
                 }
 
-                return i
+                return j
             }
 
             /**
@@ -1799,9 +1799,9 @@ class codebase
                         codebase.collectionOperations.arrayOperations.arrSort(&present, true)
                         if (present.Length)
                         {
-                            for i in present
+                            for j in present
                             {
-                                out.RemoveAt(i)
+                                out.RemoveAt(j)
                             }
                         }
                     }
@@ -1872,9 +1872,9 @@ class codebase
                 }
 
                 out := []
-                for x in codebase.range(arr.Length, 1, -1)
+                for searchx in codebase.range(arr.Length, 1, -1)
                 {
-                    out.Push(arr[x])
+                    out.Push(arr[searchx])
                 }
 
                 return out
@@ -1943,19 +1943,19 @@ class codebase
                 {
                     pivot := pArr[Floor((r + l) / 2)]
                     
-                    i := l - 1
+                    j := l - 1
                     j := r + 1
 
                     if (stringComp)
                     {
                         if (sortDesc)
                         {
-                            iI := () => StrCompare(pArr[i], pivot, "Logical") <= 0
+                            iI := () => StrCompare(pArr[j], pivot, "Logical") <= 0
                             iJ := () => StrCompare(pArr[j], pivot, "Logical") >= 0
                         }
                         else
                         {
-                            iI := () => StrCompare(pArr[i], pivot, "Logical") >= 0
+                            iI := () => StrCompare(pArr[j], pivot, "Logical") >= 0
                             iJ := () => StrCompare(pArr[j], pivot, "Logical") <= 0
                         }
                     }
@@ -1963,12 +1963,12 @@ class codebase
                     {
                         if (sortDesc)
                         {
-                            iI := () => pArr[i] <= pivot
+                            iI := () => pArr[j] <= pivot
                             iJ := () => pArr[j] >= pivot
                         }
                         else
                         {
-                            iI := () => pArr[i] >= pivot
+                            iI := () => pArr[j] >= pivot
                             iJ := () => pArr[j] <= pivot
                         }
                     }
@@ -1977,7 +1977,7 @@ class codebase
                     {
                         Loop
                         {
-                            i++
+                            j++
                             if (iI())
                             {
                                 break
@@ -1992,12 +1992,12 @@ class codebase
                             }
                         }
 
-                        if (i >= j)
+                        if (j >= j)
                         {
                             return j
                         }
 
-                        pArr := codebase.collectionOperations.arrayOperations.arrSwap(pArr, i, j)
+                        pArr := codebase.collectionOperations.arrayOperations.arrSwap(pArr, j, j)
                     }
                 }
                 
@@ -2042,9 +2042,9 @@ class codebase
                 }
 
                 sub := []
-                for i in codebase.range(start, stop)
+                for j in codebase.range(start, stop)
                 {
-                    sub.Push(arr[i])
+                    sub.Push(arr[j])
                 }
                 return sub
             }
@@ -2057,9 +2057,9 @@ class codebase
             static arrayConcat(arrs*)
             {
                 comb := []
-                for x in arrs
+                for searchx in arrs
                 {
-                    comb.Push(x*)
+                    comb.Push(searchx*)
                 }
                 return comb
             }
@@ -2073,15 +2073,15 @@ class codebase
             static arraySplit(arr, n)
             {
                 split := []
-                for i in codebase.range(1, Ceil(arr.Length / n))
+                for j in codebase.range(1, Ceil(arr.Length / n))
                 {
                     split.Push([])
                     yoffset := (A_Index - 1) * n
                     try
                     {
-                        for x in codebase.range(1 + yoffset, n + yoffset)
+                        for searchx in codebase.range(1 + yoffset, n + yoffset)
                         {
-                            split[i].Push(arr[x])
+                            split[j].Push(arr[searchx])
                         }
                     }
                 }
@@ -2398,7 +2398,7 @@ class codebase
                 }
 
                 steps := [guess]
-                for i in codebase.range(1, iter)
+                for j in codebase.range(1, iter)
                 {
                     steps.Push(guess -= ((guess ** r - 3) / (r * (guess ** (r - 1)))))
                 }
@@ -2430,16 +2430,16 @@ class codebase
                 out := codebase.range(1, n - 1)
                 for pk in pf
                 {
-                    for x in codebase.range(1, n - 1)
+                    for searchx in codebase.range(1, n - 1)
                     {
-                        if (pk * x > n)
+                        if (pk * searchx > n)
                         {
                             break
                         }
 
-                        for i in codebase.collectionOperations.arrayOperations.arrayContains(out, pk * x)
+                        for j in codebase.collectionOperations.arrayOperations.arrayContains(out, pk * searchx)
                         {
-                            out[i] := "REM"
+                            out[j] := "REM"
                         }
                     }
                 }
@@ -2920,11 +2920,11 @@ class codebase
                 }
 
                 equal := true
-                for i in codebase.range(2, vs.Length)
+                for j in codebase.range(2, vs.Length)
                 {
                     Loop hdim
                     {
-                        if (!(codebase.math.misc.equal(0.0000001, vs[1].GetOwnPropDesc("v" . A_Index).Value, vs[i].GetOwnPropDesc("v" . A_Index).Value)))
+                        if (!(codebase.math.misc.equal(0.0000001, vs[1].GetOwnPropDesc("v" . A_Index).Value, vs[j].GetOwnPropDesc("v" . A_Index).Value)))
                         {
                             return false
                         }
@@ -3002,24 +3002,24 @@ class codebase
                 ; The entire idea of using a loop like this was absolutely disgusting to come up with, understand and then actually write
                 ; The actual solution, as in, the code, is     B  E  A  U  T  I  F  U  L, but that's about it
                 ; AAAAND it works so I reeeeaaaally don't care :3
-                for x in possibleIntersections
+                for searchx in possibleIntersections
                 {
                     base := [1, 2, 3]
-                    base.RemoveAt(x)
+                    base.RemoveAt(searchx)
 
                     lambda := 0
-                    if ((v := pv.GetOwnPropDesc("v" . x).Value) !== 0)
+                    if ((v := pv.GetOwnPropDesc("v" . searchx).Value) !== 0)
                     {
                         lambda += (v > 0 ? -v : v)
                     }
 
                     try
                     {
-                        lambda /= dv.GetOwnPropDesc("v" . x).Value
+                        lambda /= dv.GetOwnPropDesc("v" . searchx).Value
                     }
 
                     xs := { }
-                    xs.DefineProp("x" . x, { Value: 0.0 })
+                    xs.DefineProp("x" . searchx, { Value: 0.0 })
                     xs.DefineProp("x" . base[1], { Value: pv.GetOwnPropDesc("v" . base[1]).Value + (dv.GetOwnPropDesc("v" . base[1]).Value * lambda) })
                     xs.DefineProp("x" . base[2], { Value: pv.GetOwnPropDesc("v" . base[2]).Value + (dv.GetOwnPropDesc("v" . base[2]).Value * lambda) })
 
@@ -3315,13 +3315,13 @@ class codebase
                 }
 
                 newV := []
-                for i in codebase.range(1, Max(dims*))
+                for j in codebase.range(1, Max(dims*))
                 {
                     newV.Push(
                         codebase.math.sum(
                             1,
                             vs.Length,
-                            ((a, n) => vs[n].HasOwnProp("v" . a) ? vs[n].GetOwnPropDesc("v" . a).Value : 0).Bind(i)
+                            ((a, n) => vs[n].HasOwnProp("v" . a) ? vs[n].GetOwnPropDesc("v" . a).Value : 0).Bind(j)
                         )
                     )
                 }
@@ -3352,13 +3352,13 @@ class codebase
                 }
 
                 newV := []
-                for i in codebase.range(1, Max(dims*))
+                for j in codebase.range(1, Max(dims*))
                 {
                     newV.Push(
                         codebase.math.sum(
                             1,
                             vs.Length,
-                            ((a, n) => vs[n].HasOwnProp("v" . a) ? (n !== 1 ? -(vs[n].GetOwnPropDesc("v" . a).Value) : vs[n].GetOwnPropDesc("v" . a).Value) : 0).Bind(i)
+                            ((a, n) => vs[n].HasOwnProp("v" . a) ? (n !== 1 ? -(vs[n].GetOwnPropDesc("v" . a).Value) : vs[n].GetOwnPropDesc("v" . a).Value) : 0).Bind(j)
                         )
                     )
                 }
@@ -3503,10 +3503,10 @@ class codebase
                     }
                     out .= "`n"
 
-                    for i in codebase.range(1, this.dim.y)
+                    for j in codebase.range(1, this.dim.y)
                     {
-                        out .= "[" . i . "]`t"
-                        for elem in this.getRow(i)
+                        out .= "[" . j . "]`t"
+                        for elem in this.getRow(j)
                         {
                             out .= elem . "`t"
                         }
@@ -3535,11 +3535,11 @@ class codebase
                         }
                         w.WriteLine(codebase.stringOperations.strJoin(',', true, out*))
 
-                        for i in codebase.range(1, this.dim.y)
+                        for j in codebase.range(1, this.dim.y)
                         {
                             out := []
-                            w.Write("[" . i . "],")
-                            for elem in this.getRow(i)
+                            w.Write("[" . j . "],")
+                            for elem in this.getRow(j)
                             {
                                 out.Push(elem)
                             }
@@ -3572,9 +3572,9 @@ class codebase
                 getVectors(start := 1, stop := unset)
                 {
                     v := []
-                    for i in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
+                    for j in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
                     {
-                        v.Push(this.getVector(i))
+                        v.Push(this.getVector(j))
                     }
                     return v
                 }
@@ -3594,9 +3594,9 @@ class codebase
                     {
                         i_max := 0
                         args := codebase.range(h, this.dim.y)
-                        for i in args
+                        for j in args
                         {
-                            n := Abs(this.GetOwnPropDesc(k . i).Value)
+                            n := Abs(this.GetOwnPropDesc(k . j).Value)
                             if (n > i_max)
                             {
                                 i_max := args[A_Index]
@@ -3612,22 +3612,22 @@ class codebase
                             this.swapRows(h, i_max)
                             d *= -1
 
-                            for i in codebase.range(h + 1, this.dim.y)
+                            for j in codebase.range(h + 1, this.dim.y)
                             {
-                                if (i > this.dim.y)
+                                if (j > this.dim.y)
                                 {
                                     continue
                                 }
 
-                                f := this.GetOwnPropDesc(k . i).Value / this.GetOwnPropDesc(k . h).Value
-                                this.DefineProp(k . i, { Value: 0 })
+                                f := this.GetOwnPropDesc(k . j).Value / this.GetOwnPropDesc(k . h).Value
+                                this.DefineProp(k . j, { Value: 0 })
                                 for j in codebase.range(k + 1, this.dim.y)
                                 {
                                     if (j > this.dim.x)
                                     {
                                         continue
                                     }
-                                    this.DefineProp(j . i, { Value: this.GetOwnPropDesc(j . i).Value - (this.GetOwnPropDesc(j . h).Value * f) })
+                                    this.DefineProp(j . j, { Value: this.GetOwnPropDesc(j . j).Value - (this.GetOwnPropDesc(j . h).Value * f) })
                                     d *= f
                                 }
                             }
@@ -3648,11 +3648,11 @@ class codebase
                 leadingCoefficients()
                 {
                     coeff := []
-                    for i in codebase.range(1, this.dim.y)
+                    for j in codebase.range(1, this.dim.y)
                     {
                         for j in codebase.range(1, this.dim.x)
                         {
-                            n := this.GetOwnPropDesc(j . i).Value
+                            n := this.GetOwnPropDesc(j . j).Value
                             if (n !== 0)
                             {
                                 coeff.Push(n)
@@ -3675,10 +3675,10 @@ class codebase
                     swapi := m.getRow(i)
                     swapj := m.getRow(j)
 
-                    for x in codebase.range(1, m.dim.x)
+                    for searchx in codebase.range(1, m.dim.x)
                     {
-                        m.DefineProp(x . i, { Value: swapj[x] })
-                        m.DefineProp(x . j, { Value: swapi[x] })
+                        m.DefineProp(searchx . i, { Value: swapj[searchx] })
+                        m.DefineProp(searchx . j, { Value: swapi[searchx] })
                     }
                     return m
                 }
@@ -3695,10 +3695,10 @@ class codebase
                     swapi := m.getColumn(i)
                     swapj := m.getColumn(j)
 
-                    for x in codebase.range(1, m.dim.y)
+                    for searchx in codebase.range(1, m.dim.y)
                     {
-                        m.DefineProp(i . x, { Value: swapj[x] })
-                        m.DefineProp(j . x, { Value: swapi[x] })
+                        m.DefineProp(i . searchx, { Value: swapj[searchx] })
+                        m.DefineProp(j . searchx, { Value: swapi[searchx] })
                     }
                     return m
                 }
@@ -3711,9 +3711,9 @@ class codebase
                 getRow(rn)
                 {
                     out := []
-                    for i in codebase.range(1, this.dim.x)
+                    for j in codebase.range(1, this.dim.x)
                     {
-                        r := i . rn
+                        r := j . rn
                         if (this.HasOwnProp(r))
                         {
                             out.Push(this.GetOwnPropDesc(r).Value)
@@ -3731,9 +3731,9 @@ class codebase
                 getRows(start := 1, stop := unset)
                 {
                     out := []
-                    for i in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
+                    for j in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
                     {
-                        out.Push(this.getRow(i))
+                        out.Push(this.getRow(j))
                     }
                     return out
                 }
@@ -3746,9 +3746,9 @@ class codebase
                 getColumn(cn)
                 {
                     out := []
-                    for i in codebase.range(1, this.dim.y)
+                    for j in codebase.range(1, this.dim.y)
                     {
-                        r := cn . i
+                        r := cn . j
                         if (this.HasOwnProp(r))
                         {
                             out.Push(this.GetOwnPropDesc(r).Value)
@@ -3766,9 +3766,9 @@ class codebase
                 getColumns(start := 1, stop := unset)
                 {
                     out := []
-                    for i in codebase.range(start, IsSet(stop) ? stop : this.dim.x)
+                    for j in codebase.range(start, IsSet(stop) ? stop : this.dim.x)
                     {
-                        out.Push(this.getColumn(i))
+                        out.Push(this.getColumn(j))
                     }
                     return out
                 }
@@ -3910,12 +3910,12 @@ class codebase
             sumX2 := 0
             sumY := 0
 
-            for i in codebase.range(1, knownX.Length)
+            for j in codebase.range(1, knownX.Length)
             {
-                sumXY += knownX[i] * knownY[i]
-                sumX += knownX[i]
-                sumY += knownY[i]
-                sumX2 += knownX[i] ** 2
+                sumXY += knownX[j] * knownY[j]
+                sumX += knownX[j]
+                sumY += knownY[j]
+                sumX2 += knownX[j] ** 2
             }
 
             sumXY /= knownX.Length
@@ -4093,12 +4093,12 @@ class codebase
                 n /= 2
             }
 
-            for i in codebase.range(3, Sqrt(n), 2)
+            for j in codebase.range(3, Sqrt(n), 2)
             {
-                while (Mod(n, i) == 0)
+                while (Mod(n, j) == 0)
                 {
-                    p.Push(Round(i))
-                    n /= i
+                    p.Push(Round(j))
+                    n /= j
                 }
             }
 
@@ -4430,9 +4430,9 @@ class codebase
 
                 k := Min(k, n - k)
                 c := 1
-                for x in codebase.range(0, k - 1)
+                for searchx in codebase.range(0, k - 1)
                 {
-                    c *= (n - x) / (x + 1)
+                    c *= (n - searchx) / (searchx + 1)
                 }
                 return c
             }
@@ -4489,9 +4489,9 @@ class codebase
                 }
 
                 p := 1
-                for x in codebase.range(n - k + 1, n)
+                for searchx in codebase.range(n - k + 1, n)
                 {
-                    p *= x
+                    p *= searchx
                 }
 
                 return p
@@ -4522,9 +4522,9 @@ class codebase
                 }
 
                 mu := 0
-                for i in codebase.range(1, x_i.Length)
+                for j in codebase.range(1, x_i.Length)
                 {
-                    mu += x_i[i] * Px[i]
+                    mu += x_i[j] * Px[j]
                 }
                 return mu
             }
@@ -4556,9 +4556,9 @@ class codebase
                 mu := codebase.math.probability.expectedValue(x_i, Px)
 
                 var := 0
-                for i in codebase.range(1, x_i.Length)
+                for j in codebase.range(1, x_i.Length)
                 {
-                    var += ((x_i[i]) ** 2) * Px[i]
+                    var += ((x_i[j]) ** 2) * Px[j]
                 }
                 return var
             }
@@ -4643,10 +4643,10 @@ class codebase
                 distr := Map()
                 cumul := Map()
 
-                for x in codebase.range(0, n)
+                for searchx in codebase.range(0, n)
                 {
-                    distr.Set(x, Round(codebase.math.probability.binomialDistribution(n, p, x), rnd))
-                    distr.Set(x, Round(codebase.math.probability.binomialDistributionRange(n, p, 0, x), rnd))
+                    distr.Set(searchx, Round(codebase.math.probability.binomialDistribution(n, p, searchx), rnd))
+                    distr.Set(searchx, Round(codebase.math.probability.binomialDistributionRange(n, p, 0, searchx), rnd))
                 }
 
                 return [distr, cumul]
@@ -4686,9 +4686,9 @@ class codebase
                 ; Find the right-most monitor
                 l := 0
                 t := 0
-                for i in codebase.range(1, MonitorGetCount())
+                for j in codebase.range(1, MonitorGetCount())
                 {
-                    MonitorGet(i, &ln, &tn)
+                    MonitorGet(j, &ln, &tn)
                     if (ln > l)
                     {
                         l := ln
@@ -5043,9 +5043,9 @@ class codebase
             bin := codebase.stringOperations.strReverse(bin)
             bin := StrSplit(bin)
 
-            for i in bin
+            for j in bin
             {
-                res += i * (2 ** (A_Index - 1))
+                res += j * (2 ** (A_Index - 1))
             }
 
             if (neg)
@@ -5070,9 +5070,9 @@ class codebase
             hex := codebase.stringOperations.strReverse(hex)
             hex := StrSplit(hex)
 
-            for i in hex
+            for j in hex
             {
-                res += (IsNumber(i) ? i : Ord(i) - 55) * (16 ** (A_Index - 1))
+                res += (IsNumber(j) ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
             }
 
             if (neg)
@@ -5141,6 +5141,41 @@ class codebase
                     codebase.math.avg(bvs*),
                     (IsSet(avs) ? codebase.math.avg(avs*) : 255)
                 ]
+            }
+
+            static variation(color, shades)
+            {
+                r := codebase.convert.HexToDec(SubStr(color, 3, 2))
+                g := codebase.convert.HexToDec(SubStr(color, 5, 2))
+                b := codebase.convert.HexToDec(SubStr(color, 7, 2))
+                if ((a := SubStr(color, 9, 2)) !== "")
+                {
+                    a := codebase.convert.HexToDec(a)
+                }
+                else
+                {
+                    a := 255
+                }
+
+                return [
+                    "0x" . codebase.convert.DecToAny(((v := r - shades) < 0 ? 0 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := g - shades) < 0 ? 0 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := b - shades) < 0 ? 0 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := a - shades) < 0 ? 0 : v), 16, 2),
+                    "0x" . codebase.convert.DecToAny(((v := r + shades) > 255 ? 255 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := g + shades) > 255 ? 255 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := b + shades) > 255 ? 255 : v), 16, 2)
+                        . codebase.convert.DecToAny( ((v := a + shades) > 255 ? 255 : v), 16, 2)
+                ]
+            }
+
+            static between(color, min, max)
+            {
+                if (codebase.convert.colors.exclusiveCompare(min, color) && codebase.convert.colors.exclusiveCompare(color, max))
+                {
+                    return true
+                }
+                return false
             }
 
             /**
@@ -5220,7 +5255,7 @@ class codebase
                 bools := []
                 Loop ref.Length
                 {
-                    bools.Push(comp[A_Index] > ref[A_Index])
+                    bools.Push(comp[A_Index] >= ref[A_Index])
                 }
             
                 gt := codebase.collectionOperations.and(bools*)
@@ -5228,7 +5263,7 @@ class codebase
                 bools := []
                 Loop ref.Length
                 {
-                    bools.Push(comp[A_Index] < ref[A_Index])
+                    bools.Push(comp[A_Index] <= ref[A_Index])
                 }
 
                 lt := codebase.collectionOperations.and(bools*)
