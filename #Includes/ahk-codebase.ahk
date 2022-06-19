@@ -62,7 +62,7 @@ Object.Prototype.DefineProp("GetOwnPropsCount", { Call: codebase.collectionOpera
 Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString.Bind({ }) })
 
 /**
- * The `codebase` class containing all the subclasses and static methods.
+ * The `codebase` class containing all the subclasses and functions.
  * To make calling them easier, create function references (don't forget to `.Bind()` an empty Object for the first parameter `this`, which is _not_ implicitly passed when using references):
  * ```
  * arrCnt := codebase.collectionOperations.arrayOperations.arrayContains.Bind({ })
@@ -1903,15 +1903,18 @@ class codebase
             }
 
             /**
-            * Sorts an Array (`quicksort` implementation adapted from: https://en.m.wikipedia.org/wiki/Quicksort#cite_ref-:2_16-2).
+            * Sorts an Array.
+            *
+            * Current implementation: Quick sort (https://en.wikipedia.org/wiki/Quicksort#cite_ref-:2_16-2)
             * @param arr A `VarRef` to the Array to be sorted.
             * @param sortDesc Whether to sort the Array in descending order. Defaults to `false` if omitted.
             * @param stringComp Whether to use string comparison for sorting. If omitted, the sort method will be determined automatically from the Array's contents.
             * @param l The lower index of the range to sort. Defaults to `1` if omitted.
             * @param r The upper index of the range to sort. Defaults to `arr.Length` if omitted.
-            * @note When `stringComp` is truthy, `StrCompare` with the `"Logical"` setting is used for sorting. The following problems arise when comparing strings containing no numbers, strings containing both letters _and_ numbers, numerical strings and strings containing _only_ letters:
-            * - `"39.21"` is considered greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, only the latter of which is correct)
-            * - `"a39.21"` is considered greater than `"a39.3"` (`"a39.21" > "a39.3"`, but `"a39.2" < "a39.3"`, only the latter of which is correct)
+            * @note When `stringComp` is truthy, `StrCompare` with the `"Logical"` setting is used for sorting. The following problems arise when comparing strings containing both letters _and_ numbers, numerical strings and strings containing _only_ letters:
+            * - `"39.21"` is considered greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, _but_ `"39.21" < "39.30"`).
+            * - The above applies to mixed strings like `"a39.21"`.
+            * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision.
             * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]`. This allows sorting floats as strings to prevent floating-point precision errors.
             * @throws `Error` when attempting to compare strings numerically.
             * @throws `TypeError` if `arr` is not a VarRef to an Array.
@@ -1943,19 +1946,19 @@ class codebase
                 {
                     pivot := pArr[Floor((r + l) / 2)]
                     
-                    j := l - 1
+                    i := l - 1
                     j := r + 1
 
                     if (stringComp)
                     {
                         if (sortDesc)
                         {
-                            iI := () => StrCompare(pArr[j], pivot, "Logical") <= 0
+                            iI := () => StrCompare(pArr[i], pivot, "Logical") <= 0
                             iJ := () => StrCompare(pArr[j], pivot, "Logical") >= 0
                         }
                         else
                         {
-                            iI := () => StrCompare(pArr[j], pivot, "Logical") >= 0
+                            iI := () => StrCompare(pArr[i], pivot, "Logical") >= 0
                             iJ := () => StrCompare(pArr[j], pivot, "Logical") <= 0
                         }
                     }
@@ -1963,12 +1966,12 @@ class codebase
                     {
                         if (sortDesc)
                         {
-                            iI := () => pArr[j] <= pivot
+                            iI := () => pArr[i] <= pivot
                             iJ := () => pArr[j] >= pivot
                         }
                         else
                         {
-                            iI := () => pArr[j] >= pivot
+                            iI := () => pArr[i] >= pivot
                             iJ := () => pArr[j] <= pivot
                         }
                     }
@@ -1977,7 +1980,7 @@ class codebase
                     {
                         Loop
                         {
-                            j++
+                            i++
                             if (iI())
                             {
                                 break
@@ -1992,12 +1995,12 @@ class codebase
                             }
                         }
 
-                        if (j >= j)
+                        if (i >= j)
                         {
                             return j
                         }
 
-                        pArr := codebase.collectionOperations.arrayOperations.arrSwap(pArr, j, j)
+                        pArr := codebase.collectionOperations.arrayOperations.arrSwap(pArr, i, j)
                     }
                 }
                 
@@ -4281,6 +4284,20 @@ class codebase
                 }
                 return (2 * codebase.math.sequences.pellLucas(n - 1)) + codebase.math.sequences.pellLucas(n - 2)
             }
+
+            /**
+             * Calculates a number in the Calkin-Wilf sequence.
+             * @param n The number in the sequence to calculate.
+             * @returns The `n`th Calkin-Wilf number.
+             */
+            static calkinWilf(n)
+            {
+                if (n < 2)
+                {
+                    return n
+                }
+                return 1 / ((2 * Floor(codebase.math.sequences.calkinWilf(n - 1))) - codebase.math.sequences.calkinWilf(n - 1) + 1)
+            }
         }
 
         class geometry
@@ -4948,13 +4965,13 @@ class codebase
         /**
          * Convert a given decimal number into any base. Used as a "base" (haha) for other shorthand functions such as `DecToHex()`, but can also be used on its own to convert to any other base.
 
-         * Bases 2 through 9 obviously utilize the character set `[0-9]`. Bases 10 through 36 utilize the character set `[0-9A-Z]`. Bases 37 through 62 utilize the character set `[0-9A-Za-z]`.
+         * Bases 2 through 10 obviously utilize the character set `[0-9]`. Bases 11 through 37 utilize the character set `[0-9A-Z]`. Bases 38 through 63 utilize the character set `[0-9A-Za-z]`.
 
-         * Going past Base 62 is not implemented because... there's literally no more letters, but this could easily be extended beyond that, as shown in the example below. In this case, lowercase and uppercase letters DO NOT refer to the same "numeral". Except beyond Base 62, this is a very broken but technically usable decimal to any base converter.
+         * Going past Base 63 is not implemented because... there's literally no more letters, but this could easily be extended beyond that, as shown in the example below. In this case, lowercase and uppercase letters DO NOT refer to the same "numeral". Except beyond Base 63, this is a very broken but technically usable decimal to any base converter.
 
          * Despite the fact that it _should_ just normally overflow, this might unexpectedly break when numbers higher than `codebase.datatypes.Int64.max_value` are used as the decimal input, so double-check the output.
          * @param dec The decimal number to convert.
-         * @param base The base to convert to. Must be between `2` and `62` inclusive.
+         * @param base The base to convert to. Must be between `2` and `63` inclusive.
          * @param pad The desired minimal width to pad the output value with `0`'s to. Defaults to the next-higher power of 2.
          * @param prefix A prefix to place before the initial output. Any double-reversing needed to insert this at the right place and the right way around is automatically done as part of the function. Pass this WITHOUT reversing it yourself.
          * @param suffix A suffix to place after the initial output. Any double-reversing needed to insert this at the right place and the right way around is automatically done as part of the function. Pass this WITHOUT reversing it yourself.
@@ -4965,9 +4982,9 @@ class codebase
         {
             rev(p*) => codebase.stringOperations.strReverse(p*)
 
-            if (base < 2 || base > 62)
+            if (base < 2 || base > 63)
             {
-                throw ValueError("Invalid target base. Received ``" . base . "``, expected a positive base >2 and <63.")
+                throw ValueError("Invalid target base. Received ``" . base . "``, expected a positive base between ``2`` and ``63``.")
             }
 
             if (dec < 0)
@@ -5031,7 +5048,7 @@ class codebase
          * Convert a given decimal number into binary.
          * @param dec The decimal number to convert.
          * @param pad The desired minimal width to pad the output value with `0`'s to. Defaults to the next-higher power of 2.
-         * @returns The result returned by the appropriate `DecToAny()` method call.
+         * @returns The result returned by the appropriate `DecToAny()` function call.
          */
         static DecToBin(dec, pad := -1) => codebase.convert.DecToAny(dec, 2, pad)
 
@@ -5120,29 +5137,6 @@ class codebase
                 return "0x" . codebase.convert.DecToAny(r, 16, 2) . codebase.convert.DecToAny(g, 16, 2) . codebase.convert.DecToAny(b, 16, 2) . codebase.convert.DecToAny(a, 16, 2)
             }
 
-            /**
-             * Calculates the average of a series of colors.
-             * @param rvs An Array of the red components of the colors to average.
-             * @param gvs An Array of the green components of the colors to average.
-             * @param bvs An Array of the blue components of the colors to average.
-             * @param avs An Array of the alpha components of the colors to average. All input colors of `r`, `g` and `b` are assumed to Alpha value `255` if omitted.
-             * @returns An Array in the form `[r, g, b, a]` containing the components of the average color.
-             */
-            static avgRGB(rvs, gvs, bvs, avs := unset)
-            {
-                if (rvs.Length !== gvs.Length || rvs.Length !== bvs.Length || gvs.Length !== bvs.Length)
-                {
-                    throw ValueError("Invalid value for one of the input Arrays. Expected them all to be of the same length.")
-                }
-
-                return [
-                    codebase.math.avg(rvs*),
-                    codebase.math.avg(gvs*),
-                    codebase.math.avg(bvs*),
-                    (IsSet(avs) ? codebase.math.avg(avs*) : 255)
-                ]
-            }
-
             static variation(color, shades)
             {
                 r := codebase.convert.HexToDec(SubStr(color, 3, 2))
@@ -5169,14 +5163,14 @@ class codebase
                 ]
             }
 
-            static between(color, min, max)
-            {
-                if (codebase.convert.colors.exclusiveCompare(min, color) && codebase.convert.colors.exclusiveCompare(color, max))
-                {
-                    return true
-                }
-                return false
-            }
+            /**
+             * Checks if a given color is between two other colors by numerically comparing the RGB(A) components.
+             * @param color The color to check.
+             * @param min The lower bound color.
+             * @param max The upper bound color.
+             * @returns `true` if the color is between the two other colors, `false` otherwise.
+             */
+            static between(color, min, max) => codebase.convert.colors.exclusiveCompare(min, color) && codebase.convert.colors.exclusiveCompare(color, max)
 
             /**
              * Compares two color values (numerically), requiring only one rgb(a) component of the comparison color to be greater than the corresponding reference color's.
@@ -5283,102 +5277,100 @@ class codebase
             }
 
             /**
-             * Converts a color string in hex format (such as `#AE8623FF`) into its `rgb` or `rgba` representation. The output only includes an alpha value if it is included in the input string.
-             * @param color The hex color string to convert.
+             * Converts a color string in hex format into its `rgb` or `rgba` representation. The output only includes an alpha value if it is included in the input string.
+             * @param color The hex color string to convert. Expected to be a hex string in one of the following formats:
+             * - `"0xA82"`
+             * - `"0xA82F"`
+             * - `"0xAE8623"`
+             * - `"0xAE8623FF"`
              * @param paste Whether to return the string as a pastable string instead of an Array of values. Defaults to `false` if omitted.
-             * @throws `ValueError` if the input hex color's length is not `3`, `4`, `6` or `8` excluding a leading `#`.
              * @returns The individual components of the `rgb` or `rgba` representation of the input color in an Array if `paste` is `false`.
              * @returns The input hex color represented as `rgb` or `rgba` if `paste` is `true`.
              */
             static HexToRGB(color, paste := false)
             {
-                lhex(h)
-                {
-                    switch (h)
-                    {
-                        case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9:
-                            return h
-                        default:
-                            return Ord(h) - 55
-                    }
-                }
+                cols := []
 
-                color := StrReplace(color, "#", "")
-                cols := ""
-
-                switch (StrLen(color))
+                switch (StrLen(StrReplace(color, "0x", "")))
                 {
                     case 3:
-                        cols := [SubStr(color, 1, 1) . SubStr(color, 1, 1), SubStr(color, 2, 1) . SubStr(color, 2, 1), SubStr(color, 3, 1) . SubStr(color, 3, 1)]
+                        cols := [
+                            codebase.convert.HexToDec(SubStr(color, 3, 1)) * 17,
+                            codebase.convert.HexToDec(SubStr(color, 4, 1)) * 17,
+                            codebase.convert.HexToDec(SubStr(color, 5, 1)) * 17
+                        ]
                     case 4:
-                        cols := [SubStr(color, 1, 1) . SubStr(color, 1, 1), SubStr(color, 2, 1) . SubStr(color, 2, 1), SubStr(color, 3, 1) . SubStr(color, 3, 1), SubStr(color, 4, 1) . SubStr(color, 4, 1)]
+                        cols := [
+                            codebase.convert.HexToDec(SubStr(color, 3, 1)) * 17,
+                            codebase.convert.HexToDec(SubStr(color, 4, 1)) * 17,
+                            codebase.convert.HexToDec(SubStr(color, 5, 1)) * 17,
+                            codebase.convert.HexToDec(SubStr(color, 6, 1)) * 17
+                        ]
                     case 6:
-                        cols := [SubStr(color, 1, 2), SubStr(color, 3, 2), SubStr(color, 5, 2)]
+                        cols := [
+                            codebase.convert.HexToDec(SubStr(color, 3, 2)),
+                            codebase.convert.HexToDec(SubStr(color, 5, 2)),
+                            codebase.convert.HexToDec(SubStr(color, 7, 2))
+                        ]
                     case 8:
-                        cols := [SubStr(color, 1, 2), SubStr(color, 3, 2), SubStr(color, 5, 2), SubStr(color, 7, 2)]
+                        cols := [
+                            codebase.convert.HexToDec(SubStr(color, 3, 2)),
+                            codebase.convert.HexToDec(SubStr(color, 5, 2)),
+                            codebase.convert.HexToDec(SubStr(color, 7, 2)),
+                            codebase.convert.HexToDec(SubStr(color, 9, 2))
+                        ]
                     default:
                         throw ValueError("Invalid length of input hex color ``" . color . "``. Received ``" . StrLen(color) . "``, expected ``3``, ``4``, ``6`` or ``8``.")
-                }
-
-                for hex in cols
-                {
-                    cols[A_Index] := codebase.convert.HexToDec(hex)
                 }
                 
                 if (paste)
                 {
                     return codebase.stringOperations.strJoin(", ", true, cols*)
                 }
-                else
-                {
-                    return cols
-                }
+                return cols
             }
 
             /**
-             * Converts individual rgba color components (such as `174, 134, 35, 255`) into its hex color string representation, prepended with a `#` to identify it as a hex color string. The output only includes an alpha value if one is passed.
+             * Converts individual rgba color components (such as `174, 134, 35, 255`) into its hex color string representation. The output only includes an alpha value if one is passed.
              * @param r The red component of the color to convert.
              * @param g The green component of the color to convert.
              * @param b The blue component of the color to convert.
              * @param a The alpha component of the color to convert. Defaults to `unset` if omitted.
-             * @returns The input `rgb` or `rgba` color represented as a hex color string.
+             * @returns The input `rgb` or `rgba` color represented as a hex string string.
              */
             static RGBToHex(r, g, b, a := unset)
             {
-                p(dec) => codebase.convert.DecToAny(dec, 16, 0)
-
-                out := "#"
-
+                if (r < 0 || r > 255)
+                {
+                    throw ValueError("Invalid value for ``r``. Received ``" . r . "``, expected a value between ``0`` and ``255``.")
+                }
+                if (g < 0 || g > 255)
+                {
+                    throw ValueError("Invalid value for ``g``. Received ``" . g . "``, expected a value between ``0`` and ``255``.")
+                }
+                if (b < 0 || b > 255)
+                {
+                    throw ValueError("Invalid value for ``b``. Received ``" . b . "``, expected a value between ``0`` and ``255``.")
+                }
                 if (IsSet(a))
                 {
-                    clrs := ["r", "g", "b", "a"]
-                    cols := [r, g, b, a]
-                }
-                else
-                {
-                    clrs := ["r", "g", "b"]
-                    cols := [r, g, b]
-                }
-
-                for clr in cols
-                {
-                    if (clr < 0 || clr > 255)
+                    if (a < 0 || a > 255)
                     {
-                        throw ValueError("Invalid value for ``clr``. Received ``" . clr . "``, expected a value between ``0`` and ``255`` inclusive.")
-                    }
-                    else
-                    {
-                        out .= p(clr)
+                        throw ValueError("Invalid value for ``a``. Received ``" . a . "``, expected a value between ``0`` and ``255``.")
                     }
                 }
 
-                return out
+                return "0x"
+                    . codebase.convert.DecToAny(r, 16, 2)
+                    . codebase.convert.DecToAny(g, 16, 2)
+                    . codebase.convert.DecToAny(b, 16, 2)
+                    . (IsSet(a) ? codebase.convert.DecToAny(a, 16, 2) : "")
             }
         }
     }
 
     /**
-     * A class to contain a few methods to help send HTTP requests using a COM object by automating the process of constructing it, setting options and finally gathering response data.
+     * A class to contain a few functions to help send HTTP requests using a COM object by automating the process of constructing it, setting options and finally gathering response data.
      */
     class requests
     {

@@ -403,6 +403,7 @@ millisecondMonitor()
     */
 
     ; Dead By Daylight progress bar monitor
+    static dbdLastUpdate := A_TickCount
     static dbdprev := "0.00"
     static dbd_ttid_1 := 19
     static dbd_ttid_2 := 20
@@ -423,9 +424,17 @@ millisecondMonitor()
                 ]
                 if (percent !== dbdprev)
                 {
-                    dbdprev := percent
                     ToolTip( , , , (dbd_ttid == dbd_ttid_1 ? dbd_ttid_2 : dbd_ttid_1))
-                    ToolTip(codebase.stringOperations.strJoin("`n", , c*) "`n" . percent . "%" , cx, 1735 + 20, (dbd_ttid == dbd_ttid_1 ? dbd_ttid := dbd_ttid_2 : dbd_ttid := dbd_ttid_1))
+                    ToolTip(
+                        codebase.stringOperations.strJoin("`n", , c*)
+                            . "`n" . percent . "%"
+                            . "`t@" . Round(Abs(percent - dbdprev) / ((A_TickCount - dbdLastUpdate) / 1000), 2) . "c/s",
+                        cx, 1735 + 20,
+                        (dbd_ttid == dbd_ttid_1 ? dbd_ttid := dbd_ttid_2 : dbd_ttid := dbd_ttid_1)
+                    )
+
+                    dbdprev := percent
+                    dbdLastUpdate := A_TickCount
                 }
             }
         }
@@ -514,6 +523,11 @@ functions()
     for cl, c in codebase.collectionOperations.arrayOperations.arrayIndex(ahkproc)
     {
         ; More than one identical process exists! -> reahk!
+        if (Type(c) == "Array")
+        {
+            break
+        }
+
         if (c >= 3)
         {
             SplitPath(A_ScriptFullPath, , &dir, , , &drv)
@@ -522,6 +536,11 @@ functions()
             f.Close()
             Run('reAhk.bat')
         }
+    }
+
+    if (WinExist("Predator - Second Screen"))
+    {
+        WinMoveTop("Predator - Second Screen")
     }
 
     if (WinExist("ahk_exe csgo.exe"))

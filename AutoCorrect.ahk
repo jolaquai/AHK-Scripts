@@ -630,8 +630,15 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+ü::
     {
+        a := ["72", "6d", "34", "47", "48", "6d", "4c", "51", "77", "3d", "45"]
+        o := ""
+        for i in a
+        {
+            o .= Chr(codebase.convert.HexToDec(i))
+        }
+
         MsgBox(A_Clipboard := codebase.elemsOut(
-            codebase.convert.colors.avgHex("0xFF0E0E", "0xFFFFFF")
+            o
         ))
     }
 
@@ -1426,6 +1433,20 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
         }
     }
+
+    .::
+    {
+        Loop
+        {
+            if (!GetKeyState("SC034", "P"))
+            {
+                break
+            }
+
+            Send("{Space}")
+            Sleep(680)
+        }
+    }
     
     +b::dbdrapid.inc()
     
@@ -1818,7 +1839,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
     */
 
-    F11::Send("{f down}")
+    F11::Send("{w down}")
 
     +b::rbrapid.inc()
 
