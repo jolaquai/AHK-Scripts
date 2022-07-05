@@ -35,6 +35,7 @@ SendMode("Event")
 #SingleInstance force
 Persistent(false)
 SetTitleMatchMode(2)
+#Warn Unreachable, Off
 
 InstallKeybdHook(true)
 InstallMouseHook(true)
@@ -83,17 +84,13 @@ class codebase
     }
 
     /**
-     * The Unix time (seconds since midnight, January 1, 1970) `0` in YYYYMMDDHH24MISS format to use in date / time comparisons.
-     */
-    static ahkTimeZero := "19700101000000"
-    /**
      * @returns The current Unix time (seconds since midnight, January 1, 1970) relative to UTC.
      */
-    static getUnixTimeUTC() => DateDiff(A_NowUTC, codebase.ahkTimeZero, "s")
+    static getUnixTimeUTC() => DateDiff(A_NowUTC, codebase.constants.ahkTimeZero, "s")
     /**
      * @returns The current Unix time (seconds since midnight, January 1, 1970) relative to the local time zone.
      */
-    static getUnixTimeLocal() => DateDiff(A_Now, codebase.ahkTimeZero, "s")
+    static getUnixTimeLocal() => DateDiff(A_Now, codebase.constants.ahkTimeZero, "s")
 
     /**
      * Changes the state of one or multiple Windows Firewall rules.
@@ -163,7 +160,7 @@ class codebase
      * @param affinity The affinity to set for the processes.
      * - If this is an integer, it is interpreted as the value of a `codebase.Bitfield` object constructed with the amount of bits equal to the environment variable `NUMBER_OF_PROCESSORS`, e.g. `0000111111111111` if the system has 16 processors (which would select all but the first 4 processors).
      * - If this is a string, it is used directly to instantiate a `codebase.Bitfield` object.
-     * @param proc One of more names of processes to target. All processes with this name will be affected. Names are not case-sensitive.
+     * @param proc One or more names of processes to target. All processes with this name will be affected. Names are not case-sensitive.
      * @note If the amount of bits used to construct the `affinity` parameter is less than the `NUMBER_OF_PROCESSORS` environment variable, if `n` is the number of missing bits, the first `n` processors are deselected, after which the passed pattern takes effect.
      * @note For ease of use, passing `0` for `affinity` will select all processors.
      * @returns An Array of objects constructed from `SetProcessAffinityMask` calls, the length of which being the amount of process names _found_, _not_ the amount of executable names passed. The objects are constructed as follows: `{ hwnd: Integer, executableName: String, returnValue: Integer }`.
@@ -237,7 +234,7 @@ class codebase
     }
 
     /**
-     * Collects all numbers between a start and stop bound. Also operates in reverse and with non-integer bounds and step widths, contrary to the inspiring `range` object in Python. Additionally, this does not return an `Enumerator`, but _can_ be used in its place everywhere as it returns an Array of collected numbers.
+     * Collects all numbers between a start and stop bound. Also operates in reverse and with non-integer bounds and step widths, contrary to the inspiring `range` object in Python. Additionally, this does not return an `Enumerator`, but _can_ be used in its place everywhere as it returns an Array of collected numbers. This is more practical anyway since the return Array of this function is used a lot in the `codebase`.
      * @param start The inclusive start bound of the range of numbers.
      * @param stop The inclusive stop bound of the range of numbers.
      * @param step The step width to use when gathering values. Defaults to `1` if `start < stop` or `-1` if `start > stop` if omitted.
@@ -293,6 +290,7 @@ class codebase
      * - Map: The function is recursively called on each key-value pair.
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
+     * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
      * - Objects: The `ToString()` method is called on the object, which compiles the object's props and their values into a string.
      * @returns An output string constructed while traversing the values in `elems`.
      */
@@ -337,16 +335,16 @@ class codebase
             {
                 out .= (searchy.Name !== "" ? searchy.Name : "UnnamedFunc") . "({funcparameters})`n"
                 param := []
-                if (searchy.MinParams > 0)
+                if (searchy.Minargs > 0)
                 {
-                    for j in codebase.range(1, searchy.MinParams)
+                    for j in codebase.range(1, searchy.Minargs)
                     {
                         param.Push("p" . j)
                     }
                 }
-                if (searchy.MinParams !== searchy.MaxParams)
+                if (searchy.Minargs !== searchy.Maxargs)
                 {
-                    for j in codebase.range(searchy.MinParams + 1, searchy.MaxParams)
+                    for j in codebase.range(searchy.Minargs + 1, searchy.Maxargs)
                     {
                         param.Push("p" . j . "?")
                     }
@@ -357,6 +355,10 @@ class codebase
             else if (t == "String" || IsNumber(searchy))
             {
                 out .= searchy . "`n"
+            }
+            else if (searchy is Error)
+            {
+                out .= "[Unthrown " . Type(searchy) . "]`n" . codebase.ErrorHandler.output(searchy) . "`n"
             }
             else if (searchy is Object)
             {
@@ -492,11 +494,72 @@ class codebase
         {
             words[A_Index] := codebase.stringOperations.strJoin(" ", , words[A_Index]*)
         }
-        return codebase.stringOperations.strJoin(" \ ", , words*)
+        return codebase.stringOperations.strJoin(" / ", , words*)
+    }
+
+    class constants
+    {
+        /**
+         * The Unix time (seconds since midnight, January 1, 1970) `0` in YYYYMMDDHH24MISS format to use in date / time comparisons.
+         */
+        static ahkTimeZero := "19700101000000"
+        
+        /**
+         * Contains the numbers 0-9 in ascending order.
+         */
+        static numbersAsc := []
+        /**
+         * Contains the numbers 9-0 in descending order.
+         */
+        static numbersDsc := []
+        /**
+         * Contains uppercase letters A-Z (character codes 65-90) in ascending order.
+         */
+        static uppercaseAsc := []
+        /**
+         * Contains uppercase letters Z-A (character codes 90-65) in descending order.
+         */
+        static uppercaseDsc := []
+        /**
+         * Contains lowercase letters a-z (character codes 97-122) in ascending order.
+         */
+        static lowercaseAsc := []
+        /**
+         * Contains lowercase letters z-a (character codes 122-97) in descending order.
+         */
+        static lowercaseDsc := []
+
+        /**
+         * Has no value. Exists to call the function `codebase.constants._init()` which populates the following static fields:
+         * - `codebase.constants.numbersAsc`
+         * - `codebase.constants.numbersDsc`
+         * - `codebase.constants.uppercaseAsc`
+         * - `codebase.constants.uppercaseDsc`
+         * - `codebase.constants.lowercaseAsc`
+         * - `codebase.constants.lowercaseDsc`
+         */
+        static init := codebase.constants._init()
+        static _init()
+        {
+            for n in codebase.range(0, 9)
+            {
+                codebase.constants.numbersAsc.Push(n)
+                codebase.constants.numbersDsc.Push(9 - n)
+            }
+
+            for o in codebase.range(65, 90)
+            {
+                codebase.constants.lowercaseAsc.Push(Chr(32 + o))
+                codebase.constants.lowercaseDsc.Push(Chr(32 + 65 + 90 - o))
+
+                codebase.constants.uppercaseAsc.Push(Chr(o))
+                codebase.constants.uppercaseDsc.Push(Chr(65 + 90 - o))
+            }
+        }
     }
 
     /**
-     * A class to accumulate or handle run-time Errors.
+     * An object to accumulate or handle run-time Errors.
      */
     class ErrorHandler
     {
@@ -551,7 +614,7 @@ class codebase
                             break
                         }
                     }
-                    this.output(e)
+                    MsgBox(codebase.ErrorHandler.output(e))
                     Reload()
                 case codebase.ErrorHandler.suppress:
                     for t in this.types
@@ -572,7 +635,7 @@ class codebase
                             break
                         }
                     }
-                    this.output(e)
+                    MsgBox(codebase.ErrorHandler.output(e))
                     return -1
                 case codebase.ErrorHandler.rethrow:
                     for t in this.types
@@ -593,15 +656,20 @@ class codebase
                             break
                         }
                     }
-                    this.output(e)
+                    MsgBox(codebase.ErrorHandler.output(e))
                     return 1
                 case codebase.ErrorHandler.exit:
-                    this.output(e)
+                    MsgBox(codebase.ErrorHandler.output(e))
                     ExitApp(0)
             }
         }
 
-        output(e) => MsgBox(e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`n`nfrom:`t< " . e.What " >`n`n" . StrReplace(e.Stack, " : ", '`n'))
+        /**
+         * Formats the information contained in an `Error` object.
+         * @param e The `Error` object the information of which to format into a string.
+         * @returns A string with the information contained in `e`.
+         */
+        static output(e) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`n`nfrom:`t< " . e.What " >`n`n" . StrReplace(e.Stack, " : ", '`n')
 
         /**
          * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
@@ -805,7 +873,7 @@ class codebase
         readLines(maxLines := 1)
         {
             out := []
-            for in codebase.range(1, maxLines)
+            Loop maxLines
             {
                 try
                 {
@@ -1157,7 +1225,7 @@ class codebase
         static strRepeat(count, str)
         {
             ret := ""
-            for in codebase.range(1, count)
+            Loop count
             {
                 ret .= str
             }
@@ -1300,7 +1368,7 @@ class codebase
             {
                 return ret
             }
-            for in codebase.range(1, count)
+            Loop count
             {
                 ret.Push(obj)
             }
@@ -1328,19 +1396,19 @@ class codebase
         /**
          * Inputs any amount of parameters into a function separately and checks if any of their return values evaluate to `true`. As with AHKv2's `or` operators (`or` and `||`), this is programmed to short-circuit, meaning function calls are only made and return values are only evaluated up to the first one that is truthy.
          * @param f The function to pass the parameters to.
-         * @param params The parameters to pass to the function.
+         * @param args The parameters to pass to the function.
          * @throws `TypeError` if the value passed for `func` is not a `Func` object or one of its subtypes.
-         * @returns `true` if any of the return values collected by calling `func` with the parameters from `params` evaluate to `true`.
-         * @returns `false` if none of the return values collected by calling `func` with the parameters from `params` evaluates to `false`.
+         * @returns `true` if any of the return values collected by calling `func` with the parameters from `args` evaluate to `true`.
+         * @returns `false` if none of the return values collected by calling `func` with the parameters from `args` evaluates to `false`.
          */
-        static orFunc(f, params*)
+        static orFunc(f, args*)
         {
             if (!(f is Func))
             {
                 throw TypeError("Invalid type for ``func``. Received ``" . Type(f) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
             }
 
-            for p in params
+            for p in args
             {
                 if (f(p))
                 {
@@ -1371,19 +1439,19 @@ class codebase
         /**
          * Inputs any amount of parameters into a function separately and checks if any of their return values evaluate to `true`. As with AHKv2's `and` operators (`and` and `&&`), this is programmed to short-circuit, meaning function calls are only made and return values are only evaluated up to the first one that is falsey.
          * @param f The function to pass the parameters to.
-         * @param params The parameters to pass to the function.
+         * @param args The parameters to pass to the function.
          * @throws `TypeError` if the value passed for `func` is not a `Func` object or one of its subtypes.
-         * @returns `true` if all of the return values collected by calling `func` with the parameters from `params` evaluate to `true`.
-         * @returns `false` if one of the return values collected by calling `func` with the parameters from `params` evaluates to `false`.
+         * @returns `true` if all of the return values collected by calling `func` with the parameters from `args` evaluate to `true`.
+         * @returns `false` if one of the return values collected by calling `func` with the parameters from `args` evaluates to `false`.
          */
-        static andFunc(f, params*)
+        static andFunc(f, args*)
         {
             if (!(f is Func))
             {
                 throw TypeError("Invalid type for ``func``. Received ``" . Type(f) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
             }
 
-            for p in params
+            for p in args
             {
                 if (!f(p))
                 {
@@ -1391,6 +1459,24 @@ class codebase
                 }
             }
             return true
+        }
+
+        /**
+         * Returns the first truthy value in any number of input arguments or the last value if no previous value is truthy.
+         * @param args The values to step through.
+         * @returns The first truthy value in `args`.
+         * @returns The last value in `args` if no previous value is truthy.
+         */
+        static true(args*)
+        {
+            for v in args
+            {
+                if (v)
+                {
+                    return v
+                }
+            }
+            return args[args.Length]
         }
 
         /**
@@ -2062,7 +2148,10 @@ class codebase
                 comb := []
                 for searchx in arrs
                 {
-                    comb.Push(searchx*)
+                    for i in searchx
+                    {
+                        comb.Push(i)
+                    }
                 }
                 return comb
             }
@@ -4834,6 +4923,13 @@ class codebase
         }
 
         /**
+         * Determines if a directory is empty.
+         * @param The directory to search through.
+         * @returns `true` if the directory contains no other directories or files.
+         */
+        static isEmpty(dir) => !(codebase.directoryOperations.getFiles(dir, false).Length || codebase.directoryOperations.getFolders(dir, false).Length)
+
+        /**
          * Scans the files of a given directory and returns the path to the oldest file, with 'oldest' referring to creation date.
          * @param dir The directory to search through.
          * @param recurse Whether to recurse into subdirectories while conducting the search.
@@ -4873,7 +4969,7 @@ class codebase
         static getNewest(dir, recurse, filter := "")
         {
             path := ""
-            date := codebase.ahkTimeZero
+            date := codebase.constants.ahkTimeZero
 
             Loop Files dir . (filter ? "\" . filter : "\*"), (recurse ? "RF" : "F")
             {
@@ -4942,6 +5038,28 @@ class codebase
         }
     }
 
+    class windowOperations
+    {
+        /**
+         * Checks whether a window is currently being displayed on the primary monitor.
+         * @param target The window to check. Defaults to the currently active window if omitted.
+         * @returns `true` if `target`'s top-left corner is on the primary monitor, `false` otherwise.
+         */
+        static isOnPrimaryMonitor(target := unset)
+        {
+            MonitorGet(MonitorGetPrimary(), &l, &t, &r, &b)
+            WinGetPos(&x, &y, &w, &h, IsSet(target) ? target : "A")
+            if ((x < r && x > l) && (y < b && y > t))
+            {
+                return true
+            }
+            else
+            {
+                return false
+            }
+        }
+    }
+
     class convert
     {
         /**
@@ -4962,55 +5080,28 @@ class codebase
             static LP100toMPG(lp100) => 235.214583 / lp100
         }
 
-        /**
-         * Convert a given decimal number into any base. Used as a "base" (haha) for other shorthand functions such as `DecToHex()`, but can also be used on its own to convert to any other base.
-
-         * Bases 2 through 10 obviously utilize the character set `[0-9]`. Bases 11 through 37 utilize the character set `[0-9A-Z]`. Bases 38 through 63 utilize the character set `[0-9A-Za-z]`.
-
-         * Going past Base 63 is not implemented because... there's literally no more letters, but this could easily be extended beyond that, as shown in the example below. In this case, lowercase and uppercase letters DO NOT refer to the same "numeral". Except beyond Base 63, this is a very broken but technically usable decimal to any base converter.
-
-         * Despite the fact that it _should_ just normally overflow, this might unexpectedly break when numbers higher than `codebase.datatypes.Int64.max_value` are used as the decimal input, so double-check the output.
-         * @param dec The decimal number to convert.
-         * @param base The base to convert to. Must be between `2` and `63` inclusive.
-         * @param pad The desired minimal width to pad the output value with `0`'s to. Defaults to the next-higher power of 2.
-         * @param prefix A prefix to place before the initial output. Any double-reversing needed to insert this at the right place and the right way around is automatically done as part of the function. Pass this WITHOUT reversing it yourself.
-         * @param suffix A suffix to place after the initial output. Any double-reversing needed to insert this at the right place and the right way around is automatically done as part of the function. Pass this WITHOUT reversing it yourself.
-         * @throws `ValueError` if the base it outside the defined bounds.
-         * @returns The input number converted to the desired base.
-         */
-        static DecToAny(dec, base, pad := -1, prefix := "", suffix := "")
+        static DecToBase64()
         {
-            rev(p*) => codebase.stringOperations.strReverse(p*)
-
-            if (base < 2 || base > 63)
-            {
-                throw ValueError("Invalid target base. Received ``" . base . "``, expected a positive base between ``2`` and ``63``.")
-            }
-
             if (dec < 0)
             {
                 prefix := "-" . prefix
-                dec := -dec
+                dec := Abs(dec)
             }
 
             out := ""
 
             while (dec !== 0)
             {
-                rm := Mod(dec, base)
-                if (rm < 10)
+                rm := Mod(dec, 64)
+                if (rm < 26)
                 {
-                    out .= rm
+                    out .= []
                 }
                 else if (rm < 36)
                 {
                     out .= Chr(65 + (rm - 10))
                 }
-                else if (rm < 62)
-                {
-                    out .= Chr(97 + (rm - 36))
-                }
-                dec := Integer(dec / base)
+                dec := Integer(dec / 64)
             }
 
             out := StrReplace(out, "-", "")
@@ -5033,25 +5124,124 @@ class codebase
                 out .= "0"
             }
 
-            return rev(rev(suffix) . out . rev(prefix))
+            return codebase.stringOperations.strReverse(out)
         }
 
         /**
          * Convert a given decimal number into hexadecimal. The output will automatically be prepended with a "0x" to identify the number as hex.
          * @param dec The decimal number to convert.
          * @param pad The desired minimal width to pad the output value with `0`'s to. Defaults to the next-higher power of 2 if omitted.
-         * @returns The result returned by the appropriate `DecToAny()` method call.
+         * @returns `dec` converted into hexadecimal.
          */
-        static DecToHex(dec, pad := -1) => codebase.convert.DecToAny(dec, 16, pad, "0x")
+        static DecToHex(dec, pad := -1)
+        {
+            prefix := "0x"
+
+            if (dec < 0)
+            {
+                prefix := "-" . prefix
+                dec := Abs(dec)
+            }
+
+            out := ""
+
+            while (dec !== 0)
+            {
+                rm := Mod(dec, 16)
+                if (rm < 10)
+                {
+                    out .= rm
+                }
+                else if (rm < 36)
+                {
+                    out .= Chr(65 + (rm - 10))
+                }
+                dec := Integer(dec / 2)
+            }
+
+            out := StrReplace(out, "-", "")
+
+            if (pad < 0)
+            {
+                Loop
+                {
+                    if (StrLen(out) <= 2 ** (A_Index - 1))
+                    {
+                        pad := 2 ** (A_Index - 1)
+                        break
+                    }
+                }
+            }
+
+            p := pad - StrLen(out)
+            Loop (p < 0 ? 0 : p)
+            {
+                out .= "0"
+            }
+
+            return codebase.stringOperations.strReverse(out . codebase.stringOperations.strReverse(prefix))
+        }
 
         /**
          * Convert a given decimal number into binary.
          * @param dec The decimal number to convert.
          * @param pad The desired minimal width to pad the output value with `0`'s to. Defaults to the next-higher power of 2.
-         * @returns The result returned by the appropriate `DecToAny()` function call.
+         * @returns `dec` converted into binary.
          */
-        static DecToBin(dec, pad := -1) => codebase.convert.DecToAny(dec, 2, pad)
+        static DecToBin(dec, pad := -1)
+        {
+            prefix := ""
 
+            if (dec < 0)
+            {
+                prefix := "-" . prefix
+                dec := Abs(dec)
+            }
+
+            out := ""
+
+            while (dec !== 0)
+            {
+                rm := Mod(dec, 2)
+                if (rm < 10)
+                {
+                    out .= rm
+                }
+                else if (rm < 36)
+                {
+                    out .= Chr(65 + (rm - 10))
+                }
+                dec := Integer(dec / 2)
+            }
+
+            out := StrReplace(out, "-", "")
+
+            if (pad < 0)
+            {
+                Loop
+                {
+                    if (StrLen(out) <= 2 ** (A_Index - 1))
+                    {
+                        pad := 2 ** (A_Index - 1)
+                        break
+                    }
+                }
+            }
+
+            p := pad - StrLen(out)
+            Loop (p < 0 ? 0 : p)
+            {
+                out .= "0"
+            }
+
+            return codebase.stringOperations.strReverse(out . codebase.stringOperations.strReverse(prefix))
+        }
+
+        /**
+         * Convert a given binary number into decimal.
+         * @param bin The bin number to convert.
+         * @returns The input number converted into decimal.
+         */
         static BinToDec(bin)
         {
             res := 0
@@ -5105,10 +5295,10 @@ class codebase
             /**
              * Calculates the average of a series of colors.
              * @param colors The colors to average.
-             * @note The output always contains an Alpha component, even if the input colors do not. If an input color does not contain an Alpha component, it will be assumed to be `0xFF` or `255`. This will cause unexpected results if not all of the input colors have an Alpha component, so `SubStr()` the output to remove the Alpha component if you don't want it.
+             * @note The output always contains an Alpha component, even if the input colors do not. If an input color does not contain an Alpha component, it will be assumed to be `0xFF` or `255`. This will cause unexpected results if not all of the input colors have an Alpha component, so `SubStr()` the output to remove the Alpha component if it is unwanted.
              * @returns The average color.
              */
-            static avgHex(colors*)
+            static average(colors*)
             {
                 rvs := []
                 gvs := []
@@ -5134,7 +5324,10 @@ class codebase
                 g := Round(codebase.math.avg(gvs*))
                 b := Round(codebase.math.avg(bvs*))
                 a := Round(codebase.math.avg(avs*))
-                return "0x" . codebase.convert.DecToAny(r, 16, 2) . codebase.convert.DecToAny(g, 16, 2) . codebase.convert.DecToAny(b, 16, 2) . codebase.convert.DecToAny(a, 16, 2)
+                return codebase.convert.DecToHex(r, 2)
+                    . SubStr(codebase.convert.DecToHex(g, 2), 3)
+                    . SubStr(codebase.convert.DecToHex(b, 2), 3)
+                    . SubStr(codebase.convert.DecToHex(a, 2), 3)
             }
 
             static variation(color, shades)
@@ -5152,14 +5345,15 @@ class codebase
                 }
 
                 return [
-                    "0x" . codebase.convert.DecToAny(((v := r - shades) < 0 ? 0 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := g - shades) < 0 ? 0 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := b - shades) < 0 ? 0 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := a - shades) < 0 ? 0 : v), 16, 2),
-                    "0x" . codebase.convert.DecToAny(((v := r + shades) > 255 ? 255 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := g + shades) > 255 ? 255 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := b + shades) > 255 ? 255 : v), 16, 2)
-                        . codebase.convert.DecToAny( ((v := a + shades) > 255 ? 255 : v), 16, 2)
+                    "0x" . codebase.convert.DecToHex(((v := r - shades) < 0 ? 0 : v), 2)
+                        . SubStr(codebase.convert.DecToHex(((v := g - shades) < 0 ? 0 : v), 2), 3)
+                        . SubStr(codebase.convert.DecToHex(((v := b - shades) < 0 ? 0 : v), 2), 3)
+                        . SubStr(codebase.convert.DecToHex(((v := a - shades) < 0 ? 0 : v), 2), 3),
+                    color
+                    "0x" . codebase.convert.DecToHex(((v := r + shades) > 255 ? 255 : v), 2)
+                        . SubStr(codebase.convert.DecToHex(((v := g + shades) > 255 ? 255 : v), 2), 3)
+                        . SubStr(codebase.convert.DecToHex(((v := b + shades) > 255 ? 255 : v), 2), 3)
+                        . SubStr(codebase.convert.DecToHex(((v := a + shades) > 255 ? 255 : v), 2), 3)
                 ]
             }
 
@@ -5173,13 +5367,14 @@ class codebase
             static between(color, min, max) => codebase.convert.colors.exclusiveCompare(min, color) && codebase.convert.colors.exclusiveCompare(color, max)
 
             /**
-             * Compares two color values (numerically), requiring only one rgb(a) component of the comparison color to be greater than the corresponding reference color's.
+             * Compares two color values (numerically).
              * @param refColor The color to compare to.
              * @param compColor The color to compare with.
+             * @param fullExclusive If truthy, to be considered greater than `refColor`, all of `compColor`'s rgb(a) components must actually be greater than its corresponding value in `refColor`.
              * @returns `0` if `compColor` is numerically equal to `refColor`
              * @returns `1` if `compColor` is numerically greater than `refColor`, `-1` otherwise.
              */
-            static compare(refColor, compColor)
+            static compare(refColor, compColor, fullExclusive := false)
             {
                 ref := []
                 comp := []
@@ -5194,96 +5389,27 @@ class codebase
                     comp.Push(val)
                 }
 
-                bools := []
+                gt := []
+                lt := []
                 Loop ref.Length
                 {
-                    bools.Push(comp[A_Index] > ref[A_Index])
-                }
-            
-                gt := codebase.collectionOperations.or(bools*)
-
-                bools := []
-                Loop ref.Length
-                {
-                    bools.Push(comp[A_Index] < ref[A_Index])
+                    gt.Push(comp[A_Index] > ref[A_Index])
+                    lt.Push(comp[A_Index] < ref[A_Index])
                 }
 
-                lt := codebase.collectionOperations.or(bools*)
-
-                if (gt)
-                {
-                    return gt
-                }
-                else if (lt)
-                {
-                    return -lt
-                }
-                else
-                {
-                    return 0
-                }
-            }
-
-            /**
-             * Compares two color values (numerically), requiring all rgb(a) components of the comparison color to be greater than the corresponding reference color's.
-             * @param refColor The color to compare to.
-             * @param compColor The color to compare with.
-             * @returns `0` if `compColor` is numerically equal to `refColor`
-             * @returns `1` if `compColor` is numerically greater than `refColor`, `-1` otherwise.
-             */
-            static exclusiveCompare(refColor, compColor)
-            {
-                ref := []
-                comp := []
-
-                for val in codebase.convert.colors.HexToRGB(refColor)
-                {
-                    ref.Push(val)
-                }
-
-                for val in codebase.convert.colors.HexToRGB(compColor)
-                {
-                    comp.Push(val)
-                }
-
-                bools := []
-                Loop ref.Length
-                {
-                    bools.Push(comp[A_Index] >= ref[A_Index])
-                }
-            
-                gt := codebase.collectionOperations.and(bools*)
-
-                bools := []
-                Loop ref.Length
-                {
-                    bools.Push(comp[A_Index] <= ref[A_Index])
-                }
-
-                lt := codebase.collectionOperations.and(bools*)
-
-                if (gt)
-                {
-                    return gt
-                }
-                else if (lt)
-                {
-                    return -lt
-                }
-                else
-                {
-                    return 0
-                }
+                gt := (fullExclusive ? codebase.collectionOperations.and(gt*)  : codebase.collectionOperations.or(gt*))  ; Evaluates to `1` if `compColor > refColor`
+                lt := (fullExclusive ? -codebase.collectionOperations.and(lt*) : -codebase.collectionOperations.or(lt*)) ; Evaluates to `-1` if `compColor < refColor`
+                return codebase.collectionOperations.true(gt, lt, 0)
             }
 
             /**
              * Converts a color string in hex format into its `rgb` or `rgba` representation. The output only includes an alpha value if it is included in the input string.
              * @param color The hex color string to convert. Expected to be a hex string in one of the following formats:
-             * - `"0xA82"`
-             * - `"0xA82F"`
-             * - `"0xAE8623"`
-             * - `"0xAE8623FF"`
-             * @param paste Whether to return the string as a pastable string instead of an Array of values. Defaults to `false` if omitted.
+             * - `0xA82`
+             * - `0xA82F`
+             * - `0xAE8623`
+             * - `0xAE8623FF`
+             * @param paste Whether to return a pastable string instead of an Array of values. Defaults to `false` if omitted.
              * @returns The individual components of the `rgb` or `rgba` representation of the input color in an Array if `paste` is `false`.
              * @returns The input hex color represented as `rgb` or `rgba` if `paste` is `true`.
              */
@@ -5360,11 +5486,10 @@ class codebase
                     }
                 }
 
-                return "0x"
-                    . codebase.convert.DecToAny(r, 16, 2)
-                    . codebase.convert.DecToAny(g, 16, 2)
-                    . codebase.convert.DecToAny(b, 16, 2)
-                    . (IsSet(a) ? codebase.convert.DecToAny(a, 16, 2) : "")
+                return codebase.convert.DecToHex(r, 2)
+                    . SubStr(codebase.convert.DecToHex(g, 2), 3)
+                    . SubStr(codebase.convert.DecToHex(b, 2), 3)
+                    . (IsSet(a) ? SubStr(codebase.convert.DecToHex(a, 2), 3) : "")
             }
         }
     }
@@ -5379,7 +5504,7 @@ class codebase
          * @param url The URL to send the request to.
          * @param method The HTTP method to use when sending the request ("GET", "POST", "PATCH", etc.)
          * @param headers A Map object with the headers to set before sending the request.
-         * @param data The body data to send with the request. Should be a string or anything interpretable as a string or a series of bytes.
+         * @param data The body data to send with the request. Must be a string, anything interpretable as a string or a `Buffer` object.
          * @throws `TypeError` if a value for `header` is passed but not a Map object.
          * @note When passing body `data` _read from a file_, read the file using `FileRead` with the `RAW` option.
          * @returns A Map object constructed from the contents of the reponse produced by the request.

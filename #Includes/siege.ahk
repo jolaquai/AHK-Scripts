@@ -1,8 +1,9 @@
 /**
  * To check for an Operator's properties, use standard comparison operators and bitwise-and `&` and bitwise-or `|`. For example, if a `siege.Operator` (object) is stored in `op`...
  * - ...can a Hard Breach Charge _or_ a Breach Charge be chosen with this Operator? `op.gadgets & (siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.breachcharge)`
+ *
  * To check for an Operator's weapons' properties, use bitwise-and `&` and bitwise-or `|`. For example, if a `siege.Weapon` (object) is stored in `prim`...
- * - ...can a 2x, 2.5x or Russian 2.5x sight be equipped? `prim.sights & (siege.Weapon.sights.x25 | siege.Weapon.sights.x2 | siege.Weapon.sights.x25)`
+ * - ...can a 2x, 2.5x or Russian 2.5x sight be equipped? `prim.sights & (siege.Weapon.sights.x25 | siege.Weapon.sights.x2)`
  * - ...is this weapon _not_ a slug shotgun _or_ a light machine gun? `prim.type & ~(siege.Weapon.types.shotgunSlug | siege.Weapon.types.lightmachinegun)`
  */
 notes := ""

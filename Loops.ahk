@@ -404,15 +404,17 @@ millisecondMonitor()
 
     ; Dead By Daylight progress bar monitor
     static dbdLastUpdate := A_TickCount
-    static dbdprev := "0.00"
-    static dbd_ttid_1 := 19
-    static dbd_ttid_2 := 20
-    static dbd_ttid := dbd_ttid_1
-    if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
+    static dbdRate := 0.0
+    static dbdRates := []
+    static dbdPrev := "0.00"
+    static dbdTtid1 := 19
+    static dbdTtid2 := 20
+    static dbdTtid := dbdTtid1
+    if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
     {
-        if (true || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
+        if (false || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
         {
-            if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 20))
+            if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 50)) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
             {
                 ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
                 percent := Round((100 * (cx - 1671)) / 591, 2)
@@ -422,18 +424,30 @@ millisecondMonitor()
                     Round((16 * (cx - 1671)) / 591, 2) . "/16`t(Heal)",
                     Round((14 * (cx - 1671)) / 591, 2) . "/14`t(Totem)"
                 ]
-                if (percent !== dbdprev)
+
+                if (percent !== dbdPrev)
                 {
-                    ToolTip( , , , (dbd_ttid == dbd_ttid_1 ? dbd_ttid_2 : dbd_ttid_1))
+                    ; Average only the last 10 rates, discard the older ones
+                    if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
+                    {
+                        dbdRates.Push(n)
+                    }
+                    if (dbdRates.Length > 10)
+                    {
+                        dbdRates.RemoveAt(1)
+                    }
+                    try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
+
+                    ToolTip( , , , (dbdTtid == dbdTtid1 ? dbdTtid2 : dbdTtid1))
                     ToolTip(
                         codebase.stringOperations.strJoin("`n", , c*)
                             . "`n" . percent . "%"
-                            . "`t@" . Round(Abs(percent - dbdprev) / ((A_TickCount - dbdLastUpdate) / 1000), 2) . "c/s",
+                            . "`t@ ~" . dbdRate . "%/s",
                         cx, 1735 + 20,
-                        (dbd_ttid == dbd_ttid_1 ? dbd_ttid := dbd_ttid_2 : dbd_ttid := dbd_ttid_1)
+                        (dbdTtid == dbdTtid1 ? dbdTtid := dbdTtid2 : dbdTtid := dbdTtid1)
                     )
 
-                    dbdprev := percent
+                    dbdPrev := percent
                     dbdLastUpdate := A_TickCount
                 }
             }
@@ -441,7 +455,7 @@ millisecondMonitor()
     }
     else
     {
-        ToolTip( , , , (dbd_ttid == dbd_ttid_1 ? dbd_ttid_2 : dbd_ttid_1))
+        ToolTip( , , , (dbdTtid == dbdTtid1 ? dbdTtid2 : dbdTtid1))
     }
 
     /*
@@ -523,9 +537,9 @@ functions()
     for cl, c in codebase.collectionOperations.arrayOperations.arrayIndex(ahkproc)
     {
         ; More than one identical process exists! -> reahk!
-        if (Type(c) == "Array")
+        if (!IsNumber(c))
         {
-            break
+            continue
         }
 
         if (c >= 3)
@@ -536,6 +550,11 @@ functions()
             f.Close()
             Run('reAhk.bat')
         }
+    }
+
+    if (!ProcessExist("explorer.exe"))
+    {
+        Run("explorer.exe")
     }
 
     if (WinExist("Predator - Second Screen"))
@@ -775,18 +794,134 @@ slowMonitor()
 
 discordThemeUpdate()
 {
+    static theme := "
+    (
+/**
+ * @name Minimalistica
+ * @author Anvilator-dev
+ * @version v1.1.1
+ * @description Customizable theme with code from Clearvision.
+ */
+
+/* Credits to ClearVision Team for making the original theme. This theme is not made by anvilator-dev,
+   This theme was originally created by ClearVision Team.*/
+
+/* IMPORT CSS - css from Clearvision for usage*/
+@import url(https://clearvision.gitlab.io/v6/main.css);
+
+/* SETTINGS */
+:root {
+
+	/* ACCENT COLORS */
+	--main-color: rgb(255, 0, 0); /* main accent color (hex, rgb or hsl) [default: #2780e6] */
+	--hover-color: #444444; /* hover accent color (hex, rgb or hsl) [default: #1e63b3] */
+	--success-color: #43b57c; /* success accent color (hex, rgb or hsl) [default: #43b581] */
+	--danger-color: #982929; /* danger accent color (hex, rgb or hsl) [default: #982929] */	
+	--url-color: var(--main-color); /*The color of url links [default: var(--main-color)]*/
+
+	/* STATUS COLORS */
+	--online-color: #43b581; /* online status color (hex, rgb or hsl) [default: #43b581] */
+	--idle-color: #faa61a; /* idle status color (hex, rgb or hsl) [default: #faa61a] */
+	--dnd-color: #982929; /* dnd status color (hex, rgb or hsl) [default: #982929] */
+	--streaming-color: #593695; /* streaming status color (hex, rgb or hsl) [default: #593695] */
+	--offline-color: #808080; /* offline/invisible status color (hex, rgb or hsl) [default: #808080] */
+
+	/* GENERAL */
+	--main-font: "Whitney", "Helvetica Neue", "Helvetica", "Arial", sans-serif; /* main font for app (font must be installed) [default: Whitney, Helvetica Neue, Helvetica, Arial, sans-serif] */
+	--code-font: "Cascadia Code"; /* font for codeblocks (font must be installed) [default: Consolas, Liberation Mono, Menlo, Courier, monospace] */
+	--text-normal: rgb(220, 221, 222); /* color of default discord text */
+	--text-muted:  rgb(114, 118, 125); /* color of default discord muted text (e.g.text found in input fields before typing).*/
+	--channels-width: 220px; /* channel list width (240px for Discord default) [default: 220px] */
+	--members-width: 240px; /* member list width [default: 240px] */
+
+/* APP BACKGROUND */
+	--background-shading: 100%; /* app background shading (0 for complete smoothness) [default: 100%] */
+	--background-overlay: rgba(0, 0, 0, 0.6); /* app background overlay color/gradient [default: rgba(0, 0, 0, 0.6)] */
+	--background-image: url("https://c4.wallpaperflare.com/wallpaper/284/923/646/minimalism-black-loading-typography-wallpaper-preview.jpg"); /* app background image (link must be HTTPS) [default: url(https://clearvision.gitlab.io/images/sapphire.jpg)]*/
+	--background-position: center; /* app background position [default: center] */
+	--background-size: cover; /* app background size [default: cover] */
+	--background-repeat: no-repeat; /* app background repeat [default: no-repeat] */
+	--background-attachment: fixed; /* app background attachment [default: fixed] */
+	--background-brightness: 100%; /* app background brightness (< 100% for darken, > 100% for lighten) [default: 100%] */
+	--background-contrast: 100%; /* app background contrast [default: 100%] */
+	--background-saturation: 100%; /* app background saturation [default: 100%] */
+	--background-invert: 0%; /* app background invert (0 - 100%)  [default: 0%] */
+	--background-grayscale: 0%; /* app background grayscale ( 0 - 100%) [default: 0%] */
+	--background-sepia: 0%; /* app background sepia (0 - 100%) [default: 0%] */
+	--background-blur: 0px; /* app background blur [default: 0px] */
+	
+	/* HOME BUTTON ICON */
+	--home-icon: url(https://clearvision.gitlab.io/icons/discord.svg); /* home button icon (link must be HTTPS) [default: url(https://clearvision.gitlab.io/icons/discord.svg)]*/
+	--home-position: center; /* home button icon position [default: center] */
+	--home-size: 40px; /* home button icon size [default: 40px] */
+		
+	/* CHANNEL COLORS */
+	--channel-unread: var(--main-color); /* Unread Server channel color. [default:  var(--main-color)] THIS OVERRIDES YOUR MAIN COLOR*/
+	--channel-color:  rgba(255,255,255,0.3); /*Read Server channel color  [default: rgba(255,255,255,0.3);]*/
+	--channel-text-selected: #fff; /* Selected channel text color, CV default is #fff */
+	--muted-color: rgba(255,255,255,0.1); /*Muted channel color  [default: rgba(255,255,255,0.1);]*/
+	
+	/* MODAL BACKDROP */
+	--backdrop-overlay: rgba(0, 0, 0, 0.8); /* modal backdrop overlay color/gradient [default: rgba(0, 0, 0, 0.8)] */
+	--backdrop-image: var(--background-image); /* modal backdrop image (link must be HTTPS) [default: var(--background-image)] */
+	--backdrop-position: var(--background-position); /* modal backdrop position [default: var(--background-position)] */
+	--backdrop-size: var(--background-size); /* modal backdrop size [default: var(--background-size)] */
+	--backdrop-repeat: var(--background-repeat); /* modal backdrop repeat [default: var(--background-repeat)] */
+	--backdrop-attachment: var(--background-attachment); /* modal backdrop attachment [default: var(--background-attachment)] */
+	--backdrop-brightness: var(--background-brightness); /* modal backdrop brightness (< 100% for darken, > 100% for lighten) [default: var(--background-brightness)] */
+	--backdrop-contrast: var(--background-contrast); /* modal backdrop contrast [default: var(--background-contrast)] */
+	--backdrop-saturation: var(--background-saturation); /* modal backdrop saturation [default: var(--background-saturation)] */
+	--backdrop-invert: var(--background-invert); /* modal backdrop invert (0 - 100%)  [default: var(--background-invert)] */
+	--backdrop-grayscale: var(--background-grayscale); /* modal backdrop grayscale ( 0 - 100%) [default: var(--background-grayscale)] */
+	--backdrop-sepia: var(--background-sepia); /* modal backdrop sepia (0 - 100%) [default: var(--background-sepia)] */
+	--backdrop-blur: var(--background-blur); /* modal backdrop blur [default: var(--background-blur)] */
+	
+	/* USER POPOUT BACKGROUND */
+	--user-popout-image: var(--background-image); /* app background image (link must be HTTPS) [default: var(--background-image)] */
+	--user-popout-position: var(--background-position); /* user popout background position [default: var(--background-position)] */
+	--user-popout-size: var(--background-size); /* user popout background size [default: var(--background-size)] */
+	--user-popout-repeat: var(--background-repeat); /* user popout background repeat [default: var(--background-repeat)] */
+	--user-popout-attachment: var(--background-attachment); /* user popout background attachment [default: var(--background-attachment)] */
+	--user-popout-brightness: var(--background-brightness); /* user popout background brightness (< 100% for darken, > 100% for lighten) [default: var(--background-brightness)] */
+	--user-popout-contrast: var(--background-contrast); /* user popout background contrast [default: var(--background-contrast)] */
+	--user-popout-saturation: var(--background-saturation); /* user popout background saturation [default: var(--background-saturation)] */
+	--user-popout-invert: var(--background-invert); /* user popout background invert (0 - 100%) [default: var(--background-invert)] */
+	--user-popout-grayscale: var(--background-grayscale); /* user popout background grayscale (0 - 100%) [default: var(--background-grayscale)] */
+	--user-popout-sepia: var(--background-sepia); /* user popout background sepia (0 - 100%) [default: var(--background-sepia)] */
+	--user-popout-blur: calc(var(--background-blur) + 3px); /* user popout background blur [default: calc(var(--background-blur) + 3px)] */
+	--user-popout-overlay: rgba(0, 0, 0, .6); /* user popout overlay color [default: rgba(0, 0, 0, .6)] */
+	
+	/* USER MODAL BACKGROUND */
+	--user-modal-image: var(--background-image); /* app background image (link must be HTTPS) [default: var(--background-image)] */
+	--user-modal-position: var(--background-position); /* user modal background position [default: var(--background-position)] */
+	--user-modal-size: var(--background-size); /* user modal background size [default: var(--background-size)] */
+	--user-modal-repeat: var(--background-repeat); /* user modal background repeat [default: var(--background-repeat)] */
+	--user-modal-attachment: var(--background-attachment); /* user modal background attachment [default: var(--background-attachment)] */
+	--user-modal-brightness: var(--background-brightness); /* user modal background brightness (< 100% for darken, > 100% for lighten) [default: var(--background-brightness)] */
+	--user-modal-contrast: var(--background-contrast); /* user modal background contrast [default: var(--background-contrast)] */
+	--user-modal-saturation: var(--background-saturation); /* user modal background saturation [default: var(--background-saturation)] */
+	--user-modal-invert: var(--background-invert); /* user modal background invert (0 - 100%) [default: var(--background-invert)] */
+	--user-modal-grayscale: var(--background-grayscale); /* user modal background grayscale (0 - 100%) [default: var(--background-grayscale)] */
+	--user-modal-sepia: var(--background-sepia); /* user modal background sepia (0 - 100%) [default: var(--background-sepia)] */
+	--user-modal-blur: calc(var(--background-blur) + 3px); /* user modal background blur [default: calc(var(--background-blur) + 3px)] */
+	
+	/* THEME BD COLORS */
+	--bd-blue: var(--main-color); /* betterdiscord main color [default: var(--main-color)] */
+	--bd-blue-hover: var(--hover-color); /* betterdiscord hover color [default: var(--hover-color)] */
+	--bd-blue-active: var(--hover-color); /* betterdiscord active color [default: var(--hover-color)] */
+	
+	{ahkline}
+}
+    )"
+
     try
     {
-        theme := FileRead("C:\Users\User\AppData\Roaming\BetterDiscord\themes\Black Minimalistica.theme.css")
-        s := InStr(theme, '`t--background-image: /* AHK */')
+        tFile := FileOpen("C:\Users\User\AppData\Roaming\BetterDiscord\themes\Black Minimalistica.theme.css", "w")
+        tStr := String(theme)
+        codebase.stringOperations.strComposite(&tStr, { ahkline: "--background-image: url('" . codebase.requests.parseJson(FileRead("E:\YOUTUBE\ETC DATA\Snip\Snip_Metadata.json"))["album"]["images"][1]["url"] . "');" })
 
-        theme := FileOpen("C:\Users\User\AppData\Roaming\BetterDiscord\themes\Black Minimalistica.theme.css", "rw")
-        line := '`t--background-image: /* AHK */ url("{url}");`r`n}'
-        codebase.stringOperations.strComposite(&line, { url: codebase.requests.parseJson(FileRead("E:\YOUTUBE\ETC DATA\Snip\Snip_Metadata.json"))["album"]["images"][1]["url"] })
-
-        theme.Seek(s - 1, 0)
-        theme.Write(line)
-        theme.Close()
+        tFile.Write(tStr)
+        tFile.Close()
     }
 }
 
@@ -992,7 +1127,7 @@ if ((f := codebase.directoryOperations.getNewest("E:\YOUTUBE\Captures\Tom Clancy
 prio_base := 0
 prio_elv := 1
 SetTimer(slowMonitor, 10000, prio_elv)
-SetTimer(discordThemeUpdate, 2500, prio_base)
+SetTimer(discordThemeUpdate, 10000, prio_base)
 SetTimer(functions, 70, prio_base)
 SetTimer(clipFetch, 1000, prio_base)
 SetTimer(millisecondMonitor, 1, prio_base)

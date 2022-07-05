@@ -132,6 +132,7 @@ sfrapid := Rapidvar("sf")
 fnrapid := Rapidvar("fn")
 owrapid := Rapidvar("ow")
 apexrapid := Rapidvar("apex")
+f13rapid := Rapidvar("f13")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -509,6 +510,36 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Hotkeys
 
 #HotIf ; Context-insensitive hotkeys
+    <+>^ü::
+    {
+        procs := ["Launcher.exe", "RockstarErrorHandler.exe", "RockstarService.exe", "SocialClubHelper.exe", "PlayGTAV.exe"]
+        for pname in procs
+        {
+            while (ProcessClose(pname))
+            {
+                
+            }
+        }
+    }
+
+    SC002::
+    SC002 up::
+    {
+        static held := false
+
+        if (InStr(A_ThisHotkey, "up"))
+        {
+            held := false
+            return
+        }
+
+        if (!held)
+        {
+            Send("{SC002 down}{SC002 up}")
+            held := true
+        }
+    }
+
     ScrollLock::
     ^ScrollLock::
     {
@@ -630,15 +661,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+ü::
     {
-        a := ["72", "6d", "34", "47", "48", "6d", "4c", "51", "77", "3d", "45"]
-        o := ""
-        for i in a
-        {
-            o .= Chr(codebase.convert.HexToDec(i))
-        }
-
         MsgBox(A_Clipboard := codebase.elemsOut(
-            o
+            
         ))
     }
 
@@ -833,7 +857,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         {
             global chosenTime
             A_Clipboard := ""
-            A_Clipboard := DateDiff(chosenTime, codebase.ahkTimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
+            A_Clipboard := DateDiff(chosenTime, codebase.constants.ahkTimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
             if (A_Clipboard)
             {
                 codebase.Tool("Copied!")
@@ -1690,7 +1714,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
 
             Send("{Blind}{LButton}")
-            Sleep(40)
+            Sleep(Random((t := 40), t + 20))
         }
     }
 
@@ -1975,9 +1999,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
 #HotIf WinExist("ahk_exe GTA5.exe")
-    #.::
+    ^.::
     {
-        WinMove(0, 0, 3840, 2160, "ahk_exe GTA5.exe")
+        WinGetPos(&x, &y, , , "ahk_exe GTA5.exe")
+        WinMove(x, y, w := 3600, (w / 16) * 9, "ahk_exe GTA5.exe")
     }
 
     NumpadSub::
@@ -2112,6 +2137,26 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
             
             Send("y")
+            Sleep(10)
+        }
+    }
+
+#HotIf WinActive("ahk_exe SummerCamp.exe")
+    ^.::WinMove(0, 0, 3840, 2160, "ahk_exe SummerCamp.exe")
+
+    +b::f13rapid.inc()
+
+    ~e::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("E", "P") && f13rapid.is()))
+            {
+                break
+            }
+            
+            SendPlay("e")
             Sleep(10)
         }
     }
