@@ -7,9 +7,9 @@ codebase.Tool("Reloaded AutoCorrect.ahk", codebase.Tool.center, , , 15)
 
 ; ~This was first intended to be a class, but AHKv2 doesn't support using methods as SetTimer() callback functions (they are of course still function objects in the usual sense, but passing them as inputs to other functions doesn't work), which makes implementation as I intended impossible. This is likely due to AHKv2 not having any "guarantee" that the method's function object is still valid when the callback is attempted to be executed.~
 ; Turns out, though, I'm just fucking retarded and didn't know about ObjBindMethod(), so it _does_ work exactly as I wanted.
-;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
-;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
-;codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
+codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
+codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
+codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
 
 /**
  * A `Rapidvar` is basically a counter with a specific maximum value. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
@@ -545,7 +545,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        simple := true
+        simple := false
 
         n := ""
         math := codebase.math
@@ -553,7 +553,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         prob := codebase.math.probability
         mat := codebase.math.matrixComputation
 
-        arr := [ 
+        arr := [
             
         ]
 
@@ -580,11 +580,18 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
                 for op in class
                 {
-                    for w in op.primaries
+                    for w in op.secondaries
                     {
-                        if (w.type & siege.Weapon.types.marksmanrifle)
+                        if (
+                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, op.nickname, false).Length)
+                            && op.speed == 3
+                            && (
+                                   w.type & siege.Weapon.types.shotgunShot
+                                || op.gadgets & siege.Weapon.gadgets.impactgrenade
+                            )
+                        )
                         {
-                            arr.Push(op.nickname . codebase.stringOperations.strSeparator(op.nickname, 4, l) . w.name)
+                            arr.Push(op.nickname) ; . codebase.stringOperations.strSeparator(op.nickname, 4, l))
                         }
                     }
                 }
@@ -597,10 +604,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             return
         }
 
-        n := Trim(codebase.elemsOut(arr), '`n `t`r')
-
-        A_Clipboard := n
-        MsgBox(n)
+        MsgBox(A_Clipboard := SubStr(Trim(codebase.elemsOut(arr), '`n `t`r'), 9))
     }
 
     CtrlBreak::
@@ -626,48 +630,82 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         artist := StrSplit(artist, ",", " `t")[1]
         track := StrSplit(track, [" - "], " `t")[1]
 
-        artist := StrLower(RegExReplace(artist, "[^a-zA-Z]*"))
-        track := StrLower(RegExReplace(track, "[^a-zA-Z]*"))
+        artist := StrLower(RegExReplace(artist, "[^a-zA-Z]+", "-"))
+        track := StrLower(RegExReplace(track, "[^a-zA-Z]+", "-"))
 
-        Run("https://www.azlyrics.com/lyrics/" . artist . "/" . track . ".html")
+        Run("https://genius.com/" . artist . "-" . track . "-lyrics")
     }
 
     ^+ö::
-    ranscp(a)
     {
-        static n := 0
-        if (IsNumber(a))
+        cats := ["damage", "rpm", "capacity", "suppresseddamage", "dps"]
+        stat := Map(
+            "damage", 0,
+            "rpm", 0,
+            "capacity", 0,
+            "suppresseddamage", 0,
+            "dps", 0,
+        )
+
+        for op in siege.defatk
         {
-            Run("https://scp-wiki.wikidot.com/scp-" . (n + a))
+            for prim in op.primaries
+            {
+                if (prim.type & siege.Weapon.types.shotgunShot)
+                {
+                    for cat in cats
+                    {
+                        if (prim.%cat% > stat.Get(cat))
+                        {
+                            stat.Set(cat, prim.%cat%)
+                            stat.Set(cat . "name", prim.name)
+                        }
+                    }
+                }
+            }
         }
-        else
+        stats := []
+        for k, v in stat
         {
-            n := Random(1, 7000)
-            Run("https://scp-wiki.wikidot.com/scp-" . n)
+            stats.Push(k . " - " . v)
         }
+        codebase.collectionOperations.arrayOperations.arrSort(&stats, , true)
+
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            stats
+        ))
     }
-    ^!+ö::ranscp(0)
 
     ^+ä::
     {
-        SNIP := "E:\YOUTUBE\ETC DATA\Snip"
-        path := FileSelect("S 16", "C:\Users\User\Documents\cdlc\album.jpg", , "JPG Image (*.jpg)")
-        if (path == "")
-        {
-            return
-        }
-        FileCopy(SNIP . "\Snip_Artwork.jpg", path, true)
+        z1 := codebase.math.complex.Number(3, 2)
+        z2 := codebase.math.complex.Number(-3, -2)
+        z := codebase.math.complex.multiply(z1, z2)
+
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            z.real . (InStr(z.imaginary, "-") ? StrReplace(z.imaginary, "-", " - ") : " + " . z.imaginary) . "i"
+        ))
     }
 
     ^+ü::
     {
         MsgBox(A_Clipboard := codebase.elemsOut(
-            
+            codebase.escape("¯\_(ツ)_/¯")
         ))
     }
 
     ^+#::
     {
+        param := [
+            "appid=381210",
+            "key=AF18C39B1BD7ED5FF77756BAA64AD6CA",
+            "steamid=76561198313591904"
+        ]
+        urlbase := "http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?"
+        url := urlbase . codebase.stringOperations.strJoin("&", , param*)
+        r := codebase.requests.makeRequest(url, "GET").Get("ResponseText")
+        FileAppend(r, "cock.txt")
+
         MsgBox(A_Clipboard := codebase.elemsOut(
             
         ))
@@ -1208,23 +1246,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
     +b::siegerapid.inc()
-    +m::siegerapid.set(-1)
     +v::siegerapid.set(2)
-
-    ~LButton::
-    {
-        global
-        Loop
-        {
-            if (!(GetKeyState("LButton", "P") && siegerapid.is(-1)))
-            {
-                break
-            }
-
-            Send("{LAlt up}{Click}")
-            Sleep(10)
-        }
-    }
 
     ~RButton & LButton::
     {
@@ -1247,26 +1269,43 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
         }
     }
-    
-    2::
+
+    ~*1::
+    ~*XButton1::
+    ~*XButton2::
+    ~*LButton::
+    *2::
     {
-        Send("{Numpad9 down}")
-        Sleep(200)
-        while (true)
+        static nadeHeld := false
+        static nadeBtn := "Numpad9"
+        out := A_ThisHotkey
+
+        if (nadeHeld)
         {
-            if (GetKeyState("1", "P") || GetKeyState("XButton1", "P")) ; cancel
+            if (A_ThisHotkey == "*2" || InStr(A_ThisHotkey, "LButton"))
             {
-                Sleep(200)
-                Send("{Numpad9 up}")
-                break
+                out .= "`nThrowing"
             }
-            else if (GetKeyState("2", "P") || GetKeyState("LButton", "P")) ; Throw!
+            else ; if (InStr(hotkey, "XButton1") || InStr(hotkey, "XButton2") || hotkey == "~1") ; Cancel
             {
-                Send("{Numpad9 up}")
-                break
+                out .= (nadeHeld ? "`nCanceling" : "")
+                Send("{XButton1}")
             }
-            Sleep(10)
+
+            nadeHeld := false
+            Send("{" . nadeBtn . " up}")
         }
+        else
+        {
+            if (A_ThisHotkey == "*2")
+            {
+                out .= "`nHolding"
+                nadeHeld := true
+                Send("{" . nadeBtn . " down}")
+            }
+        }
+
+        codebase.Tool(out, codebase.Tool.center)
     }
 
     ~f::
@@ -1306,70 +1345,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 Send("{CapsLock down}")
             }
             capspresses := 0
-        }
-    }
-
-    F2::
-    {
-        pause()
-        {
-            if (!WinActive("ahk_exe RainbowSix.exe"))
-            {
-                Sleep(10000)
-                return 1
-            }
-            return 0
-        }
-        enter()
-        {
-            if (pause())
-            {
-                return
-            }
-
-            Send("{Enter}")
-            Sleep(1000)
-        }
-        ctrlClick()
-        {
-            if (pause())
-            {
-                return
-            }
-
-            ; Prone / Aufstehen -> weniger Hits?
-            Send("{LControl down}")
-            ; 1600x1200 !!!
-            CoordMode("Mouse", "Client")
-            ; "Retry"-Button
-            Click("986 953")
-            Click("284 783")
-            CoordMode("Mouse", "Screen")
-            Send("{LControl up}")
-            Sleep(500)
-        }
-        tab()
-        {
-            if (pause())
-            {
-                return
-            }
-
-            ; Tab drücken, um schneller zum "Bonus"-Tab zu kommen, im Scoreboard ist der Retry-Button nicht sichtbar
-            Send("{Tab}")
-            Sleep(500)
-        }
-
-        loopStart := A_TickCount
-        Loop
-        {
-            OutputDebug(codebase.formatMilliseconds(A_TickCount - loopStart) . " (~" . Round(((A_TickCount - loopStart) / (1000 * 60)) * 25, 2) . ")`n")
-            ctrlClick()
-            tab()
-            Loop 5
-            {
-                enter()
-            }
         }
     }
 

@@ -291,7 +291,7 @@ class siege
     /**
      * A class to hold information about a single weapon in the game.
      *
-     * This is never universal among all Operators; for example, there must be at least two `Weapon` objects holding information about the "Spear .308", as Finka and Thunderbird both use this weapon, but the barrel extensions they may use differ.
+     * This is never universal among all Operators; for example, there must be at least two `Weapon` objects holding information about the "SPEAR .308", as Finka and Thunderbird both use this weapon, but the barrel extensions they may use differ.
      */
     class Weapon
     {
@@ -365,9 +365,9 @@ class siege
                 "Submachine Gun", this.submachinegun,
                 "Hand Cannon", this.handcannon
             )
-            __Enum(*) => this.list.__Enum()
-            __New(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __Enum(p*) => this.list.__Enum(p*)
+            __New(*) => this.list.__Enum(1)
+            __Call(*) => this.list.__Enum(1)
         }
 
         class firingmodes
@@ -385,9 +385,9 @@ class siege
                 "Single Shot", this.singleshot,
                 "Full Auto", this.fullauto
             )
-            __Enum(*) => this.list.__Enum()
-            __New(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __Enum(p*) => this.list.__Enum(p*)
+            __New(*) => this.list.__Enum(1)
+            __Call(*) => this.list.__Enum(1)
         }
 
         /**
@@ -439,9 +439,9 @@ class siege
                 "3x", this.x3,
                 "6x/12x", this.x612
             )
-            __Enum(*) => this.list.__Enum()
-            __New(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __Enum(p*) => this.list.__Enum(p*)
+            __New(*) => this.list.__Enum(1)
+            __Call(*) => this.list.__Enum(1)
         }
 
         class barrels
@@ -474,9 +474,9 @@ class siege
                 "Muzzle Brake", this.muzzlebrake,
                 "Extended Barrel", this.extendedbarrel
             )
-            __New(*) => this.list.__Enum()
-            __Enum(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __Enum(p*) => this.list.__Enum(p*)
+            __New(*) => this.list.__Enum(1)
+            __Call(*) => this.list.__Enum(1)
         }
 
         class grips
@@ -494,9 +494,9 @@ class siege
                 "Vertical Grip", this.verticalgrip,
                 "Angled Grip", this.angledgrip
             )
-            __New(*) => this.list.__Enum()
-            __Enum(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __Enum(p*) => this.list.__Enum(p*)
+            __New(*) => this.list.__Enum(1)
+            __Call(*) => this.list.__Enum(1)
         }
 
         class gadgets
@@ -565,9 +565,9 @@ class siege
                 "Proximity Alarm", this.proximityalarm,
                 "Impact Grenade", this.impactgrenade
             )
-            __New(*) => this.list.__Enum()
-            __Enum(*) => this.list.__Enum()
-            __Call(*) => this.list.__Enum()
+            __New(*) => this.list.__Enum(1)
+            __Enum(p*) => this.list.__Enum(p*)
+            __Call(*) => this.list.__Enum(1)
         }
 
         /**
@@ -575,7 +575,7 @@ class siege
          */
         name := ""
         /**
-         * The value of a `codebase.Bitfield` object to indicate which type of weapon it is. 
+         * The value of a `codebase.Bitfield` object to indicate which type of weapon it is.
          * @note Inconsistencies like with Maverick's "AR-15.50" (which, in reality, is a so-called "Home Defense Rifle", not an "Assault Rifle" or "Marksman Rifle", despite what the game calls it) should not be and are not corrected.
          */
         type := ""
@@ -969,7 +969,7 @@ class siege
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true
-                    )
+                )
             ],
             [
                 siege.Weapon(
@@ -2761,9 +2761,9 @@ class siege
             siege.attackers.osa,
             siege.attackers.sens
         ]
-        __Enum(*) => siege.attackers.list.__Enum()
-        __New(*) => siege.attackers.list.__Enum()
-        __Call(*) => siege.attackers.list.__Enum()
+        __Enum(p*) => siege.attackers.list.__Enum(p*)
+        __New(*) => siege.attackers.list.__Enum(1)
+        __Call(*) => siege.attackers.list.__Enum(1)
     }
 
     class defenders
@@ -4789,9 +4789,9 @@ class siege
             siege.defenders.thorn,
             siege.defenders.azami
         ]
-        __Enum(*) => siege.defenders.list.__Enum()
-        __New(*) => siege.defenders.list.__Enum()
-        __Call(*) => siege.defenders.list.__Enum()
+        __Enum(p*) => siege.defenders.list.__Enum(p*)
+        __New(*) => siege.defenders.list.__Enum(1)
+        __Call(*) => siege.defenders.list.__Enum(1)
     }
 
     /**
@@ -4805,11 +4805,13 @@ class siege
 
     class challenges
     {
+        static challengeObjectiveMultiplier := 3
+
         static winRoundsWith()
         {
             s := "Win {n} rounds with {o1}, {o2}, {o3} or {o4}."
             obj := {
-                n: Random(1, 2) * 5,
+                n: Random(1, 2) * siege.challenges.challengeObjectiveMultiplier,
                 o1: siege.randomOperator(siege.attackers).op.nickname,
             }
             obj.o2 := siege.randomOperator(siege.attackers, false, [obj.o1]).op.nickname,
@@ -4818,10 +4820,8 @@ class siege
             codebase.stringOperations.strComposite(&s, obj)
             return s
         }
-
         static wepTypeElims()
         {
-            s := "Eliminate {n} opponents with {t}."
             tpe := ""
             while (tpe == "")
             {
@@ -4837,14 +4837,9 @@ class siege
                     }
                 }
             }
-            obj := {
-                n: Random(1, 2) * 5,
-                t: tpe
-            }
-            codebase.stringOperations.strComposite(&s, obj)
+            s := "Eliminate " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with " . tpe . "."
             return s
         }
-
         static orgActiveDuty()
         {
             ; Get random organization
@@ -4894,7 +4889,7 @@ class siege
             }
             obj := {
                 o: org,
-                n: Random(1, 2) * 5
+                n: Random(1, 2) * siege.challenges.challengeObjectiveMultiplier
             }
             for op in ops
             {
@@ -4903,27 +4898,26 @@ class siege
             codebase.stringOperations.strComposite(&s, obj)
             return s
         }
-
-        static role() => "Win " . Random(1, 2) * 5 . " rounds as " . (Random(1, 100) <= 50 ? "an Attacker" : "a Defender") . "."
-        static hardBreach() => "Breach " . Random(1, 3) * 5 . " reinforced walls with Thermite's Exothermic Charges, Hibana's X-KAIROs, Ace's S.E.L.M.A. Aqua Breachers or Hard Breach Charges."
-        static headshots() => "Headshot " . Random(2, 3) * 5 . " opponents."
-        static kills() => "Kill " . Random(2, 4) * 5 . " opponents."
-        static matches() => (Mod(Random(0, 100), 3) ? "Play " : "Win ") . Random(1, 2) * 5 . ((h := Random(1, 100)) <= 10 ? " Ranked" : (h <= 50 ? " Unranked" : " Casual")) . " matches."
-        static explosiveKills() => "Eliminate " . Random(1, 2) * 5 . " opponents with Impact Grenades, Nitro Cells, Frag Grenades, Fuze's Cluster Charges, Flores's RCE-Ratero Charges, Kapkan's Entry Denial Devices or Thorn's Razorbloom Shells."
-        static disorient() => "Disorient " . Random(1, 2) * 5 . " opponents with Zofia's Grzmot Grenades, Nomad's Airjabs, Echo's Yokai Sonic Burst, Ela's Grzmot Mines or Oryx's Remah Dash."
-        static stun() => "Stun " . Random(1, 2) * 5 . " opponents with Stun Grenades, Blitz's G52-Tactical Shield or Ying's Candelas."
-        static destroyObservation() => "Destroy " . Random(1, 2) * 5 . " Defender cameras, Bulletproof Cameras, Valkyrie's Black Eyes, Echo's Yokai, Maestro's Evil Eyes or drones hacked by Mozzie's Pest as an Attacker."
-        static heal() => "Heal " . Random(1, 2) * 5 . " teammates with Finka's Adrenal Surge, Doc's Stim Pistol or Thunderbird's KÓNA Stations. Revives count as 2 towards this."
-        static suppressed() => "Eliminate " . Random(2, 3) * 5 . " opponents with suppressed weapons."
-        static trapper() => "Eliminate or incapacitate " . Random(1, 2) * 5 . " opponents with Kapkan's Entry Denial Devices, Frost's Welcome Mats, Goyo's Volcán Canisters, Thorn's Razorbloom Shells or during and after they are tracked by Alibi's Primas. Eliminations count as 2 towards this."
-        static chemicalBonds() => "Eliminate, incapacitate or damage " . Random(2, 3) * 5 . " opponents with Smoke's Z8 Gas Grenades or Lesion's Gu Mines. Eliminations and incapacitations count as 2 towards this."
-        static areaDenial() => "Damage or perform area denial against " . Random(2, 3) * 5 . " opponents using Smoke's Z8 Gas Grenades, Tachanka's Shumikha Grenade Launcher, Goyo's Volcán Canisters, Capitão's Asphyxiating Bolts or Gridlock's Trax Stingers."
-        static techAttackAtk() => "Destroy, disable or render " . Random(1, 2) * 5 . " Defender gadgets useless using Thatcher's EG Mk 0-EMP Grenades, Twitch's RSD Model 1 Shock Drones, Kali's LV Explosive Lance or Zero's Argus Cameras."
-        static techAttackDef() => "Destroy, disable or render " . Random(1, 2) * 5 . " Attacker gadgets useless using Mute's GC90 Signal Disruptors, Bandit's CED-1 Shock Wires or Kaid's Rtila Electroclaws or by hacking Attacker drones using Mozzie's Pest."
-        static antiProjectile() => "Destroy " . Random(1, 2) * 5 . " Attacker projectiles using Jäger's ADS-Mk IV, Wamai's Mag-NET Systems or Aruni's Surya Gates."
-        static reveal() => "Reveal " . Random(2, 4) * 5 . " opponents by scanning them in cameras or pinging their special abilities."
-        static unauthorizedAccess() => "Hack into Defender cameras as Dokkaebi or hack an Attacker drone as Mozzie " . Random(1, 2) * 5 . " times."
-        static deployCams() => "Deploy " . Random(1, 2) * 5 . " Bulletproof Cameras, Valkyrie's Black Eyes, Maestro's Evil Eyes or Zero's Argus Cameras."
+        static antiProjectile() => "Destroy " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Attacker projectiles using Jäger's ADS-Mk IV, Wamai's Mag-NET Systems or Aruni's Surya Gates."
+        static areaDenial() => "Damage or perform area denial against " . Random(2, 3) * siege.challenges.challengeObjectiveMultiplier . " opponents using Smoke's Z8 Gas Grenades, Tachanka's Shumikha Grenade Launcher, Goyo's Volcán Canisters, Capitão's Asphyxiating Bolts or Gridlock's Trax Stingers."
+        static chemicalBonds() => "Eliminate, incapacitate or damage " . Random(2, 3) * siege.challenges.challengeObjectiveMultiplier . " opponents with Smoke's Z8 Gas Grenades or Lesion's Gu Mines. Eliminations and incapacitations count as 2 towards this."
+        static deployCams() => "Deploy " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Bulletproof Cameras, Valkyrie's Black Eyes, Maestro's Evil Eyes or Zero's Argus Cameras."
+        static destroyObservation() => "Destroy " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Defender cameras, Bulletproof Cameras, Valkyrie's Black Eyes, Echo's Yokai, Maestro's Evil Eyes or drones hacked by Mozzie's Pest as an Attacker."
+        static disorient() => "Disorient " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Zofia's Grzmot Grenades, Nomad's Airjabs, Echo's Yokai Sonic Burst, Ela's Grzmot Mines or Oryx's Remah Dash."
+        static explosiveKills() => "Eliminate " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Impact Grenades, Nitro Cells, Frag Grenades, Fuze's Cluster Charges, Flores's RCE-Ratero Charges, Kapkan's Entry Denial Devices or Thorn's Razorbloom Shells."
+        static hardBreach() => "Breach " . Random(1, 3) * siege.challenges.challengeObjectiveMultiplier . " reinforced walls with Thermite's Exothermic Charges, Hibana's X-KAIROs, Ace's S.E.L.M.A. Aqua Breachers or Hard Breach Charges."
+        static headshots() => "Headshot " . Random(2, 3) * siege.challenges.challengeObjectiveMultiplier . " opponents."
+        static heal() => "Heal " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " teammates with Finka's Adrenal Surge, Doc's Stim Pistol or Thunderbird's KÓNA Stations. Revives count as 2 towards this."
+        static kills() => "Kill " . Random(2, 4) * siege.challenges.challengeObjectiveMultiplier . " opponents."
+        static matches() => (Mod(Random(0, 100), 3) ? "Play " : "Win ") . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . ((h := Random(1, 100)) <= 10 ? " Ranked" : (h <= 50 ? " Unranked" : " Casual")) . " matches."
+        static reveal() => "Reveal " . Random(2, 4) * siege.challenges.challengeObjectiveMultiplier . " opponents by scanning them in cameras or pinging their special abilities."
+        static role() => "Win " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " rounds as " . (Random(1, 100) <= 50 ? "an Attacker" : "a Defender") . "."
+        static stun() => "Stun " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Stun Grenades, Blitz's G52-Tactical Shield or Ying's Candelas."
+        static suppressed() => "Eliminate " . Random(2, 3) * siege.challenges.challengeObjectiveMultiplier . " opponents with suppressed weapons."
+        static techAttackAtk() => "Destroy, disable or render " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Defender gadgets useless using Thatcher's EG Mk 0-EMP Grenades, Twitch's RSD Model 1 Shock Drones, Kali's LV Explosive Lance or Zero's Argus Cameras."
+        static techAttackDef() => "Destroy, disable or render " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Attacker gadgets useless using Mute's GC90 Signal Disruptors, Bandit's CED-1 Shock Wires or Kaid's Rtila Electroclaws or by hacking Attacker drones using Mozzie's Pest."
+        static trapper() => "Eliminate or incapacitate " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Kapkan's Entry Denial Devices, Frost's Welcome Mats, Goyo's Volcán Canisters, Thorn's Razorbloom Shells or during and after they are tracked by Alibi's Primas. Eliminations count as 2 towards this."
+        static unauthorizedAccess() => "Hack into Defender cameras as Dokkaebi or hack an Attacker drone as Mozzie " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " times."
 
         static weeklyChallengeSet() => codebase.stringOperations.strJoin("`n", false,
             siege.challenges.wepTypeElims(),
@@ -4934,29 +4928,29 @@ class siege
         )
 
         static list := [
-            siege.challenges.orgActiveDuty,
-            siege.challenges.winRoundsWith,
-            siege.challenges.wepTypeElims,
+            siege.challenges.antiProjectile,
+            siege.challenges.areaDenial,
+            siege.challenges.chemicalBonds,
+            siege.challenges.deployCams,
+            siege.challenges.destroyObservation,
+            siege.challenges.disorient,
+            siege.challenges.explosiveKills,
             siege.challenges.hardBreach,
             siege.challenges.headshots,
+            siege.challenges.heal,
             siege.challenges.kills,
             siege.challenges.matches,
-            siege.challenges.explosiveKills,
-            siege.challenges.disorient,
+            siege.challenges.orgActiveDuty,
+            siege.challenges.reveal,
+            siege.challenges.role,
             siege.challenges.stun,
-            siege.challenges.destroyObservation,
-            siege.challenges.heal,
             siege.challenges.suppressed,
-            siege.challenges.trapper,
-            siege.challenges.chemicalBonds,
-            siege.challenges.areaDenial,
             siege.challenges.techAttackAtk,
             siege.challenges.techAttackDef,
-            siege.challenges.antiProjectile,
-            siege.challenges.reveal,
+            siege.challenges.trapper,
             siege.challenges.unauthorizedAccess,
-            siege.challenges.deployCams,
-            siege.challenges.role,
+            siege.challenges.wepTypeElims,
+            siege.challenges.winRoundsWith,
         ]
     }
 
@@ -4985,6 +4979,7 @@ class siege
      * Gets a random Operator from one of the Operator classes and randomizes their loadout.
      * @param opClass Which class to pull an Operator from. Value must be one of the following: `siege.attackers`, `siege.defenders`.
      * @param stringOutput Whether to return a string identifying the generated loadout instead of an object with that same data. Defaults to `false` if omitted.
+     * @param omit An Array of Operator names that will cause a repick, i.e. which will be guaranteed _not_ to be returned. Defaults to none if omitted.
      * @returns An object identifying the generated loadout if `stringOutput` is falsey.
      * @returns A string identifying the generated loadout if `stringOutput` is truthy.
      */
@@ -5026,6 +5021,675 @@ class siege
             }
         }
         return op
+    }
+
+    class BattlePass extends Array
+    {
+        class Tier
+        {
+            class Reward
+            {
+                class rarities
+                {
+                    /**
+                    * Identifies a reward that has no associated rarity. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static none := codebase.Bitfield("000001").Value()
+                    /**
+                    * Identifies a common reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static common := codebase.Bitfield("000010").Value()
+                    /**
+                    * Identifies an uncommon reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static uncommon := codebase.Bitfield("000100").Value()
+                    /**
+                    * Identifies a rare reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static rare := codebase.Bitfield("001000").Value()
+                    /**
+                    * Identifies an epic reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static epic := codebase.Bitfield("010000").Value()
+                    /**
+                    * Identifies a legendary reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
+                    */
+                    static legendary := codebase.Bitfield("100000").Value()
+                }
+
+                class types
+                {
+                    /**
+                    * Identifies the Bundle reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static bundle := codebase.Bitfield("0000000000001").Value()
+                    /**
+                    * Identifies the Headgear reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static headgear := codebase.Bitfield("0000000000010").Value()
+                    /**
+                    * Identifies the Uniform reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static uniform := codebase.Bitfield("0000000000100").Value()
+                    /**
+                    * Identifies the R6 Credits reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static credits := codebase.Bitfield("0000000001000").Value()
+                    /**
+                    * Identifies the Charm reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static charm := codebase.Bitfield("0000000010000").Value()
+                    /**
+                    * Identifies the Weapon Skin reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static weapon := codebase.Bitfield("0000000100000").Value()
+                    /**
+                    * Identifies the Attachment Skin reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static attachment := codebase.Bitfield("0000001000000").Value()
+                    /**
+                    * Identifies the Card Background reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static background := codebase.Bitfield("0000010000000").Value()
+                    /**
+                    * Identifies the Operator Portrait reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static portrait := codebase.Bitfield("0000100000000").Value()
+                    /**
+                    * Identifies the Alpha Pack reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static alpha := codebase.Bitfield("0001000000000").Value()
+                    /**
+                    * Identifies the Bravo Pack reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static bravo := codebase.Bitfield("0010000000000").Value()
+                    /**
+                    * Identifies the Renown Booster reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static boosterRenown := codebase.Bitfield("0100000000000").Value()
+                    /**
+                    * Identifies the Battle Point Booster reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
+                    */
+                    static boosterBP := codebase.Bitfield("1000000000000").Value()
+                }
+
+                /**
+                 * The name of the reward item.
+                 */
+                name := ""
+                /**
+                 * The value of a `codebase.Bitfield` object to indicate which type of reward it is.
+                 */
+                type := ""
+                /**
+                 * The value of a `codebase.Bitfield` object to indicate which rarity the reward has.
+                 */
+                rarity := ""
+                /**
+                 * Any value to provide extra information about the reward. The meaning of this value depends on `this.type`:
+                 * - `siege.BattlePass.Tier.Reward.types.bundle`: An Array of further `siege.BattlePass.Tier.Reward` objects to identify the bundle's contents.
+                 * - `siege.BattlePass.Tier.Reward.types.headgear`: None.
+                 * - `siege.BattlePass.Tier.Reward.types.uniform`: None.
+                 * - `siege.BattlePass.Tier.Reward.types.credits`: The amount of R6 credits.
+                 * - `siege.BattlePass.Tier.Reward.types.charm`: None.
+                 * - `siege.BattlePass.Tier.Reward.types.weapon`: Which weapon the skin is for.
+                 * - `siege.BattlePass.Tier.Reward.types.attachment`: Which weapon the attachment skin is for. None if universal.
+                 * - `siege.BattlePass.Tier.Reward.types.background`: Which Operator the card background can be used with. None if universal.
+                 * - `siege.BattlePass.Tier.Reward.types.portrait`: Which Operator the protrait picture is for.
+                 * - `siege.BattlePass.Tier.Reward.types.alpha`: None.
+                 * - `siege.BattlePass.Tier.Reward.types.bravo`: None.
+                 * - `siege.BattlePass.Tier.Reward.types.boosterRenown`: The active duration of this booster in days.
+                 * - `siege.BattlePass.Tier.Reward.types.boosterBP`: The active duration of this booster in days.
+                 */
+                extra := ""
+
+                /**
+                 * Instantiates a new `siege.BattlePass.Tier.Reward` object.
+                 * @param name The name of the reward item.
+                 * @param typ The value of a `codebase.Bitfield` object to indicate which type of reward it is.
+                 * @param rarity The value of a `codebase.Bitfield` object to indicate which rarity the reward item has.
+                 * @param extra Any value to provide extra information about the reward. The meaning of this value depends on `this.type`.
+                 * @returns A `siege.BattlePass.Tier.Reward` object.
+                 */
+                __New(name, typ, rarity, extra)
+                {
+                    this.name := name
+                    this.type := typ
+                    this.rarity := rarity
+                    this.extra := extra
+                }
+            }
+
+            /**
+             * Instantiates a new `siege.BattlePass.Tier` object.
+             * @param free An Array of `siege.BattlePass.Tier.Reward` objects to identify the rewards of this tier for all players.
+             * @param premium An Array of `siege.BattlePass.Tier.Reward` objects to identify the rewards of this tier for players who have bought the premium Battle Pass.
+             * @returns A `siege.BattlePass.Tier` object.
+             */
+            __New(free, premium)
+            {
+                this.free := free
+                this.premium := premium
+            }
+        }
+
+        /**
+         * Instantiates a new `siege.BattlePass` object.
+         * @param tiers Any number of `siege.BattlePass.Tier` objects to identify 
+         */
+        __New(tiers*)
+        {
+            if (tiers.Length < 100)
+            {
+                MsgBox("Incomplete Battle Pass, got " . tiers.Length . " instead of 100 Tier objects.")
+            }
+            this.tiers := tiers
+        }
+
+        static Y7S2 := siege.BattlePass(
+            siege.BattlePass.Tier( ; 1
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Sens Daylight Bundle",
+                        siege.BattlePass.Tier.Reward.types.bundle,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        Array(
+                            siege.BattlePass.Tier.Reward(
+                                "Daylight Shift",
+                                siege.BattlePass.Tier.Reward.types.headgear,
+                                siege.BattlePass.Tier.Reward.rarities.rare,
+                                ""
+                            ),
+                            siege.BattlePass.Tier.Reward(
+                                "Daylight Shift",
+                                siege.BattlePass.Tier.Reward.types.uniform,
+                                siege.BattlePass.Tier.Reward.rarities.rare,
+                                ""
+                            )
+                        )
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 2
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Otorongo",
+                        siege.BattlePass.Tier.Reward.types.uniform,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.amaru
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.legendary,
+                        siege.defenders.doc
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 3
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "R6 Credits",
+                        siege.BattlePass.Tier.Reward.types.credits,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        120
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 4
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Doc",
+                        siege.BattlePass.Tier.Reward.types.charm,
+                        siege.BattlePass.Tier.Reward.rarities.uncommon,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 5
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Experimental Unit",
+                        siege.BattlePass.Tier.Reward.types.weapon,
+                        siege.BattlePass.Tier.Reward.rarities.legendary,
+                        "P90"
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 6
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Alpha Pack",
+                        siege.BattlePass.Tier.Reward.types.alpha,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Lifeline",
+                        siege.BattlePass.Tier.Reward.types.background,
+                        siege.BattlePass.Tier.Reward.rarities.legendary,
+                        siege.defenders.doc
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 7
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Jaguar Claw",
+                        siege.BattlePass.Tier.Reward.types.charm,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 8
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Experimental Unit",
+                        siege.BattlePass.Tier.Reward.types.attachment,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        "P90"
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 9
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Otorongo",
+                        siege.BattlePass.Tier.Reward.types.portrait,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.amaru
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Renown Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterRenown,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        1
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 10
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Battle Point Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterBP,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        3
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 11
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Tech",
+                        siege.BattlePass.Tier.Reward.types.weapon,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        "SG-CQB"
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 12
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        siege.attackers.sens
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 13
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolf Support",
+                        siege.BattlePass.Tier.Reward.types.charm,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 14
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Otorongo",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.amaru
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 15
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Renown Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterRenown,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        1
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 16
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "R6 Credits",
+                        siege.BattlePass.Tier.Reward.types.credits,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        120
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 17
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.portrait,
+                        siege.BattlePass.Tier.Reward.rarities.legendary,
+                        siege.defenders.doc
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 18
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Tech",
+                        siege.BattlePass.Tier.Reward.types.weapon,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        "SPEAR .308"
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 19
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Lliqlla Strips",
+                        siege.BattlePass.Tier.Reward.types.weapon,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        "G8A1"
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 20
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.uniform,
+                        siege.BattlePass.Tier.Reward.rarities.legendary,
+                        siege.defenders.doc
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 21
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Sens",
+                        siege.BattlePass.Tier.Reward.types.charm,
+                        siege.BattlePass.Tier.Reward.rarities.uncommon,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 22
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        siege.defenders.thunderbird
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 23
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.uniform,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.sens
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 24
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Alpha Pack",
+                        siege.BattlePass.Tier.Reward.types.alpha,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Renown Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterRenown,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        1
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 25
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Panthera Onca",
+                        siege.BattlePass.Tier.Reward.types.background,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.amaru
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 26
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Battle Point Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterBP,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        3
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 27
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Tech",
+                        siege.BattlePass.Tier.Reward.types.charm,
+                        siege.BattlePass.Tier.Reward.rarities.uncommon,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 28
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.uniform,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.attackers.twitch
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 29
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Tech",
+                        siege.BattlePass.Tier.Reward.types.weapon,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        "POF-9"
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 30
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        siege.defenders.clash
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Bravo Pack",
+                        siege.BattlePass.Tier.Reward.types.bravo,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 31
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.uniform,
+                        siege.BattlePass.Tier.Reward.rarities.epic,
+                        siege.defenders.thunderbird
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 32
+                [
+                    
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Wolfguard Standard",
+                        siege.BattlePass.Tier.Reward.types.headgear,
+                        siege.BattlePass.Tier.Reward.rarities.rare,
+                        siege.attackers.twitch
+                    )
+                ]
+            ),
+            siege.BattlePass.Tier( ; 33
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Alpha Pack",
+                        siege.BattlePass.Tier.Reward.types.alpha,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        ""
+                    )
+                ],
+                [
+                    siege.BattlePass.Tier.Reward(
+                        "Renown Booster",
+                        siege.BattlePass.Tier.Reward.types.boosterRenown,
+                        siege.BattlePass.Tier.Reward.rarities.none,
+                        1
+                    )
+                ]
+            )
+        )
     }
 
     class AlphaPackTracker

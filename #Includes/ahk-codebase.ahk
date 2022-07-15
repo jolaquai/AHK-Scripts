@@ -437,6 +437,8 @@ class codebase
         }
     }
 
+    static escape(str) => RegExReplace(str, "[\*_\/\\]", "\$0")
+
     /**
      * Converts each letter in a string to its equivalent in the NATO spelling alphabet.
      * @param str The string to convert.
@@ -725,8 +727,10 @@ class codebase
      */
     class Tool
     {
+        static usedToolTips := []
+
         /**
-         * Display a tooltip while having the "heavy lifting" taken care of automatically, namely removing it after a set time, as well as placement.
+         * Display a tooltip while having the "heavy lifting" taken care of automatically, namely removing it after a set time, placement and rotating through the 20 ToolTip slots available to a single running script.
          * @param text The text to be displayed.
          * @param display Which display mode to use. Value must be one of the following: `codebase.Tool.cursor`, `codebase.Tool.center`, `codebase.Tool.coords`. Defaults to `codebase.Tool.cursor` if omitted.
          * @param displayTime How many milliseconds to display the tooltip for. Defaults to `1000` if omitted.
@@ -742,7 +746,13 @@ class codebase
             yoffset := 10
             xoffset := 20
 
-            ToolTip()
+            for i in codebase.range(1, 20)
+            {
+                if (codebase.Tool.usedToolTips)
+                {
+
+                }
+            }
 
             switch (display)
             {
@@ -998,9 +1008,8 @@ class codebase
     {
         /**
          * Instantiates a new `codebase.Bitfield` object.
-         * It works like any usual bitfield.
-         * @param bits Any number of values or String which comprise the matrix.
-         * - Value mode: Any number of values (-> bits) for the `codebase.Bitfield` to hold. All passed values are translated into simple boolean values, i.e. contents of strings or numerical values are lost.
+         * @param bits
+         * - Value mode: Any number of values for the `codebase.Bitfield` to hold. All passed values are translated into simple boolean values, i.e. contents of strings or numerical values are lost.
          * - String mode: A string of any length with single digits to identify the bits the object should hold, e.g. "00010100".
          * @returns A `codebase.Bitfield` object.
          */
@@ -1129,32 +1138,32 @@ class codebase
          * Constructs a string consisting of spaces to separate one "column" of text from another.
          * @param str The current string to use when calculating the amount of padding spaces.
          * @param padding How many spaces to add in addition to the amount needed to separate the columns _exactly_. Defaults to `4` if omitted.
-         * @param strs One of the following. Defaults to `StrLen(str)` if omitted, resulting in exactly `padding` padding spaces for each string.
+         * @param extra One of the following. Defaults to `StrLen(str)` if omitted, resulting in exactly `padding` padding spaces for each string.
          * - An Array of all possible strings in the "left column".
          * - The longest string in the "left column".
          * - An integer, which is interpreted as length of the longest string in the "left column".
          * @returns A string consisting of spaces with an appropriate length to separate the columns.
          */
-        static strSeparator(str, padding := 4, strs := unset)
+        static strSeparator(str, padding := 4, extra := unset)
         {
-            if (!IsSet(strs))
+            if (!IsSet(extra))
             {
-                strs := StrLen(str)
+                extra := StrLen(str)
             }
-            else if (IsNumber(strs))
+            else if (IsNumber(extra))
             {
 
             }
-            else if (Type(strs) == "Array")
+            else if (Type(extra) == "Array")
             {
-                strs := Max(codebase.collectionOperations.arrayOperations.evaluate(StrLen, strs)*)
+                extra := Max(codebase.collectionOperations.arrayOperations.evaluate(StrLen, extra)*)
             }
             else
             {
-                strs := StrLen(strs)
+                extra := StrLen(extra)
             }
 
-            return codebase.stringOperations.strRepeat(padding + strs - StrLen(str), ' ')
+            return codebase.stringOperations.strRepeat(padding + extra - StrLen(str), ' ')
         }
 
         /**
@@ -1187,7 +1196,7 @@ class codebase
 
         /**
          * Performs a series of `StrReplace` calls on an input string with data from a Map.
-         * @param str  The string to perform the replacements on.
+         * @param str The string to perform the replacements on.
          * @param srmap A Map of search-replace pairs.
          * @returns The string with all replacements performed.
          */
@@ -1197,6 +1206,22 @@ class codebase
             for k, v in srmap
             {
                 ret := StrReplace(ret, k, v)
+            }
+            return ret
+        }
+
+        /**
+         * Performs a series of `RegExReplace` calls on an input string with data from a Map.
+         * @param str The string to perform the replacements on.
+         * @param srmap A Map of search-replace pairs.
+         * @returns The string with all replacements performed.
+         */
+        static strRegExReplace(str, srmap)
+        {
+            ret := String(str)
+            for k, v in srmap
+            {
+                ret := RegExReplace(ret, k, v)
             }
             return ret
         }
@@ -1215,11 +1240,10 @@ class codebase
         }
 
         /**
-         * Constructs a String consisting of a source repeated one or more times.
+         * Constructs a String consisting of a source string repeated one or more times.
          * @param count How many times to repeat the string.
          * @param obj The string to repeat.
-         * @note This is intended to replicate syntax such as `' ' for x in range(9)` in Python.
-         * @note This is the string equivalent of `codebase.collectionOperations.objRepeat(count, obj)`.
+         * @note This is the string equivalent of `codebase.stringOperations.strJoin('', true, codebase.collectionOperations.objRepeat(count, obj)*)` if `obj` is a string.
          * @returns The constructed string.
          */
         static strRepeat(count, str)
@@ -1280,29 +1304,47 @@ class codebase
         /**
          * Uses C#-style syntax and emulates composite string formatting to avoid having to use concatenations.
          * @param str A VarRef to the initial string to search for `{name}` patterns, where `name` is any alpha-numeric string (i.e. `IsAlpha(name)` must return `true` for every `name`).
-         * @param objs An object containing `name: value` pairs. The pattern `{name}` will be searched in `str` and replaced by the corresponding `value`.
-         * @note The amount of objects / values passed in `objs` must correspond to (or at least exceed) the amount of `{name}` patterns in `str` as `obj.Length` is used to determine how many `StrReplace()` calls will be made. Excess objects / values are discarded as their corresponding `{name}` patterns will be missing.
+         * @param objOrMap One of the following:
+         * - An object containing `name: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
+         * - A Map containing `name: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
+         * @note The amount of values in `objOrMap` must correspond to (or at least exceed) the amount of `{name}` patterns in `str` as `obj.Length` is used to determine how many `StrReplace()` calls will be made. Excess objects / values are discarded as their corresponding `{name}` patterns will be missing.
          * @note Yes, this is exactly the same as using the AHKv2-native function `Format()` with... admittedly less functionality, however, this one allows naming of the passed objects / values and the user is returned all excess objects / values that could not be inserted into `str`, possibly allowing for easier error handling?
-         * @returns `objs` with all name-value pairs removed that were successfully inserted into `str`. If `objs.OwnProps` after calling this function is not empty, there are still composite patterns (`{name}`) left in `str`.
+         * @returns `objOrMap` with all name-value or key-value pairs removed that were successfully inserted into `str`. If `objOrMap.OwnProps` or `objOrMap.Count` after calling this function is not empty, there are still composite patterns (`{name}`) left in `str`.
          */
-        static strComposite(&str, objs)
+        static strComposite(&str, objOrMap)
         {
             startingpos := 1
             while (RegExMatch(str, "\{([A-z0-9]+)\}", &match, startingpos) !== 0)
             {
                 replace := ""
-                if (objs.HasOwnProp(match[1]))
+                if (Type(objOrMap) == "Object")
                 {
-                    replace := objs.GetOwnPropDesc(match[1]).Value
-                    str := StrReplace(str, match[], replace)
-                    objs.DeleteProp(match[1])
+                    if (objOrMap.HasOwnProp(match[1]))
+                    {
+                        replace := objOrMap.GetOwnPropDesc(match[1]).Value
+                        str := StrReplace(str, match[], replace)
+                        objOrMap.DeleteProp(match[1])
+                    }
+                    else
+                    {
+                        startingpos := match.Pos + match.Len
+                    }
                 }
-                else
+                else if (Type(objOrMap) == "Map")
                 {
-                    startingpos := match.Pos + match.Len
+                    if (objOrMap.Has(match[1]))
+                    {
+                        replace := objOrMap.Get(match[1])
+                        str := StrReplace(str, match[], replace)
+                        objOrMap.Delete(match[1])
+                    }
+                    else
+                    {
+                        startingpos := match.Pos + match.Len
+                    }
                 }
             }
-            return objs
+            return objOrMap
         }
 
         /**
@@ -1357,7 +1399,7 @@ class codebase
          * Constructs an Array consisting of one value repeated one or more times.
          * @param count How many times to repeat the object.
          * @param obj The object (any value) to repeat.
-         * @note This is intended to replicate syntax such as `6 for x in range(9)` in Python.
+         * @note This is intended to replicate syntax such as `[6 for x in range(9)]` in Python.
          * @note This is the generally usable equivalent of `codebase.stringOperations.strRepeat(count, str)`, however, it compiles an Array instead of a string.
          * @returns The constructed Array.
          */
@@ -1545,31 +1587,31 @@ class codebase
               * @note This function complements `codebase.collectionOperations.mapOperations.mapIntersect`. Combining the results of the function calls `mapIntersect(map_1, map_2)` and `mapNotIntersect(map_1, map_2)` yields `map_1` extended by `map_2`'s values for the keys present in both.
               * @returns A Map with key-value pairs from `src` that are not present in any of the other Maps.
               */
-             static mapNotIntersect(src, maps*)
-             {
-                 for mp in maps
-                 {
-                     if (Type(mp) !== "Map")
-                     {
-                         throw TypeError("Invalid type for ``maps[" . A_Index . "]``. Received ``" . Type(maps[A_Index]) . "``, expected ``Map``.")
-                     }
-                 }
+            static mapNotIntersect(src, maps*)
+            {
+                for mp in maps
+                {
+                    if (Type(mp) !== "Map")
+                    {
+                        throw TypeError("Invalid type for ``maps[" . A_Index . "]``. Received ``" . Type(maps[A_Index]) . "``, expected ``Map``.")
+                    }
+                }
 
-                 out := src.Clone()
+                out := src.Clone()
 
-                 for mp in maps
-                 {
-                     for k in mp
-                     {
-                         if (out.Has(k))
-                         {
-                             out.Delete(k)
-                         }
-                     }
-                 }
- 
-                 return out
-             }
+                for mp in maps
+                {
+                    for k in mp
+                    {
+                        if (out.Has(k))
+                        {
+                            out.Delete(k)
+                        }
+                    }
+                }
+
+                return out
+            }
 
             /**
              * Compiles all keys of a Map into an Array.
@@ -1780,14 +1822,14 @@ class codebase
             }
 
             /**
-            * Checks whether an Array contains the specified item. This is basically `array.IndexOf(element)`, but finds _all_ instead of only the first instance.
-            * @param arr The Array to iterate over.
-            * @param item The item to look for.
-            * @param caseSense Whether case matters when comparing the values. Defaults to `true` if omitted.
-            * @throws `TypeError` if `arr` is not an Array.
-            * @note The return value is _always_ an Array, even if there is only one index for `item` in `arr` or it was not found at all. To check just _if_ `item` is present in `arr` at all, use the `Length` prop as an `if` condition.
-            * @returns An Array of indices.
-            */
+             * Checks whether an Array contains the specified item. This is basically `array.IndexOf(element)`, but finds _all_ instead of only the first instance.
+             * @param arr The Array to iterate over.
+             * @param item The item to look for.
+             * @param caseSense Whether case matters when comparing the values. Defaults to `true` if omitted.
+             * @throws `TypeError` if `arr` is not an Array.
+             * @note The return value is _always_ an Array, even if there is only one index for `item` in `arr` or it was not found at all. To check just _if_ `item` is present in `arr` at all, use the `Length` prop as an `if` condition.
+             * @returns An Array of indices.
+             */
             static arrayContains(arr, item, caseSense := true)
             {
                 if (Type(arr) !== "Array")
@@ -1945,11 +1987,11 @@ class codebase
             }
 
             /**
-            * Reverses the order of the items in an Array.
-            * @param arr The Array to reverse.
-            * @throws `TypeError` if `array` is not an Array.
-            * @returns The reversed array.
-            */
+             * Reverses the order of the items in an Array.
+             * @param arr The Array to reverse.
+             * @throws `TypeError` if `array` is not an Array.
+             * @returns The reversed array.
+             */
             static arrayReverse(arr)
             {
                 if (Type(arr) !== "Array")
@@ -1989,22 +2031,22 @@ class codebase
             }
 
             /**
-            * Sorts an Array.
-            *
-            * Current implementation: Quick sort (https://en.wikipedia.org/wiki/Quicksort#cite_ref-:2_16-2)
-            * @param arr A `VarRef` to the Array to be sorted.
-            * @param sortDesc Whether to sort the Array in descending order. Defaults to `false` if omitted.
-            * @param stringComp Whether to use string comparison for sorting. If omitted, the sort method will be determined automatically from the Array's contents.
-            * @param l The lower index of the range to sort. Defaults to `1` if omitted.
-            * @param r The upper index of the range to sort. Defaults to `arr.Length` if omitted.
-            * @note When `stringComp` is truthy, `StrCompare` with the `"Logical"` setting is used for sorting. The following problems arise when comparing strings containing both letters _and_ numbers, numerical strings and strings containing _only_ letters:
-            * - `"39.21"` is considered greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, _but_ `"39.21" < "39.30"`).
-            * - The above applies to mixed strings like `"a39.21"`.
-            * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision.
-            * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]`. This allows sorting floats as strings to prevent floating-point precision errors.
-            * @throws `Error` when attempting to compare strings numerically.
-            * @throws `TypeError` if `arr` is not a VarRef to an Array.
-            */
+             * Sorts an Array.
+             *
+             * Current implementation: Quick sort (https://en.wikipedia.org/wiki/Quicksort#cite_ref-:2_16-2)
+             * @param arr A `VarRef` to the Array to be sorted.
+             * @param sortDesc Whether to sort the Array in descending order. Defaults to `false` if omitted.
+             * @param stringComp Whether to use string comparison for sorting. If omitted, the sort method will be determined automatically from the Array's contents.
+             * @param l The lower index of the range to sort. Defaults to `1` if omitted.
+             * @param r The upper index of the range to sort. Defaults to `arr.Length` if omitted.
+             * @note When `stringComp` is truthy, `StrCompare` with the `"Logical"` setting is used as the sort callback function. The following problems arise when comparing strings containing both letters _and_ numbers, numerical strings and strings containing _only_ letters:
+             * - `"39.21"` is considered greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, _but_ `"39.21" < "39.30"`).
+             * - The above applies to mixed strings like `"a39.21"`.
+             * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision.
+             * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]`. This allows sorting floats as strings to prevent floating-point precision errors. To create a string from a float so that it works with this sort function, use `String(Round())` on all floats to be sorted and round them to the _same_ precision.
+             * @throws `Error` when attempting to compare strings numerically.
+             * @throws `TypeError` if `arr` is not a VarRef to an Array.
+             */
             static arrSort(&arr, sortDesc := false, stringComp := unset, l := unset, r := unset)
             {
                 if (!IsSet(l))
@@ -2104,15 +2146,15 @@ class codebase
             }
 
             /**
-            * Extracts part of an Array. Intended to replicate syntax like `arr[3:]`, `arr[:6]` or `arr[4:7]`.
-            * @param arr The Array to get a subarray from.
-            * @param start The index in `arr` of where to start extracting items. Defaults to `1` (the first item) if omitted.
-            * @param stop The index in `arr` of where to stop extracting items. Defaults to `arr.Length` (the last item) if omitted.
-            * @throws `TypeError` if `arr` is not an Array.
-            * @note An empty Array is returned if a value greater than `arr.Length` is explicitly passed for `start`.
-            * @note An empty Array is returned if `0` is explicitly passed for `stop`.
-            * @returns The subarray extracted from `arr`. This is always an Array, even if only one item is extracted.
-            */
+             * Extracts part of an Array. Intended to replicate syntax like `arr[3:]`, `arr[:6]` or `arr[4:7]`.
+             * @param arr The Array to get a subarray from.
+             * @param start The index in `arr` of where to start extracting items. Defaults to `1` (the first item) if omitted.
+             * @param stop The index in `arr` of where to stop extracting items. Defaults to `arr.Length` (the last item) if omitted.
+             * @throws `TypeError` if `arr` is not an Array.
+             * @note An empty Array is returned if a value greater than `arr.Length` is explicitly passed for `start`.
+             * @note An empty Array is returned if `0` is explicitly passed for `stop`.
+             * @returns The subarray extracted from `arr`. This is always an Array, even if only one item is extracted.
+             */
             static subarray(arr, start := 1, stop := unset)
             {
                 if (Type(arr) !== "Array")
@@ -2139,10 +2181,10 @@ class codebase
             }
 
             /**
-            * Concatenates (combines) a series of Arrays into one.
-            * @param arrs The Arrays to concatenate.
-            * @returns The items of the given `arrs` combined into one in the order they were passed.
-            */
+             * Concatenates (combines) a series of Arrays into one.
+             * @param arrs The Arrays to concatenate.
+             * @returns The items of the given `arrs` combined into one in the order they were passed.
+             */
             static arrayConcat(arrs*)
             {
                 comb := []
@@ -2157,11 +2199,11 @@ class codebase
             }
 
             /**
-            * Splits an Array into multiple subarrays with a given length.
-            * @param arr The Array to split.
-            * @param n The amount of items in each subarray. If `Mod(arr.Length, n)` is not `0`, the last Array in the return Array will contain `n - Mod(arr.Length, n)` items.
-            * @returns An Array of Arrays, each containing `n` of `arr`'s items in the same order.
-            */
+             * Splits an Array into multiple subarrays with a given length.
+             * @param arr The Array to split.
+             * @param n The amount of items in each subarray. If `Mod(arr.Length, n)` is not `0`, the last Array in the return Array will contain `n - Mod(arr.Length, n)` items.
+             * @returns An Array of Arrays, each containing `n` of `arr`'s items in the same order.
+             */
             static arraySplit(arr, n)
             {
                 split := []
@@ -2286,6 +2328,168 @@ class codebase
              * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `δ_S` if `(2a + b) / a == a / b == δ_S`.
              */
             static delta_S := 1 + Sqrt(2)
+        }
+
+        /**
+         * A class to deal with complex numbers.
+         * @note AHKv2 does not have meta-functions for simple arithmetic or similar. As such, do not attempt to perform such operations on a `codebase.math.complex.Number`, use the functions defined in this class instead.
+         */
+        class complex
+        {
+            class Number
+            {
+                /**
+                 * The real component of the complex number.
+                 */
+                real := 0
+                /**
+                 * The imaginary / complex component of the complex number.
+                 */
+                imaginary := 0
+
+                /**
+                 * Instantiates a new `codebase.math.complex.Number` object.
+                 * @param a The real component of the complex number.
+                 * @param b The imaginary / complex component of the complex number.
+                 * @note Complex numbers with complex component `b = 0` are still treated as complex by all functions in `codebase.math.complex`. This might produce unexpected results.
+                 * @returns A `codebase.math.complex.Number` object.
+                 */
+                __New(a, b)
+                {
+                    this.real := a
+                    this.imaginary := b
+                }
+            }
+
+            /**
+             * Multiplies any number of (complex) numbers.
+             * @param z The numbers to multiply.
+             * @note If none of the numbers in `z` are complex, the return value is not complex either.
+             * @returns The numbers in `z` multiplied.
+             */
+            static multiply(z*)
+            {
+                op := z.Clone()
+                a := 1
+                b := 0
+                for _z in z
+                {
+                    if (Type(_z) == "codebase.math.complex.Number")
+                    {
+                        a := _z.real
+                        b := _z.imaginary
+                        op.RemoveAt(A_Index)
+                        break
+                    }
+                }
+
+                for _z in op
+                {
+                    if (_z is Number)
+                    {
+                        a *= _z
+                        b *= _z
+                        continue
+                    }
+                    _a := (_z.real * a) - (_z.imaginary * b)
+                    _b := (_z.imaginary * a) + (_z.real * b)
+                    a := _a
+                    b := _b
+                }
+                return (b !== 0 ? codebase.math.complex.Number(a, b) : a)
+            }
+
+            /**
+             * Calculates the absolute value of a complex number, defined as the distance from the origin of the complex plane.
+             * @param z The complex number.
+             * @throws `TypeError` if `z` is not a `codebase.math.complex.Number`.
+             * @returns The distance of `z` from the origin of the complex plane.
+             */
+            static abs(z)
+            {
+                if (Type(z) !== "codebase.math.complex.Number")
+                {
+                    throw TypeError("Invalid type for ``z``. Received ``" . Type(z) . "``, expected ``codebase.math.complex.Number``.")
+                }
+
+                return Sqrt((z.real ** 2) + (z.imaginary ** 2))
+            }
+
+            /**
+             * Adds any number of (complex) numbers.
+             * @param z The numbers to add.
+             * @note If none of the numbers in `z` are complex, the return value is not complex either.
+             * @returns All numbers in `z` added up.
+             */
+            static add(z*)
+            {
+                a := 0
+                b := 0
+                for _z in z
+                {
+                    if (_z is Number)
+                    {
+                        a += _z
+                        continue
+                    }
+                    a += _z.real
+                    b += _z.imaginary
+                }
+                return (b !== 0 ? codebase.math.complex.Number(a, b) : a)
+            }
+
+            /**
+             * Subtracts any number of (complex) numbers from the first in the series.
+             * @param z The numbers to use for the calculation. The first is used as a base from which the rest will be subtracted.
+             * @note If none of the numbers in `z` are complex, the return value is not complex either.
+             * @returns The numbers `z[2]` through `z[z.Length]` subtracted from `z[1]`.
+             */
+            static subtract(z*)
+            {
+                zs := [z[1]]
+                for _z in z
+                {
+                    if (_z is Number)
+                    {
+                        zs.Push(-_z)
+                        continue
+                    }
+                    zs.Push(codebase.math.complex.Number(-_z.real, -_z.imaginary))
+                }
+                return codebase.math.complex.add(zs*)
+            }
+
+            /**
+             * Divides a (complex) number by another.
+             * @param z1 The dividend to use for the calculation.
+             * @param z2 The divisor to use for the calculation.
+             * @note If none of the numbers in `z` are complex, the return value is not complex either.
+             * @returns The result of the appropriate division method, dependent on the input types.
+             */
+            static divide(z1, z2)
+            {
+                if (z2 is Number)
+                {
+                    if (z1 is Number)
+                    {
+                        return z1 / z2
+                    }
+                    else
+                    {
+                        return codebase.math.complex.Number(
+                            z1.real / z2,
+                            z2.imaginary / z2
+                        )
+                    }
+                }
+                else
+                {
+                    return codebase.math.complex.Number(
+                        ((z1.real * z2.real) + (z1.imaginary * z2.imaginary) / ((z2.real ** 2) + (z2.imaginary ** 2))),
+                        ((z1.imaginary * z2.real) - (z1.real * z2.imaginary) / ((z2.real ** 2) + (z2.imaginary ** 2)))
+                    )
+                }
+            }
         }
 
         /**
@@ -2713,6 +2917,24 @@ class codebase
              * @returns `n`'s hyperbolic arccosecant.
              */
             static ACsch(n) => codebase.math.trig.ASinh(1 / n)
+
+            static sinc(n)
+            {
+                if (n == 0)
+                {
+                    return 1
+                }
+                return Sin(n) / n
+            }
+
+            static sincNormalized(n)
+            {
+                if (n == 0)
+                {
+                    return 1
+                }
+                return Sin(codebase.math.constants.pi * n) / (codebase.math.constants.pi * n)
+            }
         }
 
         class vectorGeometry
@@ -2740,7 +2962,7 @@ class codebase
                     }
                 }
 
-                __Enum(*) => this.asArray().__Enum()
+                __Enum(p*) => this.asArray().__Enum(p*)
 
                 /**
                  * Compiles the coordinates of the `codebase.math.vectorGeometry.Vector` object into an Array.
