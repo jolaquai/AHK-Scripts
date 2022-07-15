@@ -407,55 +407,50 @@ millisecondMonitor()
     static dbdRate := 0.0
     static dbdRates := []
     static dbdPrev := "0.00"
-    static dbdTtid1 := 19
-    static dbdTtid2 := 20
-    static dbdTtid := dbdTtid1
-    if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
+    try
     {
-        if (false || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
+        if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
         {
-            if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 50)) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+            ;if (false || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
+            if (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
             {
-                ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
-                percent := Round((100 * (cx - 1671)) / 591, 2)
-                c := [
-                    Round((80 * (cx - 1671)) / 591, 2) . "/80`t(Generator)",
-                    Round((20 * (cx - 1671)) / 591, 2) . "/20`t(Exit Gate)",
-                    Round((16 * (cx - 1671)) / 591, 2) . "/16`t(Heal)",
-                    Round((14 * (cx - 1671)) / 591, 2) . "/14`t(Totem)"
-                ]
-
-                if (percent !== dbdPrev)
+                if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 50)) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
                 {
-                    ; Average only the last 10 rates, discard the older ones
-                    if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
-                    {
-                        dbdRates.Push(n)
-                    }
-                    if (dbdRates.Length > 10)
-                    {
-                        dbdRates.RemoveAt(1)
-                    }
-                    try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
+                    ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
+                    percent := Round((100 * (cx - 1671)) / 591, 2)
+                    c := [
+                        Round((80 * (cx - 1671)) / 591, 2) . "/80`t(Generator)",
+                        Round((20 * (cx - 1671)) / 591, 2) . "/20`t(Exit Gate)",
+                        Round((16 * (cx - 1671)) / 591, 2) . "/16`t(Heal)",
+                        Round((14 * (cx - 1671)) / 591, 2) . "/14`t(Totem)"
+                    ]
 
-                    ToolTip( , , , (dbdTtid == dbdTtid1 ? dbdTtid2 : dbdTtid1))
-                    ToolTip(
-                        codebase.stringOperations.strJoin("`n", , c*)
-                            . "`n" . percent . "%"
-                            . "`t@ ~" . dbdRate . "%/s",
-                        cx, 1735 + 20,
-                        (dbdTtid == dbdTtid1 ? dbdTtid := dbdTtid2 : dbdTtid := dbdTtid1)
-                    )
+                    if (percent !== dbdPrev)
+                    {
+                        ; Average only the last 10 rates, discard the older ones
+                        if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
+                        {
+                            dbdRates.Push(n)
+                        }
+                        if (dbdRates.Length > 10)
+                        {
+                            dbdRates.RemoveAt(1)
+                        }
+                        try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
 
-                    dbdPrev := percent
-                    dbdLastUpdate := A_TickCount
+                        codebase.Tool(
+                            codebase.stringOperations.strJoin("`n", , c*)
+                                . "`n" . percent . "%"
+                                . "`t@ ~" . dbdRate . "%/s",
+                            codebase.Tool.coords, 1000, cx, 1735 + 20,
+                        )
+
+                        dbdPrev := percent
+                        dbdLastUpdate := A_TickCount
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        ToolTip( , , , (dbdTtid == dbdTtid1 ? dbdTtid2 : dbdTtid1))
     }
 
     /*
@@ -542,13 +537,16 @@ functions()
             continue
         }
 
-        if (c >= 3)
+        if (Type(c) !== "Array")
         {
-            SplitPath(A_ScriptFullPath, , &dir, , , &drv)
-            f := FileOpen('reAhk.bat', "w")
-            f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
-            f.Close()
-            Run('reAhk.bat')
+            if (c >= 3)
+            {
+                SplitPath(A_ScriptFullPath, , &dir, , , &drv)
+                f := FileOpen('reAhk.bat', "w")
+                f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
+                f.Close()
+                Run('reAhk.bat')
+            }
         }
     }
 
@@ -1114,7 +1112,7 @@ shclip_Click(*)
 
 afkshown := false
 clipshown := false
-shgui.Show("X" . searchx + w + 5 . "Y5 NoActivate")
+shgui.Show("X5 Y5 NoActivate")
 
 codebase.Tool("Reloaded Loops.ahk", true, , , 50)
 

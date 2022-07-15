@@ -15,7 +15,7 @@ codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1
  * A `Rapidvar` is basically a counter with a specific maximum value. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
  *
  * The name `Rapidvar` is a reference to "rapid firing" semi-automatic guns by making a game hotkey spam the left mouse button only if that game's `Rapidvar` is equal to some value, which is the entire reason I created `Rapidvar`s. Despite this, I've since found other use cases, such as creating a "single fire" mode for any weapon. Its uses beyond as a toggle switch for specific hotkey behaviors are rather limited.
- * @note While every `Rapidvar` has a maximum value defined at instantiation, it is not guaranteed that its current value is within the range `[0, Rapidvar.max]` as the `set()` method does not enforce the limit to allow for temporary values. This also avoids having to cycle between all _possible_ values of a `Rapidvar` to achieve a specific state. To ensure the current value stays within that range, either call the `inc()` or `dec()` methods, or use `safeset()`.
+ * @note While every `Rapidvar` has a maximum value defined at instantiation, it is not guaranteed that its current value is within the range `[0, Rapidvar.max]` as the `set` method does not enforce the limit to allow for temporary values. This also avoids having to cycle between all _possible_ values of a `Rapidvar` to achieve a specific state. To ensure the current value stays within that range, either call the `inc` or `dec` methods, or use `safeset`.
  */
 class Rapidvar
 {
@@ -562,41 +562,32 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             l := 0
             for op in siege.atkdef
             {
-                if ((name := StrLen(op.nickname)) > l)
+                for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
                 {
-                    l := name
+                    if ((name := StrLen(w.dps)) > l)
+                    {
+                        l := name
+                    }
                 }
             }
             for class in [siege.attackers(), siege.defenders()]
             {
-                if (A_Index == 1)
-                {
-                    arr.Push("[ATK]")
-                }
-                else
-                {
-                    arr.Push("`n[DEF]")
-                }
-
                 for op in class
                 {
-                    for w in op.secondaries
+                    for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
                     {
                         if (
-                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, op.nickname, false).Length)
-                            && op.speed == 3
-                            && (
-                                   w.type & siege.Weapon.types.shotgunShot
-                                || op.gadgets & siege.Weapon.gadgets.impactgrenade
-                            )
+                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
+                            && true
                         )
                         {
-                            arr.Push(op.nickname) ; . codebase.stringOperations.strSeparator(op.nickname, 4, l))
+                            arr.Push(w.dps . codebase.stringOperations.strSeparator(w.dps, 4, l) . w.name)
                         }
                     }
                 }
             }
         }
+        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
 
         if (!(arr.Length))
         {
@@ -638,74 +629,61 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+ö::
     {
-        cats := ["damage", "rpm", "capacity", "suppresseddamage", "dps"]
-        stat := Map(
-            "damage", 0,
-            "rpm", 0,
-            "capacity", 0,
-            "suppresseddamage", 0,
-            "dps", 0,
-        )
-
-        for op in siege.defatk
+        s7_2 := siege.BattlePass.Y7S2.Clone()
+        
+        for tierN in codebase.range(1, 100)
         {
-            for prim in op.primaries
+            for r in ["free", "premium"]
             {
-                if (prim.type & siege.Weapon.types.shotgunShot)
+                for rewardN in (s7_2.tiers[tierN].%r%.Length !== 0 ? codebase.range(1, s7_2.tiers[tierN].%r%.Length) : [])
                 {
-                    for cat in cats
+                    if (Type(s7_2.tiers[tierN].%r%[rewardN].extra) == "siege.Operator")
                     {
-                        if (prim.%cat% > stat.Get(cat))
-                        {
-                            stat.Set(cat, prim.%cat%)
-                            stat.Set(cat . "name", prim.name)
-                        }
+                        s7_2.tiers[tierN].%r%[rewardN].extra := s7_2.tiers[tierN].%r%[rewardN].extra.nickname
                     }
                 }
             }
         }
-        stats := []
-        for k, v in stat
-        {
-            stats.Push(k . " - " . v)
-        }
-        codebase.collectionOperations.arrayOperations.arrSort(&stats, , true)
 
         MsgBox(A_Clipboard := codebase.elemsOut(
-            stats
+            OSError(32)
         ))
     }
 
     ^+ä::
     {
-        z1 := codebase.math.complex.Number(3, 2)
-        z2 := codebase.math.complex.Number(-3, -2)
-        z := codebase.math.complex.multiply(z1, z2)
-
+        arr := [
+            "Quentin Smith",
+            "Adam Francis",
+            "Jane Romero",
+            "Felix Richter",
+            "Jill Valentine",
+            "Yoichi Asakawa"
+        ]
         MsgBox(A_Clipboard := codebase.elemsOut(
-            z.real . (InStr(z.imaginary, "-") ? StrReplace(z.imaginary, "-", " - ") : " + " . z.imaginary) . "i"
+            arr.Length,
+            ;arr[Random(1, arr.Length)]
         ))
     }
 
     ^+ü::
     {
+        static lenu := codebase.collectionOperations.arrayOperations.arrayConcat(codebase.constants.lowercaseAsc, codebase.constants.numbersAsc)
+        url := "https://prnt.sc/"
+        Loop 6
+        {
+            url .= lenu[Random(1, lenu.Length)]
+        }
+        Run(url)
+        return
+
         MsgBox(A_Clipboard := codebase.elemsOut(
-            codebase.escape("¯\_(ツ)_/¯")
+            
         ))
     }
 
     ^+#::
     {
-        param := [
-            "appid=381210",
-            "key=AF18C39B1BD7ED5FF77756BAA64AD6CA",
-            "steamid=76561198313591904"
-        ]
-        urlbase := "http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?"
-        url := urlbase . codebase.stringOperations.strJoin("&", , param*)
-        r := codebase.requests.makeRequest(url, "GET").Get("ResponseText")
-        FileAppend(r, "cock.txt")
-
         MsgBox(A_Clipboard := codebase.elemsOut(
             
         ))
@@ -781,8 +759,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         /**
          * Destroys the altgrgui's GUI window and reactivates the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
          */
         altgrgui_Exit(*)
         {
@@ -818,9 +794,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         altgrgui.OnEvent("Escape", altgrgui_Exit)
 
         /**
-         * Retrieves the command line of the previously active window by getting the `commandline` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Retrieves the command line of the previously active window by getting the `commandline` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         cmdl_Click(*)
         {
@@ -837,9 +811,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         cmdl.OnEvent("Click", cmdl_Click)
 
         /**
-         * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         exec_Click(*)
         {
@@ -854,9 +826,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         cmdl.OnEvent("Click", exec_Click)
 
         /**
-         * Sets the clipboard equal to the position of and color under the cursor before the GUI window was opened. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Sets the clipboard equal to the position of and color under the cursor before the GUI window was opened. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         mpos_Click(*)
         {
@@ -874,9 +844,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         /**
          * Retrieves the chosen time from the DateTime GUI element and sets `chosenTime` equal to it.
-         *
-         * @param obj The GUI element object that called this function. Always passed by the calling element.
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
          */
         cal_Change(obj, *)
         {
@@ -887,9 +854,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         cal.OnEvent("Change", cal_Change)
 
         /**
-         * Sets the clipboard equal to the chosen date and time as a Unix timestamp. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Sets the clipboard equal to the chosen date and time as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         calts_Click(*)
         {
@@ -907,9 +872,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         calts.OnEvent("Click", calts_Click)
 
         /**
-         * Sets the clipboard equal to the current date and time (relative to UTC) as a Unix timestamp. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Sets the clipboard equal to the current date and time (relative to UTC) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         unix0ts_Click(*)
         {
@@ -926,9 +889,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         unix0ts.OnEvent("Click", unix0ts_Click)
 
         /**
-         * Sets the clipboard equal to the chosen date and time (in the current time zone) as a Unix timestamp. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Sets the clipboard equal to the chosen date and time (in the current time zone) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         unixlts_Click(*)
         {
@@ -945,9 +906,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         unixlts.OnEvent("Click", unixlts_Click)
 
         /**
-         * Sets the clipboard equal to the absolute value (always positive) of the difference between the chosen date and time in seconds. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * Sets the clipboard equal to the absolute value (always positive) of the difference between the chosen date and time in seconds. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         tdiff_Click(*)
         {
@@ -965,9 +924,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         tdiff.OnEvent("Click", tdiff_Click)
 
         /**
-         * If ShutdownBlocker is running on the system, calls it with the `-allow` parameter per command line to allow a shutdown to be scheduled. Then calls `shutdown` per command line to schedule a shutdown of the system at the chosen timestamp. Finally calls `altgrgui_Exit()` to close the GUI window and return to the previously active window.
-         *
-         * @param * Any. These callback functions are always called with the arguments `GuiCtrlObj` and `Info`, sometimes more than this. Not allowing this function to receive arguments will cause an Error to be thrown.
+         * If ShutdownBlocker is running on the system, calls it with the `-allow` parameter per command line to allow a shutdown to be scheduled. Then calls `shutdown` per command line to schedule a shutdown of the system at the chosen timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
          */
         tdiffsd_Click(*)
         {
@@ -981,7 +938,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
             Sleep(1000)
             
-            sdtime := DateDiff(A_Now, chosenTime, "s") < 0 ? -DateDiff(A_Now, chosenTime, "s") : DateDiff(A_Now, chosenTime, "s")
+            sdtime := Abs(DateDiff(A_Now, chosenTime, "s"))
             ex := RunWait('shutdown -s -t ' . sdtime)
             
             if (!ex)
@@ -1010,7 +967,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     >+SC00C::
     {
         global
-
+ 
         input := ""
         patterns := []
 
@@ -1031,7 +988,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
         
         inputgui.Add("Text", , "Paste text to insert.`nThis may not preserve line breaks if ill-formatted.")
-        inputEdit := inputgui.Add("Edit", "r35 w500 Wantreturn")
+        inputEdit := inputgui.Add("Edit", "r35 w500 WantReturn")
 
         inputgui.Add("Text", , "Split text to new line at each occurance of this string:")
         inputSplit := inputgui.Add("Edit", "w500")
@@ -1839,6 +1796,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     */
 
     F11::Send("{w down}")
+    F1::SC002
+    Numpad1::SC002
 
     +b::rbrapid.inc()
 

@@ -55,7 +55,7 @@ scriptStartupTick := A_TickCount
 
 /**
  * An equivalent to Python's `pass` keyword. Does nothing, and exists basically just to show that defined loop introductions or similar are _supposed_ to be empty.
- * @note While I'd say it's extremely unlikely, it's technically possible that a future change in how AHKv2 works makes just writing `pass` invalid syntax, instead requiring it to be called like a regular function, i.e. `pass()`.
+ * @note While I'd say it's extremely unlikely, it's technically possible that a future change in how AHKv2 works makes just writing `pass` invalid syntax, instead requiring it to be called like a regular function, i.e. `pass`.
  */
 pass := (*) => ""
 
@@ -64,7 +64,7 @@ Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.ob
 
 /**
  * The `codebase` class containing all the subclasses and functions.
- * To make calling them easier, create function references (don't forget to `.Bind()` an empty Object for the first parameter `this`, which is _not_ implicitly passed when using references):
+ * To make calling them easier, create function references (don't forget to `.Bind` an empty Object for the first parameter `this`, which is _not_ implicitly passed when using references):
  * ```
  * arrCnt := codebase.collectionOperations.arrayOperations.arrayContains.Bind({ })
  * ```
@@ -73,8 +73,8 @@ class codebase
 {
     /**
      * Switches the values of two variables.
-     * @param var1 A VarRef to the first variable.
-     * @param var2 A VarRef to the second variable.
+     * @param var1 A `VarRef` to the first variable.
+     * @param var2 A `VarRef` to the second variable.
      */
     static switchVars(&var1, &var2)
     {
@@ -291,7 +291,7 @@ class codebase
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
      * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
-     * - Objects: The `ToString()` method is called on the object, which compiles the object's props and their values into a string.
+     * - Objects: The `ToString` method is called on the object, which compiles the object's props and their values into a string.
      * @returns An output string constructed while traversing the values in `elems`.
      */
     static elemsOut(elems*)
@@ -314,21 +314,38 @@ class codebase
             t := Type(searchy)
             if (t == "Array")
             {
-                out .= "[" . t . "]`n"
+                out .= "[" . t
                 lines := StrSplit(Trim(codebase.elemsOut(searchy*), '`n '), '`n')
-                for line in lines
+                if (lines.Length !== 0)
                 {
-                    out .= indentStr . line . "`n"
+                    out .= "]`n"
+                    for line in lines
+                    {
+                        out .= indentStr . indentStr . line . "`n"
+                    }
+                }
+                else
+                {
+                    out .= " (empty)]`n"
                 }
             }
             else if (t == "Map")
             {
-                out .= "[" . t . "]`n"
+                out .= "[" . t
+                kvpairs := ""
                 for a, b in searchy
                 {
-                    out .= indentStr . "[Key-Value pair]`n"
-                    out .= indentStr . indentStr . 'Key | ' . Trim(codebase.elemsOut(a), '`n ') . '`n'
-                    out .= indentStr . indentStr . 'Value | ' . Trim(codebase.elemsOut(b), '`n ') . '`n'
+                    kvpairs .= indentStr . "[Key-Value pair]`n"
+                    kvpairs .= indentStr . indentStr . 'Key | ' . Trim(codebase.elemsOut(a), '`n ') . '`n'
+                    kvpairs .= indentStr . indentStr . 'Value | ' . Trim(codebase.elemsOut(b), '`n ') . '`n'
+                }
+                if (lines.Length !== 0)
+                {
+                    out .= "]`n" . kvpairs
+                }
+                else
+                {
+                    out .= " (empty)]`n"
                 }
             }
             else if (t == "Func" || t == "Closure" || t == "BoundFunc")
@@ -358,7 +375,7 @@ class codebase
             }
             else if (searchy is Error)
             {
-                out .= "[Unthrown " . Type(searchy) . "]`n" . codebase.ErrorHandler.output(searchy) . "`n"
+                out .= "[Unthrown " . Type(searchy) . "]`n" . codebase.ErrorHandler.output(searchy, false) . "`n"
             }
             else if (searchy is Object)
             {
@@ -373,9 +390,13 @@ class codebase
                     out .= indentStr . line . "`n"
                 }
             }
+            else
+            {
+                throw TypeError("Invalid type for ``searchy``. Received ``" . Type(searchy) . "``, expected any handled Type.")
+            }
         }
 
-        return Trim(out, '`t `n') . "`n`n"
+        return Trim(out, '`t `n') . "`n"
     }
 
     /**
@@ -383,10 +404,10 @@ class codebase
      * @param t The millisecond value to format.
      * @param includeRaw Whether to include the original value in the return value, separated by a newline from the formatted version. Defaults to `false` if omitted.
      * @param precision How many digits to include beyond seconds by rounding the excess milliseconds.
-     * If this remaining value is less than `10`, this has no effect.
-     * If this remaining value is between `10` and `100`, this only has an effect if it is `1` or `2`.
-     * The remaining value is omitted entirely if `0` is passed and `t` is greater than `1000`.
-     * Defaults to `1` if omitted.
+     * - If this remaining value is less than `10`, this has no effect.
+     * - If this remaining value is between `10` and `100`, this only has an effect if it is `1` or `2`.
+     * - The remaining value is omitted entirely if `0` is passed and `t` is greater than `1000`.
+     * - Defaults to `1` if omitted.
      * @param suffix A suffix to append to the remaining milliseconds. Defaults to none if omitted.
      * @throws `ValueError` if precision is not between `0` and `3`.
      * @returns The formatted time value.
@@ -499,6 +520,11 @@ class codebase
         return codebase.stringOperations.strJoin(" / ", , words*)
     }
 
+    class misc
+    {
+        
+    }
+
     class constants
     {
         /**
@@ -532,7 +558,7 @@ class codebase
         static lowercaseDsc := []
 
         /**
-         * Has no value. Exists to call the function `codebase.constants._init()` which populates the following static fields:
+         * Has no value. Exists to call the function `codebase.constants._init` which populates the following static fields:
          * - `codebase.constants.numbersAsc`
          * - `codebase.constants.numbersDsc`
          * - `codebase.constants.uppercaseAsc`
@@ -573,7 +599,7 @@ class codebase
         static exit := 4
 
         /**
-         * Instantiates an an `ErrorHandler` object.
+         * Instantiates an `ErrorHandler` object.
          * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
          * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors.
          * @param mode How this `ErrorHandler` should react to an incoming error. Must be one of the following values:
@@ -669,9 +695,10 @@ class codebase
         /**
          * Formats the information contained in an `Error` object.
          * @param e The `Error` object the information of which to format into a string.
+         * @param stack Whether to include the call stack contained in the `Error` object. Defaults to true if omitted.
          * @returns A string with the information contained in `e`.
          */
-        static output(e) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`n`nfrom:`t< " . e.What " >`n`n" . StrReplace(e.Stack, " : ", '`n')
+        static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
 
         /**
          * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
@@ -680,9 +707,9 @@ class codebase
          */
         setTypes(types)
         {
-            errtypes := [
-                Error, KeyError, TypeError, IndexError, ValueError, MemberError, MemoryError, MethodError, TargetError, TimeoutError, PropertyError, ZeroDivisionError
-            ]
+            ; TODO: Update AHKv2 to 2.0-beta.6
+            ; TODO: Update Error types
+            errtypes := [Error, KeyError, TypeError, IndexError, ValueError, MemberError, MemoryError, MethodError, TargetError, TimeoutError, PropertyError, ZeroDivisionError]
 
             if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
             {
@@ -727,7 +754,7 @@ class codebase
      */
     class Tool
     {
-        static usedToolTips := []
+        static usedToolTipIds := []
 
         /**
          * Display a tooltip while having the "heavy lifting" taken care of automatically, namely removing it after a set time, placement and rotating through the 20 ToolTip slots available to a single running script.
@@ -735,23 +762,29 @@ class codebase
          * @param display Which display mode to use. Value must be one of the following: `codebase.Tool.cursor`, `codebase.Tool.center`, `codebase.Tool.coords`. Defaults to `codebase.Tool.cursor` if omitted.
          * @param displayTime How many milliseconds to display the tooltip for. Defaults to `1000` if omitted.
          * @param x The x-coordinate of where to place the tooltip. Defaults to `0` if omitted.
-         * - If `display` is `codebase.Tool.coords`, an offset of 5 is always applied to this.
+         * - If `display` is `codebase.Tool.coords`, this is used as-is.
          * - Otherwise, it is treated as an offset from the position that `display` would indicate.
          * @param y The y-coordinate of where to place the tooltip. Defaults to `0` if omitted.
-         * - If `display` is `codebase.Tool.coords`, an offset of 10 is always applied to this.
+         * - If `display` is `codebase.Tool.coords`, this is used as-is.
          * - Otherwise, it is treated as an offset from the position that `display` would indicate.
          */
         __New(text, display := 0, displayTime := 1000, x := unset, y := unset)
         {
-            yoffset := 10
-            xoffset := 20
-
+            thisId := 0
             for i in codebase.range(1, 20)
             {
-                if (codebase.Tool.usedToolTips)
+                if (!(codebase.collectionOperations.arrayOperations.arrayContains(codebase.Tool.usedToolTipIds, i).Length))
                 {
-
+                    thisId := i
+                    codebase.Tool.usedToolTipIds.Push(i)
+                    break
                 }
+            }
+            ; Failsafe: all ToolTip slots are occupied? -> override and default to the first
+            if (thisId == 0)
+            {
+                codebase.Tool.freeId(1)
+                thisId := 1
             }
 
             switch (display)
@@ -765,19 +798,30 @@ class codebase
             
             if (display == 2)
             {
-                ToolTip(text, x + xoffset, y + yoffset)
+                ToolTip(text, x, y)
             }
             else
             {
-                ToolTip(text, xo + (IsSet(x) ? x : xoffset), yo + (IsSet(y) ? y : yoffset))
+                ToolTip(text, xo + (IsSet(x) ? x : 0), yo + (IsSet(y) ? y : 0))
             }
 
-            SetTimer(() => ToolTip(), -displayTime, codebase.datatypes.Int64.max_value)
+            SetTimer(() => codebase.Tool.freeId(thisId), -displayTime, codebase.datatypes.Int64.max_value)
         }
 
         static cursor := 0
         static center := 1
         static coords := 2
+
+        /**
+         * Frees an occupied slot ID from the `codebase.Tool.usedToolTipIds` Array.
+         * @param id The ID of the slot to free.
+         * @note This should not be called manually. It is called automatically after the time specified when creating a ToolTip using `codebase.Tool`.
+         */
+        static freeId(id)
+        {
+            ToolTip(, , , id)
+            codebase.Tool.usedToolTipIds := codebase.collectionOperations.arrayOperations.remove(codebase.Tool.usedToolTipIds, [id])
+        }
     }
 
     /**
@@ -793,7 +837,7 @@ class codebase
          * - Data can be written to the output stream using the stream's write methods.
          * - Data can be read from _and_ written to the error stream using the stream's read and write methods.
          *
-         * Output streams must be closed (`this.invalidateHandles()`) or flushed (`this.flush()`) before any data is actually written from the buffers. This can be done manually and occurs automatically when the `StandardIO` object is destroyed.
+         * Output streams must be closed (`this.invalidateHandles`) or flushed (`this.flush`) before any data is actually written from the buffers. This can be done manually and occurs automatically when the `StandardIO` object is destroyed.
          *
          * By reading and tokenizing user input via `stdin`, this can be used to emulate CLI behavior.
          */
@@ -1257,7 +1301,7 @@ class codebase
         }
 
         /**
-         * Concatenates any number of input arguments into a single string. If concatenation on something other than a string or number is attempted, concatenation on the result of its `ToString()` method is performed. This may result in unexpected results due to the formatting of the result of `ToString()`.
+         * Concatenates any number of input arguments into a single string. If concatenation on something other than a string or number is attempted, concatenation on the result of its `ToString` method is performed. This may result in unexpected results due to the formatting of the result of `ToString`.
          * @param strs The strings to concatenate.
          * @returns The concatenated string.
          */
@@ -1276,7 +1320,7 @@ class codebase
         }
 
         /**
-         * Joins a number of strings into a single string with a separator in between. This separator is not present at the end of the string. If concatenation on something other than a string or number is attempted, concatenation on the result of its `ToString()` method is performed. This may result in unexpected results due to the formatting of the result of `ToString()`.
+         * Joins a number of strings into a single string with a separator in between. This separator is not present at the end of the string. If concatenation on something other than a string or number is attempted, concatenation on the result of its `ToString` method is performed. This may result in unexpected results due to the formatting of the result of `ToString`.
          * @param sep The separator to use between the strings.
          * @param insertEmpty Whether to insert the separator if an empty string is encountered.
          * @param strs The strings to join with `sep`.
@@ -1303,12 +1347,12 @@ class codebase
 
         /**
          * Uses C#-style syntax and emulates composite string formatting to avoid having to use concatenations.
-         * @param str A VarRef to the initial string to search for `{name}` patterns, where `name` is any alpha-numeric string (i.e. `IsAlpha(name)` must return `true` for every `name`).
+         * @param str A `VarRef` to the initial string to search for `{name}` patterns, where `name` is any alpha-numeric string (i.e. `IsAlpha(name)` must return `true` for every `name`).
          * @param objOrMap One of the following:
          * - An object containing `name: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
-         * - A Map containing `name: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
-         * @note The amount of values in `objOrMap` must correspond to (or at least exceed) the amount of `{name}` patterns in `str` as `obj.Length` is used to determine how many `StrReplace()` calls will be made. Excess objects / values are discarded as their corresponding `{name}` patterns will be missing.
-         * @note Yes, this is exactly the same as using the AHKv2-native function `Format()` with... admittedly less functionality, however, this one allows naming of the passed objects / values and the user is returned all excess objects / values that could not be inserted into `str`, possibly allowing for easier error handling?
+         * - A Map containing `key: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
+         * @note The amount of values in `objOrMap` must correspond to (or at least exceed) the amount of `{name}` patterns in `str` as `obj.Length` is used to determine how many `StrReplace` calls will be made. Excess objects / values are discarded as their corresponding `{name}` patterns will be missing.
+         * @note Yes, this is exactly the same as using the AHKv2-native function `Format` with... admittedly less functionality, however, this one allows naming of the passed objects / values and the user is returned all excess objects / values that could not be inserted into `str`, possibly allowing for easier error handling?
          * @returns `objOrMap` with all name-value or key-value pairs removed that were successfully inserted into `str`. If `objOrMap.OwnProps` or `objOrMap.Count` after calling this function is not empty, there are still composite patterns (`{name}`) left in `str`.
          */
         static strComposite(&str, objOrMap)
@@ -1660,7 +1704,7 @@ class codebase
 
             /**
              * Adds the key-value pairs of any number of maps to an initial Map.
-             * @param src A VarRef to the Map to add the following Maps to.
+             * @param src A `VarRef` to the Map to add the following Maps to.
              * @param overwrite Whether to overwrite existing key-value pairs in the initial Map if the key is present in any of the following Maps.
              * @param append Any number of maps to add to `src`.
              * @returns `true` if any changes were made to `src`.
@@ -1681,19 +1725,33 @@ class codebase
                 {
                     for k, v in m
                     {
-                        if (src.Has(k))
-                        {
-                            if (overwrite)
-                            {
-                                src.Set(k, v)
-                                changed := true
-                            }
-                        }
-                        else
+                        if (!(src.Has(k)) || overwrite)
                         {
                             src.Set(k, v)
                             changed := true
                         }
+                    }
+                }
+
+                return changed
+            }
+
+            /**
+             * Expands a Map by adding its inverse's key-value pairs to itself.
+             * @param src A `VarRef` to the Map to add its inverse's data to.
+             * @param overwrite Whether to overwrite existing key-value pairs in the initial Map if the key is present in any of the following Maps.
+             * @returns `true` if any changes were made to `src`.
+             * @returns `false` if no changes were made to `src`.
+             */
+            static mapExpand(&src, overwrite)
+            {
+                changed := false
+                for k, v in codebase.collectionOperations.mapOperations.mapInvert(src)
+                {
+                    if (!(src.Has(k)) || overwrite)
+                    {
+                        src.Set(k, v)
+                        changed := true
                     }
                 }
 
@@ -1726,6 +1784,7 @@ class codebase
              * Shifts an Array's elements, removing specific elements.
              * @param arr The Array to iterate over.
              * @param elems An Array of elements to remove from `arr`.
+             * @note This removes _elements_ from `arr` matching ones in `elems`, _not_ indices.
              * @returns An Array with the same elements as `arr`, but with any elements matching the ones in `elems` removed.
              */
             static remove(arr, elems)
@@ -1758,6 +1817,23 @@ class codebase
                 }
 
                 return arr
+            }
+
+            /**
+             * Shifts an Array's elements, removing elements at specific indices.
+             * @param arr The Array to iterate over.
+             * @param i An Array of indices to remove elements from `arr` at.
+             * @note This removes _indices_ from `arr`, _not_ specific elements.
+             * @returns An Array with the same elements as `arr`, but with elements at the indices in `i` removed.
+             */
+            static removeAt(arr, i)
+            {
+                cpy := arr.Clone()
+                for _i in i
+                {
+                    cpy[_i] := "REM"
+                }
+                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
             }
 
             /**
@@ -1805,15 +1881,16 @@ class codebase
              * Shifts an Array's elements, removing elements based on the return value of a function.
              * @param arr The Array to iterate over.
              * @param f The function to use when determining which elements to remove. Expected return values are:
-             * - Any value evaluating to `true`: the element is kept.
-             * - Any value evaluating to `false`: the element is removed.
+             * - Any value evaluating to `true`: the element is removed.
+             * - Any value evaluating to `false`: the element is kept.
+             * @returns `arr` with all elements removed that `f` returned `true` for.
              */
             static removeFunction(arr, f)
             {
                 cpy := arr.Clone()
                 for val in arr
                 {
-                    if (!f(val))
+                    if (f(val))
                     {
                         cpy[A_Index] := "REM"
                     }
@@ -1855,7 +1932,7 @@ class codebase
              * @param item The item to look for.
              * @param caseSense Whether case matters when comparing the values. Defaults to `true` if omitted.
              * @throws `TypeError` if `arr` is not an Array.
-             * @note If an element in `arr` cannot be interpreted as a string or numerical string, its `ToString()` method is called. If this _also_ fails, the element is skipped and considered not to contain `item`.
+             * @note If an element in `arr` cannot be interpreted as a string or numerical string, its `ToString` method is called. If this _also_ fails, the element is skipped and considered not to contain `item`.
              * @returns An Array of indices if `item` was found in one or more elements of `arr`. This is always an Array, even if `item` is present in an element of `arr` only once.
              * @returns An empty Array if `item` was not found.
              */
@@ -2045,7 +2122,7 @@ class codebase
              * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision.
              * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]`. This allows sorting floats as strings to prevent floating-point precision errors. To create a string from a float so that it works with this sort function, use `String(Round())` on all floats to be sorted and round them to the _same_ precision.
              * @throws `Error` when attempting to compare strings numerically.
-             * @throws `TypeError` if `arr` is not a VarRef to an Array.
+             * @throws `TypeError` if `arr` is not a `VarRef` to an Array.
              */
             static arrSort(&arr, sortDesc := false, stringComp := unset, l := unset, r := unset)
             {
@@ -2747,6 +2824,35 @@ class codebase
         class trig
         {
             /**
+             * The rest of the `codebase.math.trig` class is a lot more useful, I promise.
+             */
+            class misc
+            {
+                /**
+                 * Creates a sine and cosine function that, when provided with arguments in a specific range, return coordinates that define an ellipse around given input coordinates.
+                 * @param x The `x`-coordinate of the point the two functions should define an ellipse around.
+                 * @param y The `y`-coordinate of the point the two functions should define an ellipse around.
+                 * @param rSin The factor to use for the sine function, corresponding to the horizontal radius of the ellipse.
+                 * @param rCos The factor to use for the cosine function, corresponding to the vertical radius of the ellipse. Defaults to `rSin` if omitted, making the ellipse a circle.
+                 * @param resolution How many "degrees" constitute a full rotation around the point `x, y`. Defaults to `360` if omitted.
+                 * @note May also be used for linear instead of elliptical or circular movement by using only one of the output functions.
+                 * @returns An object in the pattern `{ sin: Func(1), cos: Func(1) }`.
+                 */
+                static ellipseAround(x, y, rSin, rCos := unset, resolution := 360)
+                {
+                    if (!IsSet(rCos))
+                    {
+                        rCos := rSin
+                    }
+
+                    return {
+                        sin: (this, d) => rSin * Sin((d / resolution) * (2 * codebase.math.constants.pi)) + x,
+                        cos: (this, d) => rCos * (-Cos((d / resolution) * (2 * codebase.math.constants.pi))) + y
+                    }
+                }
+            }
+
+            /**
              * Returns the inverse function (`f^-1` / `arcf`) to one of the trig functions.
              * @param trigFunc A trig function. Value must be one of the following:
              * - `Sin`
@@ -2780,7 +2886,7 @@ class codebase
                     codebase.math.trig.Sech, codebase.math.trig.ASech,
                     codebase.math.trig.Csch, codebase.math.trig.ACsch
                 )
-                codebase.collectionOperations.mapOperations.mapCombine(&retMap, codebase.collectionOperations.mapOperations.mapInvert(retMap))
+                codebase.collectionOperations.mapOperations.mapCombine(&retMap, true, codebase.collectionOperations.mapOperations.mapInvert(retMap))
                 
                 try
                 {
@@ -2983,7 +3089,7 @@ class codebase
                  * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `1` and ≤ `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
-                 * @note If any of the vectors' dimension is not equal to the `Max()` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
+                 * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
                  * @returns The scalar product of the vectors in `vs`.
                  */
                 scalarProduct(vs*) => codebase.math.vectorGeometry.scalarProduct(this, vs*)
@@ -3272,7 +3378,7 @@ class codebase
              * @param pv The position Vector of a point on the line.
              * @param dv The direction Vector to indicate where the line runs.
              * @throws `ValueError` if `dv` is a null Vector, as `pv` and `dv` would not define a line in this case.
-             * @note The return object should not be _expected_ to have a specific number of props as the direction Vector `dv` might have one or more coordinates equal to `0`. As such, it should only be iterated over using an object's `OwnProps()` method, _unless_ the passed direction Vector is _ensured_ to possess a specific expected number of intersections with the coordinate planes.
+             * @note The return object should not be _expected_ to have a specific number of props as the direction Vector `dv` might have one or more coordinates equal to `0`. As such, it should only be iterated over using an object's `OwnProps` method, _unless_ the passed direction Vector is _ensured_ to possess a specific expected number of intersections with the coordinate planes.
              * @returns An object, with at least one of the props `x2x3`, `x1x3` and `x1x2`, each with the props `x1`, `x2` and `x3` for the coordinates of the points.
              */
             static planeIntersections(pv, dv)
@@ -3383,7 +3489,7 @@ class codebase
              * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
-             * @note If any of the vectors' dimension is not equal to the `Max()` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
+             * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
              * @returns A truthy value if the vectors in `vs` are linearly dependent.
              * @returns A falsey value if the vectors in `vs` are linearly independent.
              */
@@ -3502,7 +3608,7 @@ class codebase
              * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
-             * @note If any of the vectors' dimension is not equal to the `Max()` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
+             * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
              * @returns The scalar product of the vectors in `vs`.
              */
             static scalarProduct(vs*)
@@ -5517,7 +5623,7 @@ class codebase
             /**
              * Calculates the average of a series of colors.
              * @param colors The colors to average.
-             * @note The output always contains an Alpha component, even if the input colors do not. If an input color does not contain an Alpha component, it will be assumed to be `0xFF` or `255`. This will cause unexpected results if not all of the input colors have an Alpha component, so `SubStr()` the output to remove the Alpha component if it is unwanted.
+             * @note The output always contains an Alpha component, even if the input colors do not. If an input color does not contain an Alpha component, it will be assumed to be `0xFF` or `255`. This will cause unexpected results if not all of the input colors have an Alpha component, so `SubStr` the output to remove the Alpha component if it is unwanted.
              * @returns The average color.
              */
             static average(colors*)
