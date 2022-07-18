@@ -591,6 +591,7 @@ class codebase
      */
     class ErrorHandler
     {
+        static custom := -2
         static reload := -1
         static suppress := 0
         static notify := 1
@@ -603,6 +604,7 @@ class codebase
          * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
          * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors.
          * @param mode How this `ErrorHandler` should react to an incoming error. Must be one of the following values:
+         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue. The stipulations for this return value are the same as for any other `OnError` callback function.
          * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
          * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
          * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
@@ -611,15 +613,19 @@ class codebase
          * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
          * @returns An `ErrorHandler` object.
          */
-        __New(types := unset, mode := 1)
+        __New(types?, mode := 1, custom?)
         {
             OnError(this.handle.Bind(this), 1)
 
-            this.mode := ""
-            this.types := []
-
             this.setTypes(types)
             this.setMode(mode)
+            if (IsSet(custom))
+            {
+                if (custom is Func)
+                {
+                    this.customFunc := custom
+                }
+            }
 
             this.errs := []
         }
@@ -633,6 +639,8 @@ class codebase
         {
             switch (this.mode)
             {
+                case codebase.ErrorHandler.custom:
+                    return this.customFunc(e)
                 case codebase.ErrorHandler.reload:
                     for t in this.types
                     {
@@ -707,9 +715,8 @@ class codebase
          */
         setTypes(types)
         {
-            ; TODO: Update AHKv2 to 2.0-beta.6
-            ; TODO: Update Error types
-            errtypes := [Error, KeyError, TypeError, IndexError, ValueError, MemberError, MemoryError, MethodError, TargetError, TimeoutError, PropertyError, ZeroDivisionError]
+            ; `UnsetError` and `UnsetItemError` are not in the extensions yet
+            errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
 
             if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
             {
@@ -722,6 +729,7 @@ class codebase
         /**
          * Changes how this `ErrorHandler` should react to an incoming error.
          * @param mode One of the following values:
+         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` object to a passed function, the return value of which dictates whether execution may continue.
          * - `codebase.ErrorHandler.reload`: Collect errors and notify the user of them. Even if the error would allow it, stop execution and reload the script.
          * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
          * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle it. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
@@ -732,6 +740,7 @@ class codebase
         setMode(mode)
         {
             modes := [
+                codebase.ErrorHandler.custom,
                 codebase.ErrorHandler.reload,
                 codebase.ErrorHandler.suppress,
                 codebase.ErrorHandler.notify,
@@ -768,7 +777,7 @@ class codebase
          * - If `display` is `codebase.Tool.coords`, this is used as-is.
          * - Otherwise, it is treated as an offset from the position that `display` would indicate.
          */
-        __New(text, display := 0, displayTime := 1000, x := unset, y := unset)
+        __New(text, display := 0, displayTime := 1000, x?, y?)
         {
             thisId := 0
             for i in codebase.range(1, 20)
@@ -1188,7 +1197,7 @@ class codebase
          * - An integer, which is interpreted as length of the longest string in the "left column".
          * @returns A string consisting of spaces with an appropriate length to separate the columns.
          */
-        static strSeparator(str, padding := 4, extra := unset)
+        static strSeparator(str, padding := 4, extra?)
         {
             if (!IsSet(extra))
             {
@@ -2124,7 +2133,7 @@ class codebase
              * @throws `Error` when attempting to compare strings numerically.
              * @throws `TypeError` if `arr` is not a `VarRef` to an Array.
              */
-            static arrSort(&arr, sortDesc := false, stringComp := unset, l := unset, r := unset)
+            static arrSort(&arr, sortDesc := false, stringComp?, l?, r?)
             {
                 if (!IsSet(l))
                 {
@@ -2232,7 +2241,7 @@ class codebase
              * @note An empty Array is returned if `0` is explicitly passed for `stop`.
              * @returns The subarray extracted from `arr`. This is always an Array, even if only one item is extracted.
              */
-            static subarray(arr, start := 1, stop := unset)
+            static subarray(arr, start := 1, stop?)
             {
                 if (Type(arr) !== "Array")
                 {
@@ -2743,7 +2752,7 @@ class codebase
              * @param iter The amount of iterations to perform. As the N-R method delivers a precise-enough answer relatively quickly (and AutoHotkey usually can't handle values more precise than are returned after this), defaults to `6` if omitted.
              * @returns An Array with all steps of the approximation. The first element is `guess` itself, the last element (index `[-1]`) is the value after `iter` approximations.
              */
-            static newtonRaphson(n, r, guess := unset, iter := 6)
+            static newtonRaphson(n, r, guess?, iter := 6)
             {
                 if (!IsSet(guess))
                 {
@@ -2838,7 +2847,7 @@ class codebase
                  * @note May also be used for linear instead of elliptical or circular movement by using only one of the output functions.
                  * @returns An object in the pattern `{ sin: Func(1), cos: Func(1) }`.
                  */
-                static ellipseAround(x, y, rSin, rCos := unset, resolution := 360)
+                static ellipseAround(x, y, rSin, rCos?, resolution := 360)
                 {
                     if (!IsSet(rCos))
                     {
@@ -3989,7 +3998,7 @@ class codebase
                  * @param stop The row to stop extracting at.
                  * @returns An Array of Vectors, each containing the elements of a column.
                  */
-                getVectors(start := 1, stop := unset)
+                getVectors(start := 1, stop?)
                 {
                     v := []
                     for j in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
@@ -4148,7 +4157,7 @@ class codebase
                  * @param stop The row to stop extracting at.
                  * @returns An Array of Arrays, each sub-Array containing the elements of a row.
                  */
-                getRows(start := 1, stop := unset)
+                getRows(start := 1, stop?)
                 {
                     out := []
                     for j in codebase.range(start, IsSet(stop) ? stop : this.dim.y)
@@ -4183,7 +4192,7 @@ class codebase
                  * @param stop The row to stop extracting at.
                  * @returns An Array of Arrays, each sub-Array containing the elements of a column.
                  */
-                getColumns(start := 1, stop := unset)
+                getColumns(start := 1, stop?)
                 {
                     out := []
                     for j in codebase.range(start, IsSet(stop) ? stop : this.dim.x)
@@ -4827,7 +4836,7 @@ class codebase
              * @param upper The inclusive upper bound for calculating the cumulative probability. Defaults to `k` if omitted.
              * @returns The probability of getting between `lower` and `upper` hits in `n` trials.
              */
-            static specificChanceCumulative(n, k, lower := 0, upper := unset)
+            static specificChanceCumulative(n, k, lower := 0, upper?)
             {
                 if (!IsSet(upper))
                 {
@@ -5104,7 +5113,7 @@ class codebase
              * - `remove`: A file is removed from the directory.
              * @returns A `codebase.directoryOperations.DirectoryMonitor` object.
              */
-            __New(path, interval := 10000, callbacks := unset)
+            __New(path, interval := 10000, callbacks?)
             {
                 this.firstRun := true
 
@@ -5157,7 +5166,7 @@ class codebase
                 this.disable()
             }
 
-            enable(interval := unset)
+            enable(interval?)
             {
                 if (IsSet(interval))
                 {
@@ -5373,7 +5382,7 @@ class codebase
          * @param target The window to check. Defaults to the currently active window if omitted.
          * @returns `true` if `target`'s top-left corner is on the primary monitor, `false` otherwise.
          */
-        static isOnPrimaryMonitor(target := unset)
+        static isOnPrimaryMonitor(target?)
         {
             MonitorGet(MonitorGetPrimary(), &l, &t, &r, &b)
             WinGetPos(&x, &y, &w, &h, IsSet(target) ? target : "A")
@@ -5792,7 +5801,7 @@ class codebase
              * @param a The alpha component of the color to convert. Defaults to `unset` if omitted.
              * @returns The input `rgb` or `rgba` color represented as a hex string string.
              */
-            static RGBToHex(r, g, b, a := unset)
+            static RGBToHex(r, g, b, a?)
             {
                 if (r < 0 || r > 255)
                 {
@@ -5837,7 +5846,7 @@ class codebase
          * @note When passing body `data` _read from a file_, read the file using `FileRead` with the `RAW` option.
          * @returns A Map object constructed from the contents of the reponse produced by the request.
          */
-        static makeRequest(url, method, headers := unset, data := unset)
+        static makeRequest(url, method, headers?, data?)
         {
             if (IsSet(headers))
             {

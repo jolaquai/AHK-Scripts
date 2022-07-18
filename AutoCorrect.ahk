@@ -665,6 +665,28 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             ;arr[Random(1, arr.Length)]
         ))
     }
+    
+    ^!+ä::
+    {
+        m := Map(
+            "Jill Valentine",   10,
+            "Yoichi Asakawa",    3,
+            "Steve Harrington",  3,
+            "Quentin Smith",     3,
+            "Nancy Wheeler",     3,
+            "Felix Richter",     3,
+            "Adam Francis",      3
+        )
+        arr := []
+        for n, v in m
+        {
+            arr.Push(71 - v . " - " . n)
+        }
+        codebase.collectionOperations.arrayOperations.arrSort(&arr)
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            arr
+        ))
+    }
 
     ^+ü::
     {
@@ -1400,7 +1422,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
 
             Send("{Space}")
-            Sleep(680)
+            Sleep(620)
         }
     }
     

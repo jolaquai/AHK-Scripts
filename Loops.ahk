@@ -532,12 +532,7 @@ functions()
     for cl, c in codebase.collectionOperations.arrayOperations.arrayIndex(ahkproc)
     {
         ; More than one identical process exists! -> reahk!
-        if (!IsNumber(c))
-        {
-            continue
-        }
-
-        if (Type(c) !== "Array")
+        try
         {
             if (c >= 3)
             {
@@ -1125,7 +1120,7 @@ if ((f := codebase.directoryOperations.getNewest("E:\YOUTUBE\Captures\Tom Clancy
 prio_base := 0
 prio_elv := 1
 SetTimer(slowMonitor, 10000, prio_elv)
-SetTimer(discordThemeUpdate, 10000, prio_base)
+; SetTimer(discordThemeUpdate, 10000, prio_base)
 SetTimer(functions, 70, prio_base)
 SetTimer(clipFetch, 1000, prio_base)
 SetTimer(millisecondMonitor, 1, prio_base)
