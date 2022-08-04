@@ -3,38 +3,32 @@
 
 clipProcess(type)
 {
-    static prev := "a"
-    static curr := "b"
     static changed := false
 
-    if (type !== 1)
+    if (type !== 1 || changed)
     {
+        changed := false
         return
     }
 
-    curr := A_Clipboard
-
-    if (prev == curr)
+    if (InStr(A_Clipboard, "open.spotify.com") && RegExMatch(A_Clipboard, "\?.*=") && !InStr(A_Clipboard, "spotify:"))
     {
-        A_Clipboard := prev
-        prev := ""
-        return
-    }
-
-    if (InStr(A_Clipboard, "open.spotify.com") && RegExMatch(A_Clipboard, "\?.*="))
-    {
-        A_Clipboard := RegExReplace(A_Clipboard, "\?.*", "")
         changed := true
+        str := RegExReplace(A_Clipboard, "\?.*", "")
+        A_Clipboard := str . "`n" . StrReplace(StrReplace(StrReplace(str,
+            "https://", "spotify:"),
+            "/", ":"),
+            "open.spotify.com", "")
     }
     else if (InStr(A_Clipboard, "cdn.discordapp.com/avatars") && RegExMatch(A_Clipboard, "webp(\?size=).*"))
     {
-        A_Clipboard := RegExReplace(A_Clipboard, "webp(\?size=).*", "png$1" . 4096)
         changed := true
+        A_Clipboard := RegExReplace(A_Clipboard, "webp(\?size=).*", "png$1" . 4096)
     }
     else if (InStr(A_Clipboard, "www.youtube.com/watch?v="))
     {
-        A_Clipboard := StrReplace(A_Clipboard, "www.youtube.com/watch?v=", "youtu.be/")
         changed := true
+        A_Clipboard := StrReplace(A_Clipboard, "www.youtube.com/watch?v=", "youtu.be/")
     }
     else if (InStr(A_Clipboard, "steamcommunity.com") || InStr(A_Clipboard, "store.steampowered.com"))
     {
@@ -44,43 +38,9 @@ clipProcess(type)
         }
         else
         {
+            changed := true
             A_Clipboard := "steam://openurl/" . A_Clipboard
-            changed := true
         }
-
-        /*
-        if (InStr(A_Clipboard, "https://steamcommunity.com/sharedfiles/filedetails/?id="))
-        {
-            A_Clipboard := StrReplace(A_Clipboard, "https://steamcommunity.com/sharedfiles/filedetails/?id=", "steam://url/CommunityFilePage/")
-            changed := true
-        }
-        else if (InStr(A_Clipboard, "https://store.steampowered.com/app/"))
-        {
-            A_Clipboard := RegExReplace(A_Clipboard, ".*app/([0-9]+).*", "steam://store/${1}")
-            changed := true
-        }
-        else
-        {
-            A_Clipboard := "steam://openurl/" . A_Clipboard
-            changed := true
-        }
-        */
-    }
-    else if (InStr(A_Clipboard, "open.spotify.com"))
-    {
-        A_Clipboard := StrReplace(StrReplace(A_Clipboard, "https://open.spotify.com/", "spotify:"), "/", ":")
-        changed := true
-    }
-    else if (InStr(A_Clipboard, "roblox.com/games") && RegExMatch(A_Clipboard, "\?.*="))
-    {
-        A_Clipboard := RegExReplace(A_Clipboard, "\?.*", "")
-        changed := true
-    }
-
-    if (changed)
-    {
-        prev := curr
-        changed := false
     }
 }
 OnClipboardChange(clipProcess)
@@ -152,6 +112,8 @@ sendAfk(exe := "")
     }
     else if (exe == "RobloxPlayerBeta.exe")
     {
+        Send("{Space}")
+        return
         Send("{w down}")
         Sleep(490)
         Send("{s down}{w up}{Click}")
@@ -210,7 +172,7 @@ sendAfk(exe := "")
     }
 }
 
-millisecondMonitor()
+fastMonitor()
 {
     global
     str := ""
@@ -316,13 +278,9 @@ millisecondMonitor()
     {
         if (WinActive("ahk_exe RobloxPlayerBeta.exe"))
         {
-            col := PixelGetColor(2985, 1903)
-            for c in ["0xF09D59", "0xF1A363", "0xF1A161", "0xF1A262", "0xF1A160"]
+            if (PixelGetColor(3266, 1712) == "D82533")
             {
-                if (col == c)
-                {
-                    Click("3000 1903")
-                }
+                Click("3266 1712")
             }
 
             robloxWasActive := 0
@@ -403,52 +361,64 @@ millisecondMonitor()
     */
 
     ; Dead By Daylight progress bar monitor
+    static WIDTH := 0
+    static HEIGHT := 0
+    if (WIDTH == 0 || HEIGHT == 0)
+    {
+        MonitorGet(MonitorGetPrimary(), , , &WIDTH, &HEIGHT)
+    }
+
+    X1 := Floor(1671 * (WIDTH / 3840))
+    Y1 := Floor(1735 * (HEIGHT / 2160))
+    X2 := Floor(2262 * (WIDTH / 3840))
+    PB_WIDTH := X2 - X1
+
     static dbdLastUpdate := A_TickCount
     static dbdRate := 0.0
     static dbdRates := []
     static dbdPrev := "0.00"
     try
     {
-        if (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
+        if (
+               (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
+            && (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
+            && PixelSearch(&cx, &cy, X1, Y1, X2, Y1, "0x3C4347", 50) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+        )
         {
-            ;if (false || PixelSearch(&cx, &cy, 1599, 1731, 1599, 1731, "0xFFFFFF", 10) || PixelSearch(&cx, &cy, 1921, 1718, 1921, 1718, "0x1B2121", 10)) ; White hand next to progress bar || Border progress bar
-            if (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
+            ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
+            percent := Round((100 * (cx - X1)) / PB_WIDTH, 2)
+            c := [
+                Round((90 * (cx - X1)) / PB_WIDTH, 2) . "/90`t[Gen]",
+                Round((32 * (cx - X1)) / PB_WIDTH, 2) . "/32`t[Recover]",
+                Round((20 * (cx - X1)) / PB_WIDTH, 2) . "/20`t[Gate]",
+                Round((16 * (cx - X1)) / PB_WIDTH, 2) . "/16`t[Heal]",
+                Round((12 * (cx - X1)) / PB_WIDTH, 2) . "/12`t[Self Mend]",
+                Round((14 * (cx - X1)) / PB_WIDTH, 2) . "/14`t[Totem]",
+                Round(( 8 * (cx - X1)) / PB_WIDTH, 2)  . "/8`t[Mend]"
+            ]
+
+            if (percent !== dbdPrev)
             {
-                if (PixelSearch(&cx, &cy, 1671, 1735, 2262, 1735, "0x3C4347", 50)) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+                ; Average only the last 10 rates, discard the older ones
+                if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
                 {
-                    ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
-                    percent := Round((100 * (cx - 1671)) / 591, 2)
-                    c := [
-                        Round((80 * (cx - 1671)) / 591, 2) . "/80`t(Generator)",
-                        Round((20 * (cx - 1671)) / 591, 2) . "/20`t(Exit Gate)",
-                        Round((16 * (cx - 1671)) / 591, 2) . "/16`t(Heal)",
-                        Round((14 * (cx - 1671)) / 591, 2) . "/14`t(Totem)"
-                    ]
-
-                    if (percent !== dbdPrev)
-                    {
-                        ; Average only the last 10 rates, discard the older ones
-                        if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
-                        {
-                            dbdRates.Push(n)
-                        }
-                        if (dbdRates.Length > 10)
-                        {
-                            dbdRates.RemoveAt(1)
-                        }
-                        try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
-
-                        codebase.Tool(
-                            codebase.stringOperations.strJoin("`n", , c*)
-                                . "`n" . percent . "%"
-                                . "`t@ ~" . dbdRate . "%/s",
-                            codebase.Tool.coords, 1000, cx, 1735 + 20,
-                        )
-
-                        dbdPrev := percent
-                        dbdLastUpdate := A_TickCount
-                    }
+                    dbdRates.Push(n)
                 }
+                if (dbdRates.Length > 10)
+                {
+                    dbdRates.RemoveAt(1)
+                }
+                try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
+
+                codebase.Tool(
+                    codebase.stringOperations.strJoin("`n", , c*)
+                        . "`n" . percent . "%"
+                        . "`t@ ~" . dbdRate . "%/s",
+                    codebase.Tool.coords, 1000, cx, 1735 + 20,
+                )
+
+                dbdPrev := percent
+                dbdLastUpdate := A_TickCount
             }
         }
     }
@@ -520,27 +490,31 @@ functions()
 {
     global
 
-    ahkproc := []
-    for p in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
+    autoReahk := false
+    if (autoReahk)
     {
-        ; https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process?redirectedfrom=MSDN
-        if (InStr(p.Name, "AutoHotkey"))
+        ahkproc := []
+        for p in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
         {
-            ahkproc.Push(p.CommandLine)
-        }
-    }
-    for cl, c in codebase.collectionOperations.arrayOperations.arrayIndex(ahkproc)
-    {
-        ; More than one identical process exists! -> reahk!
-        try
-        {
-            if (c >= 3)
+            ; https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process?redirectedfrom=MSDN
+            if (InStr(p.Name, "AutoHotkey"))
             {
-                SplitPath(A_ScriptFullPath, , &dir, , , &drv)
-                f := FileOpen('reAhk.bat', "w")
-                f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
-                f.Close()
-                Run('reAhk.bat')
+                ahkproc.Push(p.CommandLine)
+            }
+        }
+        for cl, c in codebase.collectionOperations.arrayOperations.arrayIndex(ahkproc)
+        {
+            ; More than one identical process exists! -> reahk!
+            try
+            {
+                if (c >= 3)
+                {
+                    SplitPath(A_ScriptFullPath, , &dir, , , &drv)
+                    f := FileOpen('reAhk.bat', "w")
+                    f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
+                    f.Close()
+                    Run('reAhk.bat')
+                }
             }
         }
     }
@@ -567,6 +541,11 @@ functions()
     if (WinExist("ahk_exe msedge.exe"))
     {
         WinKill("ahk_exe msedge.exe")
+    }
+
+    if (WinExist("Feedback Hub"))
+    {
+        WinKill("Feedback Hub")
     }
 
     if (WinActive("Shut Down Windows"))
@@ -624,6 +603,7 @@ functions()
                     if (WinExist(w))
                     {
                         doDodge := true
+                        break
                     }
                 }
 
@@ -683,30 +663,23 @@ functions()
 
         rsExists := true
     }
-    else
+    else if (rsExists)
     {
-        if (rsExists)
+        if (MsgBox("Lost track of Rocksmith's process. Kill CE?", "RS closed", 4) == "Yes")
         {
-            if (MsgBox("Lost track of Rocksmith's process. Kill CE?", "RS closed", 4) == "Yes")
+            try
             {
-                if (!dodgedCE)
-                {
-                    try
-                    {
-                        ProcessClose(WinGetPID("Cheat Engine"))
-                    }
-                }
-                
-                try
-                {
-                    ProcessClose(WinGetPID("ahk_exe RockSniffer.exe"))
-                }
+                ProcessClose(WinGetPID("Cheat Engine"))
             }
-
-            rsExists := false
-            doDodge := false
-            dodgedCE := false
+            try
+            {
+                ProcessClose(WinGetPID("ahk_exe RockSniffer.exe"))
+            }
         }
+
+        rsExists := false
+        doDodge := false
+        dodgedCE := false
     }
 
     if (olExists && !WinExist("ahk_exe outlook.exe"))
@@ -772,15 +745,21 @@ functions()
             WinClose("Steam - News")
         }
     }
+
+    Sleep(0)
 }
 
 slowMonitor()
 {
-    op := FileRead("C:\Users\User\Desktop\Share\remote.txt")
-    switch (op)
+    Loop Parse FileRead("C:\Users\User\Desktop\Share\remote.txt"), "`n", "`r"
     {
-        case "overwatch":
-            Run("C:\Users\User\Documents\Gayms\Overwatch.lnk")
+        switch (StrLower(A_LoopField))
+        {
+            case "overwatch":
+                Run("C:\Users\User\Documents\Gayms\Overwatch.lnk")
+            case "dbd":
+                Run("steam://rungameid/381210")
+        }
     }
     FileOpen("C:\Users\User\Desktop\Share\remote.txt", "w")
 }
@@ -949,7 +928,8 @@ triggers := [
     "ahk_exe csgo.exe",
     "ahk_exe VALORANT-Win64-Shipping.exe",
     "ahk_exe bf1.exe",
-    "ahk_exe RobloxPlayerBeta.exe",
+    "ahk_exe DeadByDaylight-Win64-Shipping.exe",
+    ; roblox,
     "ahk_exe Rocksmith2014.exe",
     "Sea of Thieves",
     ;"Notepad"
@@ -1006,62 +986,7 @@ editBtn.OnEvent("Click", (*) => Reload())
 
 afkgui.Show("X-1915 Y5 NoActivate Hide")
 
-; Clipboard GUI
-timerSet := true
-clipgui := Gui("AlwaysOnTop", "Clipboard GUI")
-clp := clipgui.Add("Edit", "WantReturn WantTab +VScroll -HScroll r" . 35 - triggers.Length . " w700", "")
-clp.OnEvent("Focus", clp_Change)
-clp.OnEvent("LoseFocus", (*) => updateTxt())
-clp_Change(*)
-{
-    global
-
-    SetTimer(clipFetch, 0)
-    timerSet := false
-    updateTxt()
-}
-
-txt := clipgui.Add("Text", "w700")
-loseFocusOnCtrlC := clipgui.Add("CheckBox", "Checked", "Take focus on Ctrl+C or Ctrl+X")
-updateTxt()
-loseFocusOnCtrlC.OnEvent("Click", (*) => updateTxt())
-
-clpbtn := clipgui.Add("Button", "w700", "Reset timer and CHANGE clipboard")
-clpbtn.OnEvent("Click", (*) => clpbtn_Click(true))
-clpbtn := clipgui.Add("Button", "w700", "Reset timer and DISCARD changes")
-clpbtn.OnEvent("Click", (*) => clpbtn_Click(false))
-clpbtn_Click(changeClip)
-{
-    global
-
-    if (changeClip)
-    {
-        A_Clipboard := clp.Value
-    }
-    SetTimer(clipFetch, 10, 1)
-    timerSet := true
-    updateTxt()
-}
-
-updateTxt()
-{
-    global
-
-    txt.Value := "Clipboard edit field " . (!timerSet ? "HAS" : "has NO") . " focus.`t`t`tCtrl-C / Ctrl-X " . (loseFocusOnCtrlC.Value ? "TAKES" : "DOES NOT take") . " focus from the text field."
-}
-
-clipFetch()
-{
-    global
-
-    if (clp.Value != A_Clipboard)
-    {
-        clp.Value := A_Clipboard
-    }
-}
-
 afkgui.GetPos(&searchx, &searchy, &w, &h)
-clipgui.Show("X-1915 Y" . searchy + h + 5 . " NoActivate Hide")
 
 shgui := Gui( , "Show/Hide GUI")
 
@@ -1085,28 +1010,7 @@ shafk_Click(*)
     }
 }
 
-shclip := shgui.Add("Button", "wp", "Show Clipboard GUI")
-shclip.OnEvent("Click", shclip_Click)
-shclip_Click(*)
-{
-    global
-
-    if (clipshown)
-    {
-        clipgui.Hide()
-        clipshown := false
-        shclip.Text := "Show Clipboard GUI"
-    }
-    else
-    {
-        clipgui.Show("NoActivate")
-        clipshown := true
-        shclip.Text := "Hide Clipboard GUI"
-    }
-}
-
 afkshown := false
-clipshown := false
 shgui.Show("X5 Y5 NoActivate")
 
 codebase.Tool("Reloaded Loops.ahk", true, , , 50)
@@ -1122,14 +1026,4 @@ prio_elv := 1
 SetTimer(slowMonitor, 10000, prio_elv)
 ; SetTimer(discordThemeUpdate, 10000, prio_base)
 SetTimer(functions, 70, prio_base)
-SetTimer(clipFetch, 1000, prio_base)
-SetTimer(millisecondMonitor, 1, prio_base)
-
-#HotIf loseFocusOnCtrlC.Value
-~^c::
-~^x::
-{
-    clipFetch()
-    clpbtn_Click(false)
-    updateTxt()
-}
+SetTimer(fastMonitor, 1, prio_base)

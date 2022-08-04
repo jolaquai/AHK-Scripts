@@ -12,7 +12,7 @@ codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strik
 codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
 
 /**
- * A `Rapidvar` is basically a counter with a specific maximum value. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
+ * A `Rapidvar` is basically just a glorified Integer "type" with a custom maximum value instead of it being dictated by the amount of bits used to store a number. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
  *
  * The name `Rapidvar` is a reference to "rapid firing" semi-automatic guns by making a game hotkey spam the left mouse button only if that game's `Rapidvar` is equal to some value, which is the entire reason I created `Rapidvar`s. Despite this, I've since found other use cases, such as creating a "single fire" mode for any weapon. Its uses beyond as a toggle switch for specific hotkey behaviors are rather limited.
  * @note While every `Rapidvar` has a maximum value defined at instantiation, it is not guaranteed that its current value is within the range `[0, Rapidvar.max]` as the `set` method does not enforce the limit to allow for temporary values. This also avoids having to cycle between all _possible_ values of a `Rapidvar` to achieve a specific state. To ensure the current value stays within that range, either call the `inc` or `dec` methods, or use `safeset`.
@@ -34,8 +34,9 @@ class Rapidvar
         this.ttp := (po ? codebase.Tool.coords : codebase.Tool.center)
         if (this.ttp == codebase.Tool.coords)
         {
-            this.x := 3840
-            this.y := 0
+            MonitorGet(MonitorGetPrimary(), &l, &t)
+            this.x := l + 10
+            this.y := t + 5
         }
     }
 
@@ -60,7 +61,7 @@ class Rapidvar
      * @param value The potential value to set the `Rapidvar` to.
      * @returns The new value of the `Rapidvar`. May not be equal to `value`.
      */
-    safeset(value) => this.set(Abs(Mod(value, this.max + 1)))
+    safeset(value) => this.set(Abs(Mod(Abs(value), this.max + 1)))
 
     /**
      * Check whether the `Rapidvar`'s current value is equal to a specific value or at least one of a series of values.
@@ -133,6 +134,7 @@ fnrapid := Rapidvar("fn")
 owrapid := Rapidvar("ow")
 apexrapid := Rapidvar("apex")
 f13rapid := Rapidvar("f13")
+mwrapid := Rapidvar("mw")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -140,7 +142,9 @@ robloxSwitchKeys := [
     "~*q"
 ]
 for k in robloxSwitchKeys
+{
     Hotkey(k, hkfunc)
+}
 
 ; "Actual" AutoCorrect
 
@@ -171,16 +175,12 @@ for k in robloxSwitchKeys
 :*?:they#::they'
 :*?:e#::e'
 
-:*?:~c~::ç
-:*?:/l/::ł
-:*?:a__e::æ
-
-; :*?:>`:§::>:3
-; :*?:<`:§::>:3
-; :*?:<`:3::>:3
-; :*?:>;§::>;3
-; :*?:<;§::>;3
-; :*?:<;3::>;3
+Hotstring(":*?:>`:§", ">:3")
+Hotstring(":*?:<`:§", ">:3")
+Hotstring(":*?:<`:3", ">:3")
+Hotstring(":*?:>;§", ">;3")
+Hotstring(":*?:<;§", ">;3")
+Hotstring(":*?:<;3", ">;3")
 
 ; "On-Purpose" AutoCorrect aka. Symbols
 
@@ -245,6 +245,7 @@ for k in robloxSwitchKeys
 ; Math
 :*?:math_approx::≈
 :*?:math_neq::≠
+:*?:/=/::≠
 :*?:math_corr::≙
 :*?:math_est::≙
 
@@ -348,6 +349,8 @@ for k in robloxSwitchKeys
 :*?:/o/::ø
 :*?:~a~::ã
 :*?:~n~::ñ
+:*?:/l/::ł
+:*?:a__e::æ
 :*?:,c,::ç
 ; :*?:°a°::å
 :*?:_o_::ō
@@ -364,24 +367,24 @@ for k in robloxSwitchKeys
 :?:@Paul::@₱₳ɄⱠ
 
 ; Emojis
-#HotIf !WinActive("ahk_exe discord.exe")
-:*?:`:sparkle`:::✨
-:*?:`:wink`:::😉
-:*?:`:moon`:::🌚
-:*?:`:sunglasses`:::😎
-:*?:`:ok_hand`:::👌
-:*?:`:sweat_smile`:::😅
-:*?:`:shruggie`:::¯\_(ツ)_/¯
-:*?:`:smirk`:::😏
+; #HotIf !WinActive("ahk_exe discord.exe")
+:*?:`:drooling`:::🤤
+:*?:`:heart_eyes`:::😍
+:*?:`:innocent`:::😇
 :*?:`:joy`:::😂
+:*?:`:moon`:::🌚
+:*?:`:ok_hand`:::👌
 :*?:`:pleading`:::🥺
 :*?:`:puppy_eyes`:::🥺
-:*?:`:upside_down`:::🙃
-:*?:`:thumbs_up`:::👍
 :*?:`:sad`:::😔
-:*?:`:drooling`:::🤤
-:*?:`:innocent`:::😇
-:*?:`:heart_eyes`:::😍
+:*?:`:shruggie`:::¯\\\_(ツ)\_\/¯
+:*?:`:smirk`:::😏
+:*?:`:sparkle`:::✨
+:*?:`:sunglasses`:::😎
+:*?:`:sweat_smile`:::😅
+:*?:`:thumbs_up`:::👍
+:*?:`:upside_down`:::🙃
+:*?:`:wink`:::😉
 ~X & WheelUp::Send("{LAlt down}{PgDn}{LAlt Up}")
 
 ; Surround symbols
@@ -394,22 +397,19 @@ for k in robloxSwitchKeys
         string := InputBox("Input between one and three options to surround the selection with or insert, separated by a space.`nZero or more than three options causes the thread to exit here.")
         symbols := StrSplit(string.Value, A_Space)
 
+        WinActivate(window)
+        WinWaitActive(window)
+
         if (symbols.Length == 1)
         {
-            WinActivate(window)
-            WinWaitActive(window)
             surroundSymbols(symbols[1])
         }
         else if (symbols.Length == 2)
         {
-            WinActivate(window)
-            WinWaitActive(window)
             surroundSymbols(symbols[1], symbols[2])
         }
         else if (symbols.Length == 3)
         {
-            WinActivate(window)
-            WinWaitActive(window)
             surroundSymbols(symbols[1], symbols[2], symbols[3])
         }
         else
@@ -492,7 +492,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     && !WinActive("ahk_exe Aragami.exe")
 ~^s::
 {
-    ; Script duplication due to rapid reloading should be prevented by this
+    ; Script process duplication due to rapid reloading should be prevented by this
     Send("{Ctrl up}{s up}")
     Sleep(100)
     DetectHiddenWindows(true)
@@ -540,6 +540,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
+    ; ö::WinMove(4000, 5, , , "Mein Dominique")
+
     ScrollLock::
     ^ScrollLock::
     {
@@ -581,7 +583,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                             && true
                         )
                         {
-                            arr.Push(w.dps . codebase.stringOperations.strSeparator(w.dps, 4, l) . w.name)
+                            arr.Push(Format("{1:-" . (l + 4) . "}{2}", w.dps, w.name))
                         }
                     }
                 }
@@ -591,11 +593,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         if (!(arr.Length))
         {
-            codebase.Tool("returned", codebase.Tool.center)
+            codebase.Tool("Exited.", codebase.Tool.center)
             return
         }
 
-        MsgBox(A_Clipboard := SubStr(Trim(codebase.elemsOut(arr), '`n `t`r'), 9))
+        MsgBox(A_Clipboard := Trim(codebase.elemsOut(arr), '`n `t`r'))
     }
 
     CtrlBreak::
@@ -655,9 +657,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         arr := [
             "Quentin Smith",
             "Adam Francis",
-            "Jane Romero",
             "Felix Richter",
-            "Jill Valentine",
             "Yoichi Asakawa"
         ]
         MsgBox(A_Clipboard := codebase.elemsOut(
@@ -669,7 +669,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^!+ä::
     {
         m := Map(
-            "Jill Valentine",   10,
+            "Jill Valentine",   24,
             "Yoichi Asakawa",    3,
             "Steve Harrington",  3,
             "Quentin Smith",     3,
@@ -706,8 +706,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+#::
     {
+        str := "Leipziger Str. | Potsdamer Platz | Potsdamer Str. | Bülowstr. | Nollendorfplatz | Karl-Heinrich-Ulrichs-Str. | Lützowplatz | Klingelhöferstr. | Hofjägerallee | Großer Stern | Str. des 17. Juni | bis zum Endpunkt für Fahrzeuge: Yitzhak-Rabin-Straße | für Fußgänger: Straße des 17. Juni bis Brandenburger Tor"
+        str := StrReplace(str, " | ", "`n")
         MsgBox(A_Clipboard := codebase.elemsOut(
-            
+            str
         ))
     }
 
@@ -1356,14 +1358,14 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         MouseGetPos(&x, &y)
 
-        MouseMove(191, 900)
+        MouseMove(382, 1800)
         Sleep(30)
         Loop 10
         {
             Click("WheelDown")
         }
         Sleep(50)
-        Click("109 922")
+        Click("218 1844")
         Sleep(50)
 
         MouseMove(x, y)
@@ -1375,15 +1377,15 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         KeyWait("LButton", "D")
         KeyWait("LButton", "U")
 
-        MouseMove(194, 820)
+        MouseMove(388, 1640)
         Sleep(50)
-        Click("194 820")
+        Click("388 1640")
 
         KeyWait("Enter", "D")
         KeyWait("Enter", "U")
 
         Send("gy")
-        MouseMove(964, 848)
+        MouseMove(1928, 1696)
     }
 
 ; Dead By Daylight
@@ -1800,28 +1802,53 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
     
 #HotIf WinActive("Roblox")
-    /*
-    ~*RButton::
-    ~*RButton up::
-    {
-        static x, y
+    F11::Send("{w down}")
+    *F1::SC002
+    *Numpad1::SC002
+    *SC029::SC002
 
+    NumpadAdd::WheelUp
+    NumpadSub::WheelDown
+
+    ~*WheelUp::
+    ~*WheelDown::
+    {
+        return
+        static m := []
+        if (!(m.Length))
+        {
+            for i in codebase.range(1, 2)
+            {
+                m.Push(String(i))
+            }
+        }
+
+        static i := 1
         if (InStr(A_ThisHotkey, "up"))
         {
-            MouseMove(x, y, 0)
+            i--
+            if (i == 0)
+            {
+                i := m.Length
+            }
         }
         else
         {
-            MouseGetPos(&x, &y)
+            i++
+            if (i > m.Length)
+            {
+                i := 1
+            }
         }
+        OutputDebug(i)
+        Send(i)
+        Send("{Wheel" . (InStr(A_ThisHotkey, "up") ? "Down" : "Up") . "}")
     }
-    */
-
-    F11::Send("{w down}")
-    F1::SC002
-    Numpad1::SC002
 
     +b::rbrapid.inc()
+
+    CapsLock::e
+    ; g::Send("{f down}")
 
     F10::
     {
@@ -1832,7 +1859,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 break
             }
 
-            Send("{Click}")
+            Send("{Blind}{Click}")
             Sleep(10)
         }
     }
@@ -1843,13 +1870,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            ;if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && rbrapid.is()))
             if (!(GetKeyState("LButton", "P") && rbrapid.is(1, 3)))
             {
                 break
             }
 
-            Send("{Click}")
+            Send("{Blind}{Click}")
             Sleep(10)
         }
     }
@@ -1862,12 +1888,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
 
         physPress := SubStr(ThisHotkey, 3)
-        ; Declare and initialize these as static to avoid setting them every time the function is called
         static vars := Map()
-        static varsIsSet := false
         static resetKey := ""
         
-        if (!varsIsSet)
+        if (!(vars.Count))
         {
             for k in robloxSwitchKeys
             {
@@ -1884,7 +1908,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
         
         ; Remember that the keys are set correctly
-        varsIsSet := true
         str := ""
 
         if (physPress == resetKey)
@@ -1893,7 +1916,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             for key, val in vars
             {
                 ; Iterate through the other keys and release them all
-                vars[key] := false
+                vars.Set(key, false)
                 Send("{" . key . " up}")
 
                 str .= key . "`n" . vars[key] . "`n`n"
@@ -1908,11 +1931,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 if (key == physPress)
                 {
                     ; The current key _is_ the one that's been pressed
-                    if (vars[key] == false)
+                    if (vars.Get(key) == false)
                     {
                         ; The key is _not_ down, so press it
                         ; Remember that it's supposed to be down
-                        vars[key] := true
+                        vars.Set(key, true)
                         ; Wait for it to be released before sending the "down" key event
                         KeyWait(key)
                         Send("{" . key . " down}")
@@ -1920,18 +1943,18 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                     else
                     {
                         ; The key _is_ down, so release it
-                        vars[key] := false
+                        vars.Set(key, false)
                         Send("{" . key . " up}")
                     }
                 }
                 else
                 {
                     ; The current key is _not_ the one that's been pressed, so release it
-                    vars[key] := false
+                    vars.Set(key, false)
                     Send("{" . key . " up}")
                 }
 
-                str .= key . "`n" . vars[key] . "`n`n"
+                str .= key . "`n" . vars.Get(key) . "`n`n"
             }
         }
 
@@ -1976,8 +1999,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     >+ä::
     {
-        r := MsgBox("Set blocking rules on / off?", "GTA:O Port Blocking WF Rules", 3)
-        switch (r)
+        switch (MsgBox("Set blocking rules on / off?", "GTA:O Port Blocking WF Rules", 3)) 
         {
             case "Yes":
                 codebase.setWFRuleStatus(true, "#GTAO Out", "#GTAO In")
@@ -2113,6 +2135,24 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
             
             SendPlay("e")
+            Sleep(10)
+        }
+    }
+
+#HotIf WinActive("ahk_exe ModernWarfare.exe")
+    +b::mwrapid.inc()
+
+    ~LButton::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("LButton", "P") && mwrapid.is()))
+            {
+                break
+            }
+            
+            Send("{LButton}")
             Sleep(10)
         }
     }

@@ -291,108 +291,98 @@ class codebase
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
      * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
-     * - Objects: The `ToString` method is called on the object, which compiles the object's props and their values into a string.
+     * - Objects: The object's `ToString` method is called. On primitive objects, this compiles the object's OwnProps and their values into a string. Objects instantiated from user-defined classes should overwrite `ToString` if warranted.
      * @returns An output string constructed while traversing the values in `elems`.
      */
     static elemsOut(elems*)
     {
         indentStr := "    "
 
-        out := ""
         if (elems.Length == 0)
         {
             return ""
         }
 
-        for searchx, searchy in elems
+        out := ""
+
+        for elem in elems
         {
-            if (!IsSet(searchy))
+            if (!IsSet(elem))
             {
+                ; unset / empty = newline
                 out .= "`n"
                 continue
             }
-            t := Type(searchy)
-            if (t == "Array")
+
+            if (elem is Array)
             {
-                out .= "[" . t
-                lines := StrSplit(Trim(codebase.elemsOut(searchy*), '`n '), '`n')
-                if (lines.Length !== 0)
+                out .= "[Array (Length=="
+                arrelems := ""
+                lines := StrSplit(Trim(codebase.elemsOut(elem*), '`n '), '`n')
+                for line in lines
                 {
-                    out .= "]`n"
-                    for line in lines
-                    {
-                        out .= indentStr . indentStr . line . "`n"
-                    }
+                    arrelems .= indentStr . line . "`n"
                 }
-                else
-                {
-                    out .= " (empty)]`n"
-                }
+                out .= elem.Length . ")]`n" . arrelems
             }
-            else if (t == "Map")
+            else if (elem is Map)
             {
-                out .= "[" . t
+                out .= "[Map (Count=="
                 kvpairs := ""
-                for a, b in searchy
+                for a, b in elem
                 {
                     kvpairs .= indentStr . "[Key-Value pair]`n"
                     kvpairs .= indentStr . indentStr . 'Key | ' . Trim(codebase.elemsOut(a), '`n ') . '`n'
                     kvpairs .= indentStr . indentStr . 'Value | ' . Trim(codebase.elemsOut(b), '`n ') . '`n'
                 }
-                if (lines.Length !== 0)
-                {
-                    out .= "]`n" . kvpairs
-                }
-                else
-                {
-                    out .= " (empty)]`n"
-                }
+                out .= elem.Count . ")]`n" . kvpairs
             }
-            else if (t == "Func" || t == "Closure" || t == "BoundFunc")
+            else if (elem is Func)
             {
-                out .= (searchy.Name !== "" ? searchy.Name : "UnnamedFunc") . "({funcparameters})`n"
+                out .= (elem.Name !== "" ? elem.Name : "UnnamedFunc")
                 param := []
-                if (searchy.Minargs > 0)
+                if (elem.MinArgs)
                 {
-                    for j in codebase.range(1, searchy.Minargs)
+                    for j in codebase.range(1, elem.MinArgs)
                     {
                         param.Push("p" . j)
                     }
                 }
-                if (searchy.Minargs !== searchy.Maxargs)
+                if (elem.MinArgs !== elem.MaxArgs)
                 {
-                    for j in codebase.range(searchy.Minargs + 1, searchy.Maxargs)
+                    for j in codebase.range(elem.MinArgs + 1, elem.MaxArgs)
                     {
                         param.Push("p" . j . "?")
                     }
                 }
-                s := codebase.stringOperations.strJoin(", ", , param*) . (searchy.IsVariadic ? ", v*" : "")
-                codebase.stringOperations.strComposite(&out, { funcparameters: s })
+                s := "(" . codebase.stringOperations.strJoin(", ", , param*) . (elem.IsVariadic ? ", v*" : "") . ")"
             }
-            else if (t == "String" || IsNumber(searchy))
+            else if (elem is String || elem is Number)
             {
-                out .= searchy . "`n"
+                out .= elem . "`n"
             }
-            else if (searchy is Error)
+            else if (elem is Error)
             {
-                out .= "[Unthrown " . Type(searchy) . "]`n" . codebase.ErrorHandler.output(searchy, false) . "`n"
+                out .= "[Unthrown " . Type(elem) . "]`n" . codebase.ErrorHandler.output(elem, false) . "`n"
             }
-            else if (searchy is Object)
+            else if (elem is Object)
             {
-                out .= "Object | [" . t . "]`n"
-                lines := StrSplit(Trim(searchy.ToString(), '`n ') . "`n", '`n')
-                for line in lines
+                out .= "[" . Type(elem) . " (OwnProps==`n"
+                props := StrSplit(Trim(codebase.collectionOperations.objectOperations.toString, '`n ') . "`n", '`n')
+                str := ""
+                for line in props
                 {
                     if (StrLen(line) == 0)
                     {
                         continue
                     }
-                    out .= indentStr . line . "`n"
+                    str .= indentStr . line . "`n"
                 }
+                out .= str
             }
             else
             {
-                throw TypeError("Invalid type for ``searchy``. Received ``" . Type(searchy) . "``, expected any handled Type.")
+                throw TypeError("Invalid type for a value passed to ``codebase.elemsOut``. Received ``" . Type(elem) . "``, expected any handled Type.")
             }
         }
 
@@ -403,11 +393,10 @@ class codebase
      * Formats a millisecond value while automatically accounting for the size of the number.
      * @param t The millisecond value to format.
      * @param includeRaw Whether to include the original value in the return value, separated by a newline from the formatted version. Defaults to `false` if omitted.
-     * @param precision How many digits to include beyond seconds by rounding the excess milliseconds.
+     * @param precision How many digits to include beyond seconds by rounding the excess milliseconds. Defaults to `1` if omitted.
      * - If this remaining value is less than `10`, this has no effect.
      * - If this remaining value is between `10` and `100`, this only has an effect if it is `1` or `2`.
      * - The remaining value is omitted entirely if `0` is passed and `t` is greater than `1000`.
-     * - Defaults to `1` if omitted.
      * @param suffix A suffix to append to the remaining milliseconds. Defaults to none if omitted.
      * @throws `ValueError` if precision is not between `0` and `3`.
      * @returns The formatted time value.
@@ -419,18 +408,7 @@ class codebase
             throw ValueError("Invalid value for ``precision``. Received ``" . precision . "``, expected ``0``, ``1``, ``2`` or ``3``.")
         }
 
-        if (precision == 1)
-        {
-            precision := 100
-        }
-        else if (precision == 2)
-        {
-            precision := 10
-        }
-        else
-        {
-            precision := 1
-        }
+        precision := 10 ** (3 - precision)
 
         if (t >= 1000 * 60 * 60)
         {
@@ -637,61 +615,30 @@ class codebase
 
         handle(e, ret)
         {
+            for t in this.types
+            {
+                if (e is t)
+                {
+                    this.errs.Push(e)
+                    break
+                }
+            }
+
             switch (this.mode)
             {
                 case codebase.ErrorHandler.custom:
                     return this.customFunc(e)
                 case codebase.ErrorHandler.reload:
-                    for t in this.types
-                    {
-                        if (e is t)
-                        {
-                            this.errs.Push(e)
-                            break
-                        }
-                    }
                     MsgBox(codebase.ErrorHandler.output(e))
                     Reload()
                 case codebase.ErrorHandler.suppress:
-                    for t in this.types
-                    {
-                        if (e is t)
-                        {
-                            this.errs.Push(e)
-                            break
-                        }
-                    }
                     return -1
                 case codebase.ErrorHandler.notify:
-                    for t in this.types
-                    {
-                        if (e is t)
-                        {
-                            this.errs.Push(e)
-                            break
-                        }
-                    }
                     MsgBox(codebase.ErrorHandler.output(e))
                     return -1
                 case codebase.ErrorHandler.rethrow:
-                    for t in this.types
-                    {
-                        if (e is t)
-                        {
-                            this.errs.Push(e)
-                            break
-                        }
-                    }
                     return 0
                 case codebase.ErrorHandler.stop:
-                    for t in this.types
-                    {
-                        if (e is t)
-                        {
-                            this.errs.Push(e)
-                            break
-                        }
-                    }
                     MsgBox(codebase.ErrorHandler.output(e))
                     return 1
                 case codebase.ErrorHandler.exit:
@@ -784,16 +731,20 @@ class codebase
             {
                 if (!(codebase.collectionOperations.arrayOperations.arrayContains(codebase.Tool.usedToolTipIds, i).Length))
                 {
-                    thisId := i
-                    codebase.Tool.usedToolTipIds.Push(i)
+                    codebase.Tool.usedToolTipIds.Push(thisId := i)
                     break
                 }
             }
-            ; Failsafe: all ToolTip slots are occupied? -> override and default to the first
+
+            ; Failsafe: all ToolTip slots are occupied?
+            ; -> begin freeing from the beginning, reusing the oldest occupied IDs
+            ; if their freeing function hasn't been called yet, free them immediately (this also deletes the timer, meaning it can be safely re-set by using the ToolTip ID)
             if (thisId == 0)
             {
-                codebase.Tool.freeId(1)
-                thisId := 1
+                thisId := codebase.Tool.usedToolTipIds[1]
+                codebase.Tool.freeId(codebase.Tool.usedToolTipIds[1])
+                codebase.Tool.usedToolTipIds.RemoveAt(1)
+                codebase.Tool.usedToolTipIds.Push(thisId)
             }
 
             switch (display)
@@ -807,14 +758,15 @@ class codebase
             
             if (display == 2)
             {
-                ToolTip(text, x, y)
+                ToolTip(text, x, y, thisId)
             }
             else
             {
-                ToolTip(text, xo + (IsSet(x) ? x : 0), yo + (IsSet(y) ? y : 0))
+                ToolTip(text, xo + (IsSet(x) ? x : 0), yo + (IsSet(y) ? y : 0), thisId)
             }
 
-            SetTimer(() => codebase.Tool.freeId(thisId), -displayTime, codebase.datatypes.Int64.max_value)
+            SetTimer(codebase.Tool.freeing.%"id" . thisId%, -displayTime, codebase.datatypes.Int64.max_value)
+            return thisId
         }
 
         static cursor := 0
@@ -826,10 +778,34 @@ class codebase
          * @param id The ID of the slot to free.
          * @note This should not be called manually. It is called automatically after the time specified when creating a ToolTip using `codebase.Tool`.
          */
-        static freeId(id)
+        static freeId(id, *)
         {
+            SetTimer(codebase.Tool.freeing.%"id" . id%, 0, codebase.datatypes.Int64.max_value)
             ToolTip(, , , id)
             codebase.Tool.usedToolTipIds := codebase.collectionOperations.arrayOperations.remove(codebase.Tool.usedToolTipIds, [id])
+        }
+
+        static freeing := {
+            id1: codebase.Tool.freeId.Bind(this, 1),
+            id2: codebase.Tool.freeId.Bind(this, 2),
+            id3: codebase.Tool.freeId.Bind(this, 3),
+            id4: codebase.Tool.freeId.Bind(this, 4),
+            id5: codebase.Tool.freeId.Bind(this, 5),
+            id6: codebase.Tool.freeId.Bind(this, 6),
+            id7: codebase.Tool.freeId.Bind(this, 7),
+            id8: codebase.Tool.freeId.Bind(this, 8),
+            id9: codebase.Tool.freeId.Bind(this, 9),
+            id10: codebase.Tool.freeId.Bind(this, 10),
+            id11: codebase.Tool.freeId.Bind(this, 11),
+            id12: codebase.Tool.freeId.Bind(this, 12),
+            id13: codebase.Tool.freeId.Bind(this, 13),
+            id14: codebase.Tool.freeId.Bind(this, 14),
+            id15: codebase.Tool.freeId.Bind(this, 15),
+            id16: codebase.Tool.freeId.Bind(this, 16),
+            id17: codebase.Tool.freeId.Bind(this, 17),
+            id18: codebase.Tool.freeId.Bind(this, 18),
+            id19: codebase.Tool.freeId.Bind(this, 19),
+            id20: codebase.Tool.freeId.Bind(this, 20)
         }
     }
 
@@ -1195,7 +1171,7 @@ class codebase
          * - An Array of all possible strings in the "left column".
          * - The longest string in the "left column".
          * - An integer, which is interpreted as length of the longest string in the "left column".
-         * @returns A string consisting of spaces with an appropriate length to separate the columns.
+         * @returns A string consisting of spaces with an appropriate length to separate the columns; it does _not_ contain the input string or any strings in `extra`.
          */
         static strSeparator(str, padding := 4, extra?)
         {
@@ -1359,7 +1335,7 @@ class codebase
          * @param str A `VarRef` to the initial string to search for `{name}` patterns, where `name` is any alpha-numeric string (i.e. `IsAlpha(name)` must return `true` for every `name`).
          * @param objOrMap One of the following:
          * - An object containing `name: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
-         * - A Map containing `key: value` pairs. The pattern `{name}` will be searched for in `str` and replaced by the corresponding `value`.
+         * - A Map containing `key: value` pairs. The pattern `{key}` will be searched for in `str` and replaced by the corresponding `value`.
          * @note The amount of values in `objOrMap` must correspond to (or at least exceed) the amount of `{name}` patterns in `str` as `obj.Length` is used to determine how many `StrReplace` calls will be made. Excess objects / values are discarded as their corresponding `{name}` patterns will be missing.
          * @note Yes, this is exactly the same as using the AHKv2-native function `Format` with... admittedly less functionality, however, this one allows naming of the passed objects / values and the user is returned all excess objects / values that could not be inserted into `str`, possibly allowing for easier error handling?
          * @returns `objOrMap` with all name-value or key-value pairs removed that were successfully inserted into `str`. If `objOrMap.OwnProps` or `objOrMap.Count` after calling this function is not empty, there are still composite patterns (`{name}`) left in `str`.
@@ -1367,7 +1343,7 @@ class codebase
         static strComposite(&str, objOrMap)
         {
             startingpos := 1
-            while (RegExMatch(str, "\{([A-z0-9]+)\}", &match, startingpos) !== 0)
+            while (RegExMatch(str, "\{([A-z0-9 ]+)\}", &match, startingpos) !== 0)
             {
                 replace := ""
                 if (Type(objOrMap) == "Object")
@@ -2370,11 +2346,13 @@ class codebase
              * @param indentStr The string to use for indenting the stringified OwnProps.
              * @returns The OwnProps of `obj` in string format.
              */
-            static toString(obj, indentStr := "    ")
+            static toString(obj, indentStr := "    ", &count?)
             {
+                count := 0
                 out := ""
                 for n, v in obj.OwnProps()
                 {
+                    count++
                     out .= '[Prop]`n'
                     out .= indentStr . "Name | " . Trim(codebase.elemsOut(n), '`n`t ') . '`n'
                     out .= indentStr . "Value | " . Trim(codebase.elemsOut(v), '`n`t ') . "`n"
@@ -2644,7 +2622,7 @@ class codebase
 
             /**
              * Calculates the slope of a function at a given input value. This is deliberately not called `derivative` as it does not return the input function's derivative.
-             * @param function The function to calculate the slope of. Must be a function of one variable.
+             * @param function The function to calculate the slope of. Must be a function of one variable and return a number.
              * @param x The input value to calculate the slope at.
              * @returns The slope of `function` at `x`.
              */
@@ -2654,7 +2632,7 @@ class codebase
              * Calculates the difference of the squares of two numbers.
              * @param a The first number.
              * @param b The second number.
-             * @note The return value is not absolute. It is be negative if `b` is greater than `a`.
+             * @note The return value is not absolute. It is negative if `b` is greater than `a`.
              * @returns The difference of the squares of `a` and `b`.
              */
             static squareDifference(a, b)
@@ -6114,7 +6092,7 @@ class codebase
         }
 
         /**
-         * Parses a CSV file into a 2D array.
+         * Parses a CSV file into a matrix.
          * @param file The path to the CSV file to parse.
          * @param delimiter The delimiter to use. Defaults to ',' if omitted.
          * @param quote The quote character to use. Defaults to '"' if omitted.
@@ -6160,7 +6138,7 @@ class codebase
     }
 
     /**
-     * A class outlining data about common number types and containing wappers for primitive types such as `Byte`, `Int16`, `UInt16`, etc.
+     * A class outlining data about common number types and containing wrappers for primitive types such as `Byte`, `Int16`, `UInt16`, etc.
      */
     class datatypes
     {

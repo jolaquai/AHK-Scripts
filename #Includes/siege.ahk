@@ -4911,7 +4911,7 @@ class siege
         static kills() => "Kill " . Random(2, 4) * siege.challenges.challengeObjectiveMultiplier . " opponents."
         static matches() => (Mod(Random(0, 100), 3) ? "Play " : "Win ") . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . ((h := Random(1, 100)) <= 10 ? " Ranked" : (h <= 50 ? " Unranked" : " Casual")) . " matches."
         static reveal() => "Reveal " . Random(2, 4) * siege.challenges.challengeObjectiveMultiplier . " opponents by scanning them in cameras or pinging their special abilities."
-        static role() => "Win " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " rounds as " . (Random(1, 100) <= 50 ? "an Attacker" : "a Defender") . "."
+        static role() => "Win " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " rounds as a" . (Random(1, 100) <= 50 ? "n Attacker" : " Defender") . "."
         static stun() => "Stun " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Stun Grenades, Blitz's G52-Tactical Shield or Ying's Candelas."
         static suppressed() => "Eliminate " . Random(2, 3) * siege.challenges.challengeObjectiveMultiplier . " opponents with suppressed weapons."
         static techAttackAtk() => "Destroy, disable or render " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Defender gadgets useless using Thatcher's EG Mk 0-EMP Grenades, Twitch's RSD Model 1 Shock Drones, Kali's LV Explosive Lance or Zero's Argus Cameras."
@@ -5219,13 +5219,6 @@ class siege
         __Item(v*) => this.tiers[v*]
 
         /**
-         * An Array of strings to identify the community challenges in this Battle Pass. A challenge's index in this Array corresponds to when its in-game number.
-         *
-         * The challenges are defined as objects in the pattern `{ name: String, objective: Integer }`.
-         */
-        communityChallenges := []
-
-        /**
          * Instantiates a new `siege.BattlePass` object.
          * @note AHKv2 does not support creating a complete `siege.BattlePass` object in one constructor call due to the length of the declaration. Use the method `siege.BattlePass.addTiers` instead as it is not subject to this limitation.
          */
@@ -5252,17 +5245,6 @@ class siege
         static init := siege.BattlePass._init()
         static _init()
         {
-            siege.BattlePass.Y7S2.communityChallenges.Push(
-                {
-                    name: "Rifle Eliminations",
-                    objective: 45000000
-                },
-                {
-                    name: "Destroy Attacker Drones",
-                    objective: 35000000
-                }
-            )
-
             siege.BattlePass.Y7S2.addTiers(
                 siege.BattlePass.Tier( ; 1
                     [
@@ -5273,7 +5255,7 @@ class siege
                             "Sens Daylight Bundle",
                             siege.BattlePass.Tier.Reward.types.bundle,
                             siege.BattlePass.Tier.Reward.rarities.none,
-                            Array(
+                            [
                                 siege.BattlePass.Tier.Reward(
                                     "Daylight Shift",
                                     siege.BattlePass.Tier.Reward.types.headgear,
@@ -5286,7 +5268,7 @@ class siege
                                     siege.BattlePass.Tier.Reward.rarities.rare,
                                     ""
                                 )
-                            )
+                            ]
                         )
                     ]
                 ),
