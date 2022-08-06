@@ -7,10 +7,6 @@
  * - Most comparisons are hard-coded case-sensitive (operator `==` instead of `=`). This does _not_ apply to functions the express use of which is string comparison, in which case an optional parameter allows for control over this. Most, if not all, default to `true`, i.e. a case-sensitive comparison. Additionally (as per AHKv2 behavior), case-sense is ignored for comparisons where one of the operands is not of type `String` (ex. objects).
  * - String concatenations are / should always be done explicitly: `"string 1" . " " . var` instead of `"string 1" " " var`.
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
- * - On 2/9/2022 and 5/3/2022, there have been updates to the `thqby.vscode-autohotkey2-lsp` VSCode extension which cause it to highlight several (working!) things as errors even if the definitions as such are valid and script runs and compiles fine. This includes, but is not limited to:
- * - - Hotkey definitions such as `NumpadDot::.` (which would remap the `NumpadDot` key, which produces a `,` instead of a `.` in some locales, to `.` in all cases), which are marked as a `Unknown token '.'` severity 8 (`error`) problem. This is likely due to a change in the way control / accessor tokens such as a single dot character is interpreted.
- * - - Hotstring definitions such as `:*?:>\:§::>:3` (which would correct the sequence `>:§` to `>:3` immediately upon typing it), ~~which are marked as a `Unexpected ':'` severity 8 (`error`) problem. This is likely due to a change in the way key combinations and, as such, hotstring definitions are interpreted.~~ Update: some specific hotstring definitions are now marked as _multiple_ errors. How _do_ you fuck up that badly?
- * - - Function calls such as `Click(300, 400)`, which are marked as a `Expected 0-1 parameters, but got 2` severity 8 (`error`) problem. The shown syntax is valid and works.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
  *
  * The functions and some classes are annotated using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
@@ -37,8 +33,8 @@ Persistent(false)
 SetTitleMatchMode(2)
 #Warn Unreachable, Off
 
-InstallKeybdHook(true)
-InstallMouseHook(true)
+InstallKeybdHook(true, true)
+InstallMouseHook(true, true)
 #UseHook true
 
 CoordMode("ToolTip", "Screen")
@@ -53,18 +49,12 @@ A_MenuMaskKey := ""
 scriptStartupDate := A_Now
 scriptStartupTick := A_TickCount
 
-/**
- * An equivalent to Python's `pass` keyword. Does nothing, and exists basically just to show that defined loop introductions or similar are _supposed_ to be empty.
- * @note While I'd say it's extremely unlikely, it's technically possible that a future change in how AHKv2 works makes just writing `pass` invalid syntax, instead requiring it to be called like a regular function, i.e. `pass`.
- */
-pass := (*) => ""
-
 Object.Prototype.DefineProp("GetOwnPropsCount", { Call: codebase.collectionOperations.objectOperations.getOwnPropsCount.Bind({ }) })
 Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString.Bind({ }) })
 
 /**
  * The `codebase` class containing all the subclasses and functions.
- * To make calling them easier, create function references (don't forget to `.Bind` an empty Object for the first parameter `this`, which is _not_ implicitly passed when using references):
+ * To make calling them easier, create function references:
  * ```
  * arrCnt := codebase.collectionOperations.arrayOperations.arrayContains.Bind({ })
  * ```
@@ -160,7 +150,7 @@ class codebase
      * @param affinity The affinity to set for the processes.
      * - If this is an integer, it is interpreted as the value of a `codebase.Bitfield` object constructed with the amount of bits equal to the environment variable `NUMBER_OF_PROCESSORS`, e.g. `0000111111111111` if the system has 16 processors (which would select all but the first 4 processors).
      * - If this is a string, it is used directly to instantiate a `codebase.Bitfield` object.
-     * @param proc One or more names of processes to target. All processes with this name will be affected. Names are not case-sensitive.
+     * @param proc One or more names of processes to target. All processes with this name will be affected. Not case-sensitive.
      * @note If the amount of bits used to construct the `affinity` parameter is less than the `NUMBER_OF_PROCESSORS` environment variable, if `n` is the number of missing bits, the first `n` processors are deselected, after which the passed pattern takes effect.
      * @note For ease of use, passing `0` for `affinity` will select all processors.
      * @returns An Array of objects constructed from `SetProcessAffinityMask` calls, the length of which being the amount of process names _found_, _not_ the amount of executable names passed. The objects are constructed as follows: `{ hwnd: Integer, executableName: String, returnValue: Integer }`.
@@ -172,7 +162,7 @@ class codebase
         if (IsNumber(affinity))
         {
             affinity := codebase.stringOperations.strReverse(codebase.convert.DecToBin(affinity, processors))
-            if (affinity == '0000000000000000')
+            if (affinity == codebase.stringOperations.strRepeat(processors, '0'))
             {
                 affinity := codebase.Bitfield(codebase.stringOperations.strRepeat(processors, '1')).Value()
             }
@@ -210,37 +200,13 @@ class codebase
     }
 
     /**
-     * Attempts to retrieve data about an OS error code.
-     * @param code The error code to look up.
-     * @returns An object with data about the error in the following pattern, if it exists: `{ id: String, codeDec: Integer, codeHex: HexString, message: String }`. If the error code is not found, the return object's `message` prop is empty.
-     */
-    static getWinError(code)
-    {
-        if (code == 0)
-        {
-            return {
-                codeDec: 0,
-                codeHex: codebase.convert.DecToHex(0, 8),
-                message: "The operation completed successfully."
-            }
-        }
-
-        data := OSError(code)
-        return {
-            codeDec: data.Number,
-            codeHex: codebase.convert.DecToHex(data.Number, 8),
-            message: RegExReplace(data.Message, "\([0-9]+\)")
-        }
-    }
-
-    /**
-     * Collects all numbers between a start and stop bound. Also operates in reverse and with non-integer bounds and step widths, contrary to the inspiring `range` object in Python. Additionally, this does not return an `Enumerator`, but _can_ be used in its place everywhere as it returns an Array of collected numbers. This is more practical anyway since the return Array of this function is used a lot in the `codebase`.
+     * Collects numbers between a start and stop bound. Also operates in reverse and with non-integer bounds and step widths, contrary to the inspiring `range` object in Python. Additionally, this does not return an `Enumerator`, but _can_ be used in its place everywhere as it returns an Array of collected numbers. This is more practical anyway since the return Array of this function is used a lot in the `codebase`.
      * @param start The inclusive start bound of the range of numbers.
      * @param stop The inclusive stop bound of the range of numbers.
      * @param step The step width to use when gathering values. Defaults to `1` if `start < stop` or `-1` if `start > stop` if omitted.
      * @note If `step` _was_ explicitly passed, but `start < stop` and `step < 0` or `start > stop` and `step > 0`, this is assumed to be a mistake, and `-step` will be used instead of `step`.
-     * @note If `stop` is set so that `start + (step * x)` surpasses `stop` at some `x`, the last value of the return array will be the last number that was reached _before_ passing over `stop`. As such, by definition, `return[-1] < stop` and `return` does not contain `stop`.
-     * @note As mentioned, this function operates with non-integer bounds and step widths, however, due to floating-point rounding errors, a workaround must be used. If `(start - stop) / step` evaluates to a value that is an Integer, `stop` will be made the last value of the return Array.
+     * @note If `stop` is set so that `start + (step * x)` surpasses `stop` at some `x`, the last value of the return array will be the last number that was reached _before_ passing over `stop`. As such, by definition, `return[-1] <= stop` and `return` does not _necessarily_ contain `stop`.
+     * @note As mentioned, this function operates with non-integer bounds and step widths, however, due to floating-point rounding, a workaround must be used. If a value other than but sufficiently close to `stop` is reached, `stop` is instead made the last value of the return Array. "Sanity checks" of this kind are only done for the last value, not at any other point while collecting numbers.
      * @throws `ValueError` if `0` was explicitly passed for `step`.
      * @returns The Array `[start]` if `stop == start`.
      * @returns The Array of numbers.
@@ -270,19 +236,16 @@ class codebase
             arr.Push((curr))
         }
 
-        if ((n := (start - stop) / step) == Integer(n))
+        if (codebase.math.misc.equal(0.000000000001, arr[-1], stop))
         {
-            if (!(codebase.math.misc.equal(arr[-1], stop)))
-            {
-                arr.Push(stop)
-            }
+            arr[-1] := stop
         }
 
         return arr
     }
 
     /**
-     * Traverses objects or collections and constructs an output string from its contents. Supports recursion into sub-objects and sub-collections and "stringifying" various types that don't directly support operations like string concatenation.
+     * Traverses objects or collections and constructs an output string from its contents. Recurses into sub-objects and sub-collections and "stringifies" various types that don't directly support operations like string concatenation.
      * @param elems Any values to incorporate into the output string.
      * - No elements passed: an empty string is returned.
      * - Empty value: a newline is inserted.
@@ -291,7 +254,7 @@ class codebase
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
      * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
-     * - Objects: The object's `ToString` method is called. On primitive objects, this compiles the object's OwnProps and their values into a string. Objects instantiated from user-defined classes should overwrite `ToString` if warranted.
+     * - Objects: The object's `ToString` method is called. On simple objects, this compiles the object's OwnProps and their values into a string. Objects instantiated from user-defined classes should overwrite `ToString` if warranted.
      * @returns An output string constructed while traversing the values in `elems`.
      */
     static elemsOut(elems*)
@@ -316,7 +279,7 @@ class codebase
 
             if (elem is Array)
             {
-                out .= "[Array (Length=="
+                out .= "[Array ("
                 arrelems := ""
                 lines := StrSplit(Trim(codebase.elemsOut(elem*), '`n '), '`n')
                 for line in lines
@@ -327,7 +290,7 @@ class codebase
             }
             else if (elem is Map)
             {
-                out .= "[Map (Count=="
+                out .= "[Map ("
                 kvpairs := ""
                 for a, b in elem
                 {
@@ -367,7 +330,7 @@ class codebase
             }
             else if (elem is Object)
             {
-                out .= "[" . Type(elem) . " (OwnProps==`n"
+                out .= "[" . Type(elem) . " (`n"
                 props := StrSplit(Trim(codebase.collectionOperations.objectOperations.toString, '`n ') . "`n", '`n')
                 str := ""
                 for line in props
@@ -385,6 +348,7 @@ class codebase
                 throw TypeError("Invalid type for a value passed to ``codebase.elemsOut``. Received ``" . Type(elem) . "``, expected any handled Type.")
             }
         }
+
 
         return Trim(out, '`t `n') . "`n"
     }
@@ -580,22 +544,16 @@ class codebase
         /**
          * Instantiates an `ErrorHandler` object.
          * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
-         * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors.
-         * @param mode How this `ErrorHandler` should react to an incoming error. Must be one of the following values:
-         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue. The stipulations for this return value are the same as for any other `OnError` callback function.
-         * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
-         * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
-         * - `codebase.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the thread.
-         * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
+         * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
+         * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.ErrorHandler.notify` if omitted.
+         * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
          * @returns An `ErrorHandler` object.
          */
         __New(types?, mode := 1, custom?)
         {
             OnError(this.handle.Bind(this), 1)
 
-            this.setTypes(types)
+            this.setTypes(IsSet(types) ? types : [Error])
             this.setMode(mode)
             if (IsSet(custom))
             {
@@ -612,6 +570,8 @@ class codebase
         {
             OnError(this.handle, 0)
         }
+
+        __Item[n] => this.errs[n]
 
         handle(e, ret)
         {
@@ -650,7 +610,7 @@ class codebase
         /**
          * Formats the information contained in an `Error` object.
          * @param e The `Error` object the information of which to format into a string.
-         * @param stack Whether to include the call stack contained in the `Error` object. Defaults to true if omitted.
+         * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
          * @returns A string with the information contained in `e`.
          */
         static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
@@ -662,7 +622,6 @@ class codebase
          */
         setTypes(types)
         {
-            ; `UnsetError` and `UnsetItemError` are not in the extensions yet
             errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
 
             if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
@@ -675,13 +634,13 @@ class codebase
 
         /**
          * Changes how this `ErrorHandler` should react to an incoming error.
-         * @param mode One of the following values:
-         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` object to a passed function, the return value of which dictates whether execution may continue.
-         * - `codebase.ErrorHandler.reload`: Collect errors and notify the user of them. Even if the error would allow it, stop execution and reload the script.
+         * @param mode One of the following values.
+         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
+         * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
          * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle it. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
+         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
          * - `codebase.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.stop`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the thread.
+         * - `codebase.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
          * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
          */
         setMode(mode)
@@ -2608,7 +2567,7 @@ class codebase
              * @note This should be used instead of direct comparison of `a` to `b` because of floating point errors.
              * @returns `true` if `a` is "equal" to `b` within a margin of `error`, `false` otherwise.
              */
-            static equal(error := 0.0000000000000001, vals*)
+            static equal(error := 10 ** -8, vals*)
             {
                 for val in vals
                 {
@@ -5922,6 +5881,8 @@ class codebase
 
     class WinInfo
     {
+        ahk_hwnd := 0
+
         /**
          * Instantiates a new `codebase.WinInfo` object.
          * @param identifier An AHK _WinTitle_ parameter to identify the window the data is to be retrieved about / from.
@@ -5931,18 +5892,18 @@ class codebase
         __New(identifier := "A")
         {
             ; Use Windows's HWND instead of the title etc. because that may change after execution of this line.
-            this.ahk_hwnd := WinGetID(identifier)
-            
+            try this.ahk_hwnd := WinGetID(identifier)
+
             SetTimer(() => ToolTip(), -500)
 
             if (!(this.ahk_hwnd))
             {
-                throw TargetError("Active window HWND could not be retrieved. The window might be in the 'not responding' state.")
+                throw TargetError("Active window HWND could not be retrieved. The window might be 'not responding' or have been closed.")
             }
 
             WinGetPos(&xAbsolute, &yAbsolute, &wAbsolute, &hAbsolute, "ahk_id " . this.ahk_hwnd)
             WinGetClientPos(&xClient, &yClient, &wClient, &hClient, "ahk_id " . this.ahk_hwnd)
-            
+
             this.wAbsolute := wAbsolute
             this.hAbsolute := hAbsolute
             this.xAbsolute := xAbsolute
@@ -5959,7 +5920,7 @@ class codebase
 
             if (!WinExist("ahk_id " . this.ahk_hwnd))
             {
-                throw TargetError("Active window could not be accessed. The window might be in the 'not responding' state or have been closed.")
+                throw TargetError("Active window could not be accessed. The window might be 'not responding' or have been closed.")
             }
 
             DetectHiddenText(false)
@@ -6007,7 +5968,7 @@ class codebase
             }
             catch
             {
-                this.commandline := ""
+                this.commandline := this.getCommandLineLegacy()
             }
         }
 

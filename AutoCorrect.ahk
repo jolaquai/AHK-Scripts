@@ -58,7 +58,7 @@ class Rapidvar
 
     /**
      * Safely set the current value of the `Rapidvar`, ensuring that it stays within the range `[0, Rapidvar.max]`.
-     * @param value The potential value to set the `Rapidvar` to.
+     * @param value The potential value to set the `Rapidvar` to. Negative values are ignored and the absolute value is used instead.
      * @returns The new value of the `Rapidvar`. May not be equal to `value`.
      */
     safeset(value) => this.set(Abs(Mod(Abs(value), this.max + 1)))
@@ -96,13 +96,13 @@ class Rapidvar
      * Increase the current value of the `Rapidvar`.
      * @returns The new value of the `Rapidvar`.
      */
-    inc() => this.safeset(this.value + 1)
+    inc() => this.set(Abs(Mod(Abs(this.value + 1), this.max + 1)))
 
     /**
      * Decrease the current value of the `Rapidvar`.
      * @returns The new value of the `Rapidvar`.
      */
-    dec() => this.safeset(this.value - 1)
+    dec() => this.value - 1 < 0 ? this.set(this.getMax()) : this.set(this.value - 1)
 
     /**
      * Get the maximum value of the `Rapidvar`.
@@ -120,7 +120,7 @@ class Rapidvar
 
 dbdrapid := Rapidvar("dbd")
 siegerapid := Rapidvar("siege")
-extractionrapid := Rapidvar("extraction", , true)
+xtrctnrapid := Rapidvar("xtrctn", , true)
 acorapid := Rapidvar("aco")
 csrapid := Rapidvar("cs")
 hlrapid := Rapidvar("hl")
@@ -135,6 +135,7 @@ owrapid := Rapidvar("ow")
 apexrapid := Rapidvar("apex")
 f13rapid := Rapidvar("f13")
 mwrapid := Rapidvar("mw")
+huntrapid := Rapidvar("hunt", 2)
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -270,6 +271,19 @@ Hotstring(":*?:<;3", ">;3")
 :*?:math_gt::>
 :*?:math_ge::≥
 
+:*?:copyVKSC::
+{
+    ih := InputHook("L1")
+    ih.Start()
+    ih.Wait()
+    ih.Stop()
+    A_Clipboard := Format("VK{:02X}SC{:03X}", GetKeyVK(ih.input), GetKeySC(ih.input))
+    if (A_Clipboard)
+    {
+        codebase.Tool("Success", codebase.Tool.center)
+    }
+}
+
 ; Insert character from Unicode code
 :*?:\u+::
 {
@@ -336,7 +350,7 @@ Hotstring(":*?:<;3", ">;3")
 :*?:symb_em::—
 :*?:symb_en::–
 
-; Rarely needed
+; Rarely needed and usually useless because this sends inputs, not the symbols (i.e. `n becomes an Enter input)
 :*?:symb_tab::`t
 :*?:symb_newline::`n
 :*?:symb_nl::`n
@@ -365,6 +379,7 @@ Hotstring(":*?:<;3", ">;3")
 :*?:dnd`:::do-not-disturb
 
 :?:@Paul::@₱₳ɄⱠ
+:*?:@Dezzy::@ドミニク
 
 ; Emojis
 ; #HotIf !WinActive("ahk_exe discord.exe")
@@ -375,7 +390,6 @@ Hotstring(":*?:<;3", ">;3")
 :*?:`:moon`:::🌚
 :*?:`:ok_hand`:::👌
 :*?:`:pleading`:::🥺
-:*?:`:puppy_eyes`:::🥺
 :*?:`:sad`:::😔
 :*?:`:shruggie`:::¯\\\_(ツ)\_\/¯
 :*?:`:smirk`:::😏
@@ -388,7 +402,7 @@ Hotstring(":*?:<;3", ">;3")
 ~X & WheelUp::Send("{LAlt down}{PgDn}{LAlt Up}")
 
 ; Surround symbols
-#HotIf !WinActive("ahk_exe Code.exe")
+#HotIf !WinActive("VSCode")
     && !WinActive("ahk_exe discord.exe")
     >+SC00D::
     {
@@ -461,7 +475,6 @@ return
 
 ; Shortcut Keys (for keyboards that do not have media buttons)
 ; Might have to change 'AppsKey' if it is unavailable
-
 AppsKey & F2::Run("ribbons.scr /s")
 AppsKey & F6::Send("{Media_Prev}")
 AppsKey & F7::Send("{Media_Play_Pause}")
@@ -509,6 +522,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Hotkeys
 
+#HotIf ; Global hotkeys
+    SC002::return
+    SC029::SC002
+
 #HotIf ; Context-insensitive hotkeys
     <+>^ü::
     {
@@ -519,24 +536,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             {
                 
             }
-        }
-    }
-
-    SC002::
-    SC002 up::
-    {
-        static held := false
-
-        if (InStr(A_ThisHotkey, "up"))
-        {
-            held := false
-            return
-        }
-
-        if (!held)
-        {
-            Send("{SC002 down}{SC002 up}")
-            held := true
         }
     }
 
@@ -551,9 +550,9 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         n := ""
         math := codebase.math
-        vec := codebase.math.vectorGeometry
-        prob := codebase.math.probability
-        mat := codebase.math.matrixComputation
+        vec := math.vectorGeometry
+        prob := math.probability
+        mat := math.matrixComputation
 
         arr := [
             
@@ -706,10 +705,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+#::
     {
-        str := "Leipziger Str. | Potsdamer Platz | Potsdamer Str. | Bülowstr. | Nollendorfplatz | Karl-Heinrich-Ulrichs-Str. | Lützowplatz | Klingelhöferstr. | Hofjägerallee | Großer Stern | Str. des 17. Juni | bis zum Endpunkt für Fahrzeuge: Yitzhak-Rabin-Straße | für Fußgänger: Straße des 17. Juni bis Brandenburger Tor"
-        str := StrReplace(str, " | ", "`n")
+        n := codebase.range(3, 6, 1/3)
+        throw Error()
         MsgBox(A_Clipboard := codebase.elemsOut(
-            str
+            n
         ))
     }
 
@@ -717,13 +716,18 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     +SC00D::Send("``{Space}")
  
     ; Pixel-perfect mouse movement which literally just breaks on any but the primary monitor IF Windows's DPI scaling is set to anything but 100%
-    #HotIf !WinActive("ahk_exe Code - Insiders.exe")
+    #HotIf !WinActive("VSCode")
     NumpadDot & Numpad2::MouseMove(0, 1, 50, "R")
     NumpadDot & Numpad4::MouseMove(-1, 0, 50, "R")
     NumpadDot & Numpad6::MouseMove(1, 0, 50, "R")
     NumpadDot & Numpad8::MouseMove(0, -1, 50, "R")
     NumpadDot & Numpad7::Click()
     NumpadDot & Numpad9::Click("Right")
+
+    :*?b0:(::){Left}
+    :*?b0:[::]{Left}
+    :*?b0:{::{}}{Left}
+
     #HotIf
 
     #!Left::WinMove(-1920, 0, 1920 / 3, 1080, "A")
@@ -732,13 +736,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^+!c::
     ^+!x::
     {
-        local sep := "`n"
+        sep := "`n"
 
         old := A_Clipboard
         A_Clipboard := ""
         Send("^" . SubStr(A_ThisHotkey, -1, 1))
-        ClipWait(0.25)
-        if (A_Clipboard)
+        if (ClipWait())
         {
             A_Clipboard := Trim(old, '`t ') . sep . Trim(A_Clipboard, '`t ')
             codebase.Tool("Appended!")
@@ -1188,7 +1191,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Context-sensitive hotkeys
 
-#HotIf WinActive("ahk_exe Code - Insiders.exe")
+#HotIf WinActive("VSCode")
     NumpadDot::Send(".")
 
 #HotIf !ProcessExist("ShareX.exe")
@@ -1331,14 +1334,14 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Extraction
 #HotIf WinActive("ahk_exe R6-Extraction.exe")
-    +b::extractionrapid.inc()
+    +b::xtrctnrapid.inc()
 
     ~RButton & LButton::
     {
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && extractionrapid.is()))
+            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && xtrctnrapid.is()))
             {
                 break
             }
@@ -1810,6 +1813,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     NumpadAdd::WheelUp
     NumpadSub::WheelDown
 
+    ö::Send("{LButton down}{RButton down}")
+
     ~*WheelUp::
     ~*WheelDown::
     {
@@ -2156,3 +2161,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             Sleep(10)
         }
     }
+
+#HotIf WinActive("ahk_exe HuntGame.exe")
+    +b::huntrapid.inc()
+    +n::huntrapid.dec()
