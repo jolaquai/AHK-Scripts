@@ -22,10 +22,10 @@ notes := ""
 
 eh := codebase.ErrorHandler([Error], codebase.ErrorHandler.reload)
 
-#Include JSON.ahk
-#Include MimeTypeMap.ahk
-#Include UnicodeBlockMap.ahk
-#Include HTTPStatusMap.ahk
+#Include JSON.ah2
+#Include MimeTypeMap.ah2
+#Include UnicodeBlockMap.ah2
+#Include HTTPStatusMap.ah2
 
 SendMode("Event")
 #SingleInstance force

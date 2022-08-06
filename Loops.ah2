@@ -1,5 +1,5 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ahk
+#Include #Includes\ahk-codebase.ah2
 
 clipProcess(type)
 {
@@ -511,7 +511,7 @@ functions()
                 {
                     SplitPath(A_ScriptFullPath, , &dir, , , &drv)
                     f := FileOpen('reAhk.bat', "w")
-                    f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
+                    f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ah2`nstart Loops.ah2")
                     f.Close()
                     Run('reAhk.bat')
                 }
@@ -1013,7 +1013,7 @@ shafk_Click(*)
 afkshown := false
 shgui.Show("X5 Y5 NoActivate")
 
-codebase.Tool("Reloaded Loops.ahk", true, , , 50)
+codebase.Tool("Reloaded Loops.ah2", true, , , 50)
 
 if ((f := codebase.directoryOperations.getNewest("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", true, "*.vpj")) !== "")
 {

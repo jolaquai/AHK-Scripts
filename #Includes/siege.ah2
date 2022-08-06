@@ -8,7 +8,7 @@
  */
 notes := ""
 
-#Include ahk-codebase.ahk
+#Include ahk-codebase.ah2
 
 class siege
 {

@@ -1,5 +1,5 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include .\#Includes\ahk-codebase.ahk
+#Include .\#Includes\ahk-codebase.ah2
 
 f := "C:\Users\leon\AppData\Roaming\BetterDiscord\themes\Black Minimalistica.theme.css"
 snip := "C:\Users\leon\OneDrive\Desktop\Snip\Snip_Metadata.json"

@@ -816,7 +816,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
         }
 
-        altgrgui := Gui(, "altgrgui [" . info.ah2_hwnd . "]")
+        altgrgui := Gui(, "altgrgui [" . info.ahk_hwnd . "]")
         altgrgui.OnEvent("Close", altgrgui_Exit)
         altgrgui.OnEvent("Escape", altgrgui_Exit)
 
@@ -843,7 +843,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         exec_Click(*)
         {
             A_Clipboard := ""
-            A_Clipboard := info.ah2_exe
+            A_Clipboard := info.ahk_exe
             if (A_Clipboard)
                 codebase.Tool("Copied!")
 
@@ -887,7 +887,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         {
             global chosenTime
             A_Clipboard := ""
-            A_Clipboard := DateDiff(chosenTime, codebase.constants.ah2TimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
+            A_Clipboard := DateDiff(chosenTime, codebase.constants.ahkTimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
             if (A_Clipboard)
             {
                 codebase.Tool("Copied!")

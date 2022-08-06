@@ -50,7 +50,7 @@ if (!FileExist("valInstallSettings.txt"))
         dsel := DirSelect("::{20d04fe0-3aea-1069-a2d8-08002b30309d}", 0, m)
         if (dsel = "")
         {
-            MsgBox("No directory has been selected or the OS refused to show the dialog.`nTo retry, open Valorant.ahk again and choose the folder.`nExiting...")
+            MsgBox("No directory has been selected or the OS refused to show the dialog.`nTo retry, open Valorant.ah2 again and choose the folder.`nExiting...")
             ExitApp(1)
         }
     }
