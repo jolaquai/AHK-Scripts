@@ -132,6 +132,7 @@ sendAfk(exe := "")
     }
     else if (exe == "DeadByDaylight-Win64-Shipping.exe")
     {
+        return
         codebase.Tool("Starting DBD's AFK...")
 
         Loop
@@ -361,17 +362,17 @@ fastMonitor()
     */
 
     ; Dead By Daylight progress bar monitor
-    static WIDTH := 0
-    static HEIGHT := 0
-    if (WIDTH == 0 || HEIGHT == 0)
+    static DBD_WIDTH := 0
+    static DBD_HEIGHT := 0
+    if (DBD_WIDTH == 0 || DBD_HEIGHT == 0)
     {
-        MonitorGet(MonitorGetPrimary(), , , &WIDTH, &HEIGHT)
+        MonitorGet(MonitorGetPrimary(), , , &DBD_WIDTH, &DBD_HEIGHT)
     }
 
-    X1 := Floor(1671 * (WIDTH / 3840))
-    Y1 := Floor(1735 * (HEIGHT / 2160))
-    X2 := Floor(2262 * (WIDTH / 3840))
-    PB_WIDTH := X2 - X1
+    DBD_X1 := Floor(1671 * (DBD_WIDTH / 3840))
+    DBD_Y1 := Floor(1735 * (DBD_HEIGHT / 2160))
+    DBD_X2 := Floor(2262 * (DBD_WIDTH / 3840))
+    PB_DBD_WIDTH := DBD_X2 - DBD_X1
 
     static dbdLastUpdate := A_TickCount
     static dbdRate := 0.0
@@ -380,21 +381,21 @@ fastMonitor()
     try
     {
         if (
-               (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe") || WinActive("ahk_exe vlc.exe"))
+               (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
             && (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
-            && PixelSearch(&cx, &cy, X1, Y1, X2, Y1, "0x3C4347", 50) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+            && PixelSearch(&cx, &cy, DBD_X1, DBD_Y1, DBD_X2, DBD_Y1, "0x3C4347", 50) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
         )
         {
             ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
-            percent := Round((100 * (cx - X1)) / PB_WIDTH, 2)
+            percent := Round((100 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2)
             c := [
-                Round((90 * (cx - X1)) / PB_WIDTH, 2) . "/90`t[Gen]",
-                Round((32 * (cx - X1)) / PB_WIDTH, 2) . "/32`t[Recover]",
-                Round((20 * (cx - X1)) / PB_WIDTH, 2) . "/20`t[Gate]",
-                Round((16 * (cx - X1)) / PB_WIDTH, 2) . "/16`t[Heal]",
-                Round((12 * (cx - X1)) / PB_WIDTH, 2) . "/12`t[Self Mend]",
-                Round((14 * (cx - X1)) / PB_WIDTH, 2) . "/14`t[Totem]",
-                Round(( 8 * (cx - X1)) / PB_WIDTH, 2)  . "/8`t[Mend]"
+                Round((90 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/90`t[Gen]",
+                Round((32 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/32`t[Recover]",
+                Round((20 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/20`t[Gate]",
+                Round((16 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/16`t[Heal]",
+                Round((14 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/14`t[Totem]",
+                Round((12 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/12`t[S. Mend]",
+                Round(( 8 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2)  . "/8`t[Mend]"
             ]
 
             if (percent !== dbdPrev)
@@ -414,7 +415,7 @@ fastMonitor()
                     codebase.stringOperations.strJoin("`n", , c*)
                         . "`n" . percent . "%"
                         . "`t@ ~" . dbdRate . "%/s",
-                    codebase.Tool.coords, 1000, cx, 1735 + 20,
+                    codebase.Tool.coords, 400, cx, DBD_Y1 + 20
                 )
 
                 dbdPrev := percent
@@ -423,50 +424,160 @@ fastMonitor()
         }
     }
 
-    /*
-    static r6prev := "0.00"
-    static r6_ttid_1 := 17
-    static r6_ttid_2 := 18
-    static r6_ttid := r6_ttid_1
-    static r6_radiussubconst := 3
-    static indices := codebase.range(-86, 270, 4)
-    static colors := {
-        mi: SubStr(codebase.convert.colors.variation("0xCA1415", 30)[1], 1, 8),
-        rf: "0xCA1415",
-        ma: SubStr(codebase.convert.colors.variation("0xCA1415", 30)[2], 1, 8)
-    }
-    if (WinActive("ahk_exe RainbowSix.exe") || WinExist("ahk_exe vlc.exe"))
+    ; Approach 1 (WIP): Uses PixelSearch to find white pixels in the bomb timer
+    static approach := 0
+    if (approach == 1)
     {
-        if (true)
+        static R6BOMB_WIDTH := 0
+        static R6BOMB_HEIGHT := 0
+        if (R6BOMB_WIDTH == 0 || R6BOMB_HEIGHT == 0)
         {
-            for j in indices
-            {
-                searchx := 1920 + ((41 - r6_radiussubconst) * Cos((j / 360) * 2 * codebase.math.constants.pi))
-                searchy := 72 + ((42 - r6_radiussubconst) * Sin((j / 360) * 2 * codebase.math.constants.pi))
-                ToolTip((c := PixelGetColor(searchx, searchy)), searchx, searchy, 12)
+            MonitorGet(MonitorGetPrimary(), , , &R6BOMB_WIDTH, &R6BOMB_HEIGHT)
+        }
 
-                if (c == "0x767676")
+        static R6BOMB_RIGHT_X1 := Floor(1921 * (R6BOMB_WIDTH / 3840))
+        static R6BOMB_RIGHT_Y1 := Floor(30 * (R6BOMB_HEIGHT / 2160))
+        static R6BOMB_RIGHT_X2 := Floor(1959 * (R6BOMB_WIDTH / 3840))
+        static R6BOMB_RIGHT_Y2 := Floor(114 * (R6BOMB_HEIGHT / 2160))
+        static R6BOMB_LEFT_X1 := Floor(1921 * (R6BOMB_WIDTH / 3840))
+        static R6BOMB_LEFT_Y1 := Floor(114 * (R6BOMB_HEIGHT / 2160))
+        static R6BOMB_LEFT_X2 := Floor(1881 * (R6BOMB_WIDTH / 3840))
+        static R6BOMB_LEFT_Y2 := Floor(30 * (R6BOMB_HEIGHT / 2160))
+        static R6BOMB_HEIGHT_DELTA := R6BOMB_RIGHT_Y2 - R6BOMB_RIGHT_Y1
+        static R6BOMB_YELLOW_X := Floor(1934 * (R6BOMB_WIDTH / 3840))
+        static R6BOMB_YELLOW_Y := Floor(52 * (R6BOMB_HEIGHT / 2160))
+
+        static R6BOMBPrev := "0.00"
+
+        try
+        {
+            if (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
+            {
+                resultFromRight := true
+                PixelSearch(&cx, &cy, R6BOMB_RIGHT_X1, R6BOMB_RIGHT_Y1, R6BOMB_RIGHT_X2, R6BOMB_RIGHT_Y2, "0xFFFFFF", 1)
+                if (!cx || !cy)
                 {
-                    continue
+                    resultFromRight := false
+                    PixelSearch(&cx, &cy, R6BOMB_LEFT_X1, R6BOMB_LEFT_Y1, R6BOMB_LEFT_X2, R6BOMB_LEFT_Y2, "0xFFFFFF", 1)
                 }
-                if (codebase.convert.colors.exclusiveCompare(c, "0xeeeeee"))
+                if ((cx >= 1912 && cx <= 1921) || (cy >= 51 && cy <= 81))
                 {
-                    timeleft := Round(45 * ((356 - (j + 90)) / 356), 2)
-                    OutputDebug(timeleft . "sec`n")
-                    if (timeleft !== r6prev)
+                    
+                }
+                OutputDebug(Format("Found ({1}, {2})`n", cx, cy))
+
+                ; (cx, cy) is the furthest counterclockwise _filled_ pixel of the bomb timer
+                percent := 100 - ((num := Abs(Floor(((cy - R6BOMB_RIGHT_Y1) / R6BOMB_HEIGHT_DELTA) * 50))) > 50 ? -num : num)
+                OutputDebug(percent . "`n")
+
+                if (percent !== R6BOMBPrev)
+                {
+                    codebase.Tool(
+                        Round(45 * (percent / 100), 2) . "sec"
+                            . "`n" . percent . "%",
+                        codebase.Tool.coords, 1000, cx, cy
+                    )
+
+                    R6BOMBPrev := percent
+                }
+
+                return Sleep(0)
+            }
+        }
+    }
+    else if (approach == 2)
+    {
+        ; Approach 2 (broken): Checks for singular white pixels in the bomb timer area
+        static r6prev := "0.00"
+        static r6_radiussubconst := 3
+        static indices := codebase.range(-22, 68)
+        if (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
+        {
+            if (true)
+            {
+                for j in indices
+                {
+                    searchx := 1920 + ((41 - r6_radiussubconst) * Cos((j / 90) * 2 * codebase.math.constants.pi))
+                    searchy := 72 + ((43 - r6_radiussubconst) * Sin((j / 90) * 2 * codebase.math.constants.pi))
+                    codebase.Tool(c := PixelGetColor(searchx, searchy), codebase.Tool.coords, 1000, searchx, searchy)
+                    if (c == "0x767676")
                     {
-                        r6prev := timeleft
+                        continue
                     }
-                    break
+
+                    if (codebase.convert.colors.between(c, "0xF0F0F0", "0xFFFFFF"))
+                    {
+                        timeleft := Round(45 * ((89 - (j + 22)) / 89), 2)
+                        OutputDebug(timeleft . "sec`n")
+                        if (timeleft !== r6prev)
+                        {
+                            r6prev := timeleft
+                        }
+                        break
+                    }
                 }
             }
         }
     }
-    else
+
+    ; Siege progress bar monitor
+    ; Always make this the last thing to do and return if there is a bomb timer, as that is more important than a progress bar
+    static R6PROG_WIDTH := 0
+    static R6PROG_HEIGHT := 0
+    if (R6PROG_WIDTH == 0 || R6PROG_HEIGHT == 0)
     {
-        ToolTip( , , , (r6_ttid == r6_ttid_1 ? r6_ttid_2 : r6_ttid_1))
+        MonitorGet(MonitorGetPrimary(), , , &R6PROG_WIDTH, &R6PROG_HEIGHT)
     }
-    */
+
+    R6PROG_X1 := Floor(1714 * (R6PROG_WIDTH / 3840))
+    R6PROG_Y1 := Floor(1296 * (R6PROG_HEIGHT / 2160))
+    R6PROG_X2 := Floor(2125 * (R6PROG_WIDTH / 3840))
+    PB_R6PROG_WIDTH := R6PROG_X2 - R6PROG_X1
+
+    static R6PROGLastUpdate := A_TickCount
+    static R6PROGRate := 0.0
+    static R6PROGRates := []
+    static R6PROGPrev := "0.00"
+    try
+    {
+        if (
+               (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
+            && (GetKeyState("F", "P") || GetKeyState("MButton", "P") || GetKeyState("CapsLock", "P") || GetKeyState("LButton", "P"))
+            && PixelSearch(&cx, &cy, R6PROG_X2, R6PROG_Y1, R6PROG_X1, R6PROG_Y1, "0xFFFFFF", 15) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+        )
+        {
+            ; (cx, cy) is the right-most pixel of the progress bar that _is_ filled
+            percent := Round((100 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2)
+            c := [
+                Round((7 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2) . "/7`t[Defuser]",
+                Round((5 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2) . "/5`t[Reinforce]",
+            ]
+
+            if (percent !== R6PROGPrev)
+            {
+                ; Average only the last 10 rates, discard the older ones
+                if ((n := Round((Abs(R6PROGPrev - percent) / ((A_TickCount - R6PROGLastUpdate) / 1000)), 2)) < 50)
+                {
+                    R6PROGRates.Push(n)
+                }
+                if (R6PROGRates.Length > 10)
+                {
+                    R6PROGRates.RemoveAt(1)
+                }
+                try R6PROGRate := Round(codebase.math.sum(1, R6PROGRates.Length, (p) => R6PROGRates[p]) / R6PROGRates.Length, 2)
+
+                codebase.Tool(
+                    codebase.stringOperations.strJoin("`n", , c*)
+                        . "`n" . percent . "%"
+                        . "`t@ ~" . R6PROGRate . "%/s",
+                    codebase.Tool.coords, 1000, cx, R6PROG_Y1 + 15
+                )
+
+                R6PROGPrev := percent
+                R6PROGLastUpdate := A_TickCount
+            }
+        }
+    }
 }
 
 disClick(obj, *)
@@ -524,11 +635,6 @@ functions()
         Run("explorer.exe")
     }
 
-    if (WinExist("Predator - Second Screen"))
-    {
-        WinMoveTop("Predator - Second Screen")
-    }
-
     if (WinExist("ahk_exe csgo.exe"))
     {
         c := PixelGetColor(1987, 828)
@@ -556,10 +662,11 @@ functions()
         }
     }
 
-    if WinExist("ahk_exe FortniteClient-Win64-Shipping.exe")
+    if (WinExist("ahk_exe FortniteClient-Win64-Shipping.exe"))
     {
         while (RunWait('sc stop kprocesshacker3') !== 1060)
         {
+            noPH := true
             Sleep(1000)
         }
     }
@@ -984,34 +1091,7 @@ editBtn.OnEvent("Click", (*) => Edit())
 editBtn := afkgui.Add("Button", "w" . elemWidth, "Reload")
 editBtn.OnEvent("Click", (*) => Reload())
 
-afkgui.Show("X-1915 Y5 NoActivate Hide")
-
-afkgui.GetPos(&searchx, &searchy, &w, &h)
-
-shgui := Gui( , "Show/Hide GUI")
-
-shafk := shgui.Add("Button", "w150", "Show AFK GUI")
-shafk.OnEvent("Click", shafk_Click)
-shafk_Click(*)
-{
-    global
-
-    if (afkshown)
-    {
-        afkgui.Hide()
-        afkshown := false
-        shafk.Text := "Show AFK GUI"
-    }
-    else
-    {
-        afkgui.Show("NoActivate")
-        afkshown := true
-        shafk.Text := "Hide AFK GUI"
-    }
-}
-
-afkshown := false
-shgui.Show("X5 Y5 NoActivate")
+afkgui.Show("X5 Y5")
 
 codebase.Tool("Reloaded Loops.ah2", true, , , 50)
 

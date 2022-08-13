@@ -1,13 +1,16 @@
 /**
  * My codebase library for most of my other AHK scripts.
  *
- * Coding conventions:
+ * Notes:
+ * - Dates should be interpreted as MM/DD/YYYY or MM/DD/YY.
  *
+ * Coding conventions:
  * - The entire library is written to allow for easy modification and expansion, making the functions somewhat prone to changes. The idea is, however, to ensure that either all calls to functions only produce different results while leaving the function's syntax untouched (or only changed so that calls to it do not have to be changed to be valid, such as adding optional parameters), or that a syntax change is easy enough to fix using regex Find-and-Replace.
  * - Most comparisons are hard-coded case-sensitive (operator `==` instead of `=`). This does _not_ apply to functions the express use of which is string comparison, in which case an optional parameter allows for control over this. Most, if not all, default to `true`, i.e. a case-sensitive comparison. Additionally (as per AHKv2 behavior), case-sense is ignored for comparisons where one of the operands is not of type `String` (ex. objects).
  * - String concatenations are / should always be done explicitly: `"string 1" . " " . var` instead of `"string 1" " " var`.
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
+ * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before 
  *
  * The functions and some classes are annotated using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
@@ -32,6 +35,7 @@ SendMode("Event")
 Persistent(false)
 SetTitleMatchMode(2)
 #Warn Unreachable, Off
+A_MenuMaskKey := ""
 
 InstallKeybdHook(true, true)
 InstallMouseHook(true, true)
@@ -41,13 +45,22 @@ CoordMode("ToolTip", "Screen")
 CoordMode("Mouse", "Screen")
 CoordMode("Pixel", "Screen")
 
-SetKeyDelay(, 10)
-SetKeyDelay(, 10, "Play")
+SetKeyDelay(30, 10)
+SetKeyDelay(30, 10, "Play")
 SetScrollLockState(false)
 
-A_MenuMaskKey := ""
 scriptStartupDate := A_Now
 scriptStartupTick := A_TickCount
+/**
+ * Whether a debugger has been attached to the script since script launch or reload.
+ *
+ * Allows full control over what a script does and does not do if a debugger is attached. For example, timers may interrupt debugging sessions if their periods expire while the script is paused.
+ * @note This is not 100% reliable:
+ * - Does not update in real-time.
+ * - Does not reflect the actual status if a debugger has attached to a running script.
+ * - If the script calls `Reload` or is reloaded through `PostMessage`, a debug session, if any, is terminated. After a reload in this manner, this variable will most likely be `false`.
+ */
+A_IsDebuggerAttached := !!InStr(codebase.WinInfo(A_ScriptHwnd, false).processQueryResult.CommandLine, "/Debug")
 
 Object.Prototype.DefineProp("GetOwnPropsCount", { Call: codebase.collectionOperations.objectOperations.getOwnPropsCount.Bind({ }) })
 Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString.Bind({ }) })
@@ -1709,6 +1722,13 @@ class codebase
         class arrayOperations
         {
             /**
+             * A constant used by various functions in this class. For example, item removal functions set items to be removed equal to this constant and then delete them.
+             *
+             * This is deliberately... "abstract" and not something as simple as `"rem"` as it is very likely for a user to be using `"rem"` as a _wanted_ value in an Array.
+             */
+            static arrayRemoveItem := "###00418632R_E_M_O_V_E_I_T_E_M9456345812###"
+
+            /**
              * Evaluates a function on each item in an Array and returns the results in an Array.
              * @param f The function to evaluate on each item in the Array.
              * @param arr The Array to iterate over.
@@ -1775,9 +1795,9 @@ class codebase
                 cpy := arr.Clone()
                 for _i in i
                 {
-                    cpy[_i] := "REM"
+                    cpy[_i] := codebase.collectionOperations.arrayOperations.arrayRemoveItem
                 }
-                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
+                return codebase.collectionOperations.arrayOperations.remove(cpy, [codebase.collectionOperations.arrayOperations.arrayRemoveItem])
             }
 
             /**
@@ -1794,11 +1814,11 @@ class codebase
                 {
                     if (!IsSet(e))
                     {
-                        cpy[A_Index] := "REM"
+                        cpy[A_Index] := codebase.collectionOperations.arrayOperations.arrayRemoveItem
                     }
                 }
 
-                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
+                return codebase.collectionOperations.arrayOperations.remove(cpy, [codebase.collectionOperations.arrayOperations.arrayRemoveItem])
             }
 
             /**
@@ -1836,10 +1856,10 @@ class codebase
                 {
                     if (f(val))
                     {
-                        cpy[A_Index] := "REM"
+                        cpy[A_Index] := codebase.collectionOperations.arrayOperations.arrayRemoveItem
                     }
                 }
-                return codebase.collectionOperations.arrayOperations.remove(cpy, ["REM"])
+                return codebase.collectionOperations.arrayOperations.remove(cpy, [codebase.collectionOperations.arrayOperations.arrayRemoveItem])
             }
 
             /**
@@ -2049,6 +2069,22 @@ class codebase
                 ret[i] := ret[j]
                 ret[j] := temp
                 return ret
+            }
+
+            static arrShuffle(arr)
+            {
+                nArr := arr.Clone()
+                if (Type(arr) !== "Array")
+                {
+                    throw TypeError("Invalid type for ``arr``. Received ``" . Type(arr) . "``, expected ``Array``.")
+                }
+                
+                for i in codebase.range(1, arr.Length, 1)
+                {
+                    j := Random(1, arr.Length)
+                    nArr := codebase.collectionOperations.arrayOperations.arrSwap(nArr, i, j)
+                }
+                return nArr
             }
 
             /**
@@ -2758,12 +2794,12 @@ class codebase
 
                         for j in codebase.collectionOperations.arrayOperations.arrayContains(out, pk * searchx)
                         {
-                            out[j] := "REM"
+                            out[j] := codebase.collectionOperations.arrayOperations.arrayRemoveItem
                         }
                     }
                 }
 
-                return codebase.collectionOperations.arrayOperations.remove(out, ["REM"])
+                return codebase.collectionOperations.arrayOperations.remove(out, [codebase.collectionOperations.arrayOperations.arrayRemoveItem])
             }
         }
 
@@ -4517,21 +4553,21 @@ class codebase
          * Steps through a range of values, passes them to a custom function and returns the sum of the results.
          * @param x The inclusive start value (lower bound) of the numbers to step through.
          * @param n The inclusive stop value (upper bound) of the numbers to step through.
-         * @param func The function to pass the current number to. Must support being passed exactly one parameter and return a numeric value.
-         * @throws `TypeError` if `func` is not a `Func` object or one of its subtypes.
-         * @returns The sum of the numbers returned by `func`.
+         * @param fn The function to pass the current number to. Must support being passed exactly one parameter and return a numeric value.
+         * @throws `TypeError` if `fn` is not a `Func` object or one of its subtypes.
+         * @returns The sum of the numbers returned by `fn`.
          */
-        static sum(x, n, func)
+        static sum(x, n, fn)
         {
-            if (Type(func) !== "Func" && Type(func) !== "Closure" && Type(func) !== "BoundFunc")
+            if (!(fn is Func))
             {
-                throw TypeError("Invalid type for ``func``. Received ``" . Type(func) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
+                throw TypeError("Invalid type for ``fn``. Received ``" . Type(fn) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
             }
 
             result := 0
             for num in codebase.range(x, n)
             {
-                result += func(num)
+                result += fn(num)
             }
             return result
         }
@@ -4540,21 +4576,21 @@ class codebase
          * Steps through a range of values, passes them to a custom function and returns the product of the results.
          * @param x The inclusive start value (lower bound) of the numbers to step through.
          * @param n The inclusive stop value (upper bound) of the numbers to step through.
-         * @param func The function to pass the current number to. Must support being passed exactly one parameter and return a numeric value.
-         * @throws `TypeError` if `func` is not a `Func` object or one of its subtypes.
-         * @returns The product of the numbers returned by `func`.
+         * @param fn The function to pass the current number to. Must support being passed exactly one parameter and return a numeric value.
+         * @throws `TypeError` if `fn` is not a `Func` object or one of its subtypes.
+         * @returns The product of the numbers returned by `fn`.
          */
-        static product(x, n, func)
+        static product(x, n, fn)
         {
-            if (Type(func) !== "Func" && Type(func) !== "Closure" && Type(func) !== "BoundFunc")
+            if (!(fn is Func))
             {
-                throw TypeError("Invalid type for ``func``. Received ``" . Type(func) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
+                throw TypeError("Invalid type for ``fn``. Received ``" . Type(fn) . "``, expected ``Func``, ``Closure`` or ``BoundFunc``.")
             }
 
             result := 1
             for num in codebase.range(x, n)
             {
-                result *= func(num)
+                result *= fn(num)
             }
             return result
         }
@@ -4713,7 +4749,7 @@ class codebase
             class cone
             {
                 static getVolume(r, h) => (codebase.math.constants.pi * (r ** 2) * h) / 3
-                static getSurface(r, h) => codebase.math.constants.pi * r * (r + (this.getSlant(r, h)))
+                static getSurface(r, h) => codebase.math.constants.pi * r * (r + (codebase.math.geometry.cone.getSlant(r, h)))
                 static getSlant(r, h) => Sqrt((r ** 2) + (h ** 2))
             }
 
@@ -4729,8 +4765,8 @@ class codebase
             /**
              * Picks one from a set of elements with set chances.
              * @param elems A Map object with a label for the items and their associated chances.
-             * @returns A Map object with the chosen item and what random number caused it to be picked. This number is between `0` and the sum of all probabilities in `elems`.
              * @note The probabilities of the items need not add up to exactly `1`.
+             * @returns A Map object with the chosen item and what random number caused it to be picked. This number is between `0` and the sum of all probabilities in `elems`.
              */
             static pickRandom(elems)
             {
@@ -5198,7 +5234,7 @@ class codebase
 
         /**
          * Determines if a directory is empty.
-         * @param The directory to search through.
+         * @param dir The directory to search through.
          * @returns `true` if the directory contains no other directories or files.
          */
         static isEmpty(dir) => !(codebase.directoryOperations.getFiles(dir, false).Length || codebase.directoryOperations.getFolders(dir, false).Length)
@@ -5638,7 +5674,7 @@ class codebase
              * @param max The upper bound color.
              * @returns `true` if the color is between the two other colors, `false` otherwise.
              */
-            static between(color, min, max) => codebase.convert.colors.exclusiveCompare(min, color) && codebase.convert.colors.exclusiveCompare(color, max)
+            static between(color, min, max) => codebase.convert.colors.compare(min, color) && codebase.convert.colors.compare(color, max)
 
             /**
              * Compares two color values (numerically).
@@ -5881,7 +5917,7 @@ class codebase
 
     class WinInfo
     {
-        ahk_hwnd := 0
+        ahk_id := 0
 
         /**
          * Instantiates a new `codebase.WinInfo` object.
@@ -5889,20 +5925,20 @@ class codebase
          * @throws `TargetError` if the HWND of the target window could not be retrieved.
          * @returns An instance of the `WinInfo` class with data about the window specified by `identifier`.
          */
-        __New(identifier := "A")
+        __New(identifier := "A", msg := true)
         {
             ; Use Windows's HWND instead of the title etc. because that may change after execution of this line.
-            try this.ahk_hwnd := WinGetID(identifier)
+            this.ahk_id := WinGetID(identifier)
 
             SetTimer(() => ToolTip(), -500)
 
-            if (!(this.ahk_hwnd))
+            if (!(this.ahk_id))
             {
                 throw TargetError("Active window HWND could not be retrieved. The window might be 'not responding' or have been closed.")
             }
 
-            WinGetPos(&xAbsolute, &yAbsolute, &wAbsolute, &hAbsolute, "ahk_id " . this.ahk_hwnd)
-            WinGetClientPos(&xClient, &yClient, &wClient, &hClient, "ahk_id " . this.ahk_hwnd)
+            WinGetPos(&xAbsolute, &yAbsolute, &wAbsolute, &hAbsolute, this.ahk_id)
+            WinGetClientPos(&xClient, &yClient, &wClient, &hClient, this.ahk_id)
 
             this.wAbsolute := wAbsolute
             this.hAbsolute := hAbsolute
@@ -5913,21 +5949,21 @@ class codebase
             this.xClient := xClient
             this.yClient := yClient
 
-            this.title := WinGetTitle("ahk_id " . this.ahk_hwnd)
-            this.ahk_class := WinGetClass("ahk_id " . this.ahk_hwnd)
-            this.ahk_exe := WinGetProcessName("ahk_id " . this.ahk_hwnd)
-            this.ahk_pid := WinGetPID("ahk_id " . this.ahk_hwnd)
+            this.title := WinGetTitle(this.ahk_id)
+            this.ahk_class := WinGetClass(this.ahk_id)
+            this.ahk_exe := WinGetProcessName(this.ahk_id)
+            this.ahk_pid := WinGetPID(this.ahk_id)
 
-            if (!WinExist("ahk_id " . this.ahk_hwnd))
+            if (!WinExist(this.ahk_id))
             {
                 throw TargetError("Active window could not be accessed. The window might be 'not responding' or have been closed.")
             }
 
             DetectHiddenText(false)
-            this.textVisible := SendMessage(0x000D, , , , "ahk_id " . this.ahk_hwnd)
+            this.textVisible := SendMessage(0x000D, , , , this.ahk_id)
             try
             {
-                this.textStatusVisible := StatusBarGetText("ahk_id " . this.ahk_hwnd)
+                this.textStatusVisible := StatusBarGetText(this.ahk_id)
             }
             catch Error
             {
@@ -5935,10 +5971,10 @@ class codebase
             }
 
             DetectHiddenText(true)
-            this.textAll := SendMessage(0x000D, , , , "ahk_id " . this.ahk_hwnd)
+            this.textAll := SendMessage(0x000D, , , , this.ahk_id)
             try
             {
-                this.textStatusAll := StatusBarGetText("ahk_id " . this.ahk_hwnd)
+                this.textStatusAll := StatusBarGetText(this.ahk_id)
             }
             catch Error
             {
@@ -5949,7 +5985,7 @@ class codebase
             for p in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
             {
                 ; https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process
-                if (p.Name == this.ahk_exe)
+                if (p.ProcessId == this.ahk_pid)
                 {
                     for v in ["CreationClassName", "Caption", "CommandLine", "CreationDate", "CSCreationClassName", "CSName", "Description", "ExecutablePath", "ExecutionState", "Handle", "HandleCount", "InstallDate", "KernelModeTime", "MaximumWorkingSetSize", "MinimumWorkingSetSize", "Name", "OSCreationClassName", "OSName", "OtherOperationCount", "OtherTransferCount", "PageFaults", "PageFileUsage", "ParentProcessId", "PeakPageFileUsage", "PeakVirtualSize", "PeakWorkingSetSize", "Priority", "PrivatePageCount", "ProcessId", "QuotaNonPagedPoolUsage", "QuotaPagedPoolUsage", "QuotaPeakNonPagedPoolUsage", "QuotaPeakPagedPoolUsage", "ReadOperationCount", "ReadTransferCount", "SessionId", "Status", "TerminationDate", "ThreadCount", "UserModeTime", "VirtualSize", "WindowsVersion", "WorkingSetSize", "WriteOperationCount", "WriteTransferCount"]
                     {
@@ -5958,7 +5994,10 @@ class codebase
                             this.processQueryResult.DefineProp(v, { Value: p.%v% })
                         }
                     }
-                    MsgBox(codebase.elemsOut(this.processQueryResult))
+                    if (msg)
+                    {
+                        MsgBox(codebase.elemsOut(this.processQueryResult))
+                    }
                     break
                 }
             }

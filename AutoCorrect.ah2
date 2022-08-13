@@ -1,13 +1,16 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
 #Include #Includes\ahk-codebase.ah2
 #Include #Includes\siege.ah2
+#Include #Includes\Dictionary.ah2
 codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
 
 ; Function / Variable / Object / Class Declarations
-
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
-codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
+if (!A_IsDebuggerAttached)
+{
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
+}
 
 /**
  * A `Rapidvar` is basically just a glorified Integer "type" with a custom maximum value instead of it being dictated by the amount of bits used to store a number. Its _current_ value's intended use is to influence the behavior of a game's hotkeys.
@@ -64,7 +67,7 @@ class Rapidvar
     /**
      * Check whether the `Rapidvar`'s current value is equal to a specific value or at least one of a series of values.
      * @param anyof Any number of numerical values to check against.
-     * @note If no arguments are passed, the return value is the current value of the `Rapidvar`.
+     * @note If no arguments are passed, the current value of the `Rapidvar` is returned. Equivalent to calling this method and passing all values in the range `[1, Rapidvar.max]`.
      * @returns `true` if the `Rapidvar`'s value is equal to any of the passed values, `false` otherwise.
      */
     is(anyof*)
@@ -110,10 +113,10 @@ class Rapidvar
 
     /**
      * Set the new maximum value of the `Rapidvar`.
-     * @param max The new maximum.
+     * @param value The new maximum.
      * @returns The new maximum value of the `Rapidvar`.
      */
-    setMax(max) => this.max := max
+    setMax(value) => this.max := value
 }
 
 dbdrapid := Rapidvar("dbd")
@@ -134,6 +137,7 @@ apexrapid := Rapidvar("apex")
 f13rapid := Rapidvar("f13")
 mwrapid := Rapidvar("mw")
 huntrapid := Rapidvar("hunt", 2)
+swrapid := Rapidvar("sw")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -207,7 +211,7 @@ Hotstring(":*?:<;3", ">;3")
     :*?:gr_tau::τ ; Τ
 :*?:gr_upsilon::υ ; Υ
     :*?:gr_phi::φ ; Φ
-    :*?:gr_chi::χ ; Χ
+    :*?:gr_chi::χ ; Χ 
     :*?:gr_psi::ψ ; Ψ
   :*?:gr_omega::ω ; Ω
 
@@ -244,7 +248,7 @@ Hotstring(":*?:<;3", ">;3")
 ; Math
 :*?:math_approx::≈
 :*?:math_neq::≠
-:*?:/=/::≠
+:*?:=/=::≠
 :*?:math_corr::≙
 :*?:math_est::≙
 
@@ -271,21 +275,35 @@ Hotstring(":*?:<;3", ">;3")
 
 :*?:copyVKSC::
 {
-    ih := InputHook("L1")
+    local ih := InputHook("V", "{Escape}")
+    ih.KeyOpt("{All}", "+NS")
+    ih.OnKeyDown := fn
+    ih.OnEnd := end
     ih.Start()
-    ih.Wait()
-    ih.Stop()
-    A_Clipboard := Format("VK{:02X}SC{:03X}", GetKeyVK(ih.input), GetKeySC(ih.input))
-    if (A_Clipboard)
+    
+    end(*)
     {
+        if (ih.EndKey == "Escape")
+        {
+            codebase.Tool("Input terminated through Escape, exiting...", codebase.Tool.center)
+            return
+        }
+    }
+    fn(hook, vk, sc)
+    {
+        A_Clipboard := ""
+        A_Clipboard := Format("VK{:02X}SC{:03X}", vk, sc)
         codebase.Tool("Success", codebase.Tool.center)
+        return ih.Stop()
     }
 }
 
 ; Insert character from Unicode code
-:*?:\u+::
+:b0*?:\u+::
+:b0*?:\x+::
+insertCharacterFromUnicodeCode(ThisHotkey)
 {
-    ih := InputHook("V L4", "{NumpadEnter}{Escape}")
+    ih := InputHook("V L4", "{Escape}")
     codebase.Tool("Waiting for Unicode char code...", codebase.Tool.center)
     ih.Start()
     ih.Wait()
@@ -295,43 +313,29 @@ Hotstring(":*?:<;3", ">;3")
         codebase.Tool("Input terminated through Escape, exiting...", codebase.Tool.center)
         return
     }
-    n := codebase.convert.HexToDec(StrUpper(ih.Input))
-    Send("{Backspace " . StrLen(ih.Input) + (ih.EndReason == "EndKey" ? 1 : 0) . "}" . (A_Clipboard := Chr(n)))
+    Send("{Backspace 7}" . (A_Clipboard := Chr(InStr(ThisHotkey, "\x") ? Integer("0x" . ih.Input) : Integer(ih.Input))))
 }
 
 :*?:symb_identify::
 {
-    ih := InputHook("V", "{NumpadEnter}{Escape}")
-    codebase.Tool("Waiting for Unicode char code...", codebase.Tool.center)
+    ih := InputHook("V", "{Enter}{Escape}")
+    ih.KeyOpt("{Enter}", "S")
+    codebase.Tool("Waiting for any text...", codebase.Tool.center)
     ih.Start()
     ih.Wait()
-    ih.Stop()
     if (ih.EndReason == "EndKey" && ih.EndKey == "Escape")
     {
         codebase.Tool("Input terminated through Escape, exiting...", codebase.Tool.center)
         return
     }
-    Send("{Backspace " . StrLen(ih.Input) + 1 . "}")
+    Send("{Backspace " . StrLen(ih.Input) . "}")
     A_Clipboard := ""
     for x in StrSplit(ih.Input)
     {
         ; -> U+HEX/DEC
-        n := StrReplace(codebase.convert.DecToHex(Ord(x), 4), "0x", "") . "/" . Ord(x)
-        A_Clipboard := codebase.stringOperations.strJoin("`n", true, A_Clipboard, n)
-        Send("U{+}" . n . " ")
+        n := Format("{:04X}", Ord(x)) . "/" . Ord(x)
+        A_Clipboard .= (A_Index > 1 ? " " : "") . "U+" . n
     }
-}
-:*?:U+::
-{
-    input := InputBox().Value
-    str := ""
-    for x in StrSplit(input)
-    {
-        ; -> U+HEX/DEC
-        n := "U+" . StrReplace(codebase.convert.DecToHex(Ord(x), 4), "0x", "") . "/" . Ord(x)
-        str := codebase.stringOperations.strJoin(" ", true, str, n)
-    }
-    InputBox(, , , str)
 }
 
 ; Misc. symbols
@@ -374,6 +378,7 @@ Hotstring(":*?:<;3", ">;3")
 :*?:mglw`:::möglicherweise
 :*?:wahrver`:::wahrscheinlichkeitsverteilung
 :*?:binver`:::binomialverteilung
+:*?C:Dnd`:::Do-Not-Disturb
 :*?:dnd`:::do-not-disturb
 
 :?:@Paul::@₱₳ɄⱠ
@@ -402,12 +407,10 @@ Hotstring(":*?:<;3", ">;3")
 ; Surround symbols
 #HotIf !WinActive("VSCode")
     && !WinActive("ahk_exe discord.exe")
-    >+SC00D::
+    RShift & SC00D:: ; RShift+`
     {
         window := WinActive("A")
-
-        string := InputBox("Input between one and three options to surround the selection with or insert, separated by a space.`nZero or more than three options causes the thread to exit here.")
-        symbols := StrSplit(string.Value, A_Space)
+        symbols := StrSplit(InputBox("Input between one and three options to surround the selection with or insert, separated by a space.`nZero or more than three options causes the thread to exit here.").Value, A_Space)
 
         WinActivate(window)
         WinWaitActive(window)
@@ -424,10 +427,6 @@ Hotstring(":*?:<;3", ">;3")
         {
             surroundSymbols(symbols[1], symbols[2], symbols[3])
         }
-        else
-        {
-            Exit(1)
-        }
 
         /*
          * Send the actual inputs.
@@ -435,7 +434,7 @@ Hotstring(":*?:<;3", ">;3")
          * @param rightSymbol The right symbol to insert. Defaults to `leftSymbol` if omitted.
          * @param moveLeft The amount of left movements to make. Defaults to `StrLen(rightSymbol)` if omitted.
          */
-        surroundSymbols(leftSymbol, rightSymbol := unset, moveLeft := unset)
+        surroundSymbols(leftSymbol, rightSymbol?, moveLeft?)
         {
             if (!IsSet(rightSymbol))
             {
@@ -465,536 +464,8 @@ Hotstring(":*?:<;3", ">;3")
         }
     }
 
-; Post-autorun return call
-return
-
-; Alt-F4 Intercept and Behavior Alteration
-#Include #Includes\alt-f4.ah2
-
-; Shortcut Keys (for keyboards that do not have media buttons)
-; Might have to change 'AppsKey' if it is unavailable
-AppsKey & F2::Run("ribbons.scr /s")
-AppsKey & F6::Send("{Media_Prev}")
-AppsKey & F7::Send("{Media_Play_Pause}")
-AppsKey & F8::Send("{Media_Next}")
-AppsKey & F10::Send("{Volume_Down}")
-AppsKey & F11::Send("{Volume_Up}")
-AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
-
-; Reload with Ctrl+S
-
-#HotIf !WinActive("ahk_exe HITMAN3.exe")
-    && !WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe")
-    && !WinActive("ahk_exe Shipping-ThiefGame.exe")
-    && !WinActive("ahk_exe javaw.exe")
-    && !WinActive("ahk_exe Mafia3DefinitiveEdition.exe")
-    && !WinActive("ahk_exe FarCry5.exe")
-    && !WinActive("ahk_exe OLGame.exe")
-    && !WinActive("ahk_exe csgo.exe")
-    && !WinActive("ahk_exe re8.exe")
-    && !WinActive("ahk_exe RustClient.exe")
-    && !WinActive("ahk_exe LittleNightmares.exe")
-    && !WinActive("ahk_exe hl2.exe")
-    && !WinActive("ahk_exe NewColossus_x64vk.exe")
-    && !WinActive("ahk_exe left4dead2.exe")
-    && !WinActive("Roblox")
-    && !WinActive("ahk_exe r5apex.exe")
-    && !WinActive("ahk_exe EvilDead-Win64-Shipping.exe")
-    && !WinActive("ahk_exe Aragami.exe")
-~^s::
-{
-    ; Script process duplication due to rapid reloading should be prevented by this
-    Send("{Ctrl up}{s up}")
-    Sleep(100)
-    DetectHiddenWindows(true)
-    for hwnd in WinGetList("ahk_class AutoHotkey")
+    RShift & SC00C:: ; RShift + ß
     {
-        if (hwnd == A_ScriptHwnd)
-        {
-            continue
-        }
-        PostMessage(0x0111, 65303, , , hwnd)
-    }
-    Reload()
-}
-
-; Hotkeys
-
-#HotIf ; Global hotkeys
-    SC002::return
-    SC029::SC002
-
-#HotIf ; Context-insensitive hotkeys
-    <+>^ü::
-    {
-        procs := ["Launcher.exe", "RockstarErrorHandler.exe", "RockstarService.exe", "SocialClubHelper.exe", "PlayGTAV.exe"]
-        for pname in procs
-        {
-            while (ProcessClose(pname))
-            {
-                
-            }
-        }
-    }
-
-    ; ö::WinMove(4000, 5, , , "Mein Dominique")
-
-    ScrollLock::
-    ^ScrollLock::
-    {
-        SetScrollLockState(false)
-
-        simple := false
-
-        n := ""
-        math := codebase.math
-        vec := math.vectorGeometry
-        prob := math.probability
-        mat := math.matrixComputation
-
-        arr := [
-            
-        ]
-
-        if (!simple)
-        {
-            l := 0
-            for op in siege.atkdef
-            {
-                for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
-                {
-                    if ((name := StrLen(w.dps)) > l)
-                    {
-                        l := name
-                    }
-                }
-            }
-            for class in [siege.attackers(), siege.defenders()]
-            {
-                for op in class
-                {
-                    for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
-                    {
-                        if (
-                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
-                            && true
-                        )
-                        {
-                            arr.Push(Format("{1:-" . (l + 4) . "}{2}", w.dps, w.name))
-                        }
-                    }
-                }
-            }
-        }
-        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
-
-        if (!(arr.Length))
-        {
-            codebase.Tool("Exited.", codebase.Tool.center)
-            return
-        }
-
-        MsgBox(A_Clipboard := Trim(codebase.elemsOut(arr), '`n `t`r'))
-    }
-
-    CtrlBreak::
-    Pause::
-    ^CtrlBreak::
-    ^Pause::
-    {
-        SNIP := "E:\YOUTUBE\ETC DATA\Snip"
-
-        replacepairs := Map(
-            "$", "s"
-        )
-
-        artist := FileRead(SNIP . "\Snip_Artist.txt")
-        track := FileRead(SNIP . "\Snip_Track.txt")
-
-        for find, rep in replacepairs
-        {
-            artist := StrReplace(artist, find, rep)
-            track := StrReplace(track, find, rep)
-        }
-
-        artist := StrSplit(artist, ",", " `t")[1]
-        track := StrSplit(track, [" - "], " `t")[1]
-
-        artist := StrLower(RegExReplace(artist, "[^a-zA-Z]+", "-"))
-        track := StrLower(RegExReplace(track, "[^a-zA-Z]+", "-"))
-
-        Run("https://genius.com/" . artist . "-" . track . "-lyrics")
-    }
-
-    ^+ö::
-    {
-        s7_2 := siege.BattlePass.Y7S2.Clone()
-        
-        for tierN in codebase.range(1, 100)
-        {
-            for r in ["free", "premium"]
-            {
-                for rewardN in (s7_2.tiers[tierN].%r%.Length !== 0 ? codebase.range(1, s7_2.tiers[tierN].%r%.Length) : [])
-                {
-                    if (Type(s7_2.tiers[tierN].%r%[rewardN].extra) == "siege.Operator")
-                    {
-                        s7_2.tiers[tierN].%r%[rewardN].extra := s7_2.tiers[tierN].%r%[rewardN].extra.nickname
-                    }
-                }
-            }
-        }
-
-        MsgBox(A_Clipboard := codebase.elemsOut(
-            OSError(32)
-        ))
-    }
-
-    ^+ä::
-    {
-        arr := [
-            "Quentin Smith",
-            "Adam Francis",
-            "Felix Richter",
-            "Yoichi Asakawa"
-        ]
-        MsgBox(A_Clipboard := codebase.elemsOut(
-            arr.Length,
-            ;arr[Random(1, arr.Length)]
-        ))
-    }
-    
-    ^!+ä::
-    {
-        m := Map(
-            "Jill Valentine",   24,
-            "Yoichi Asakawa",    3,
-            "Steve Harrington",  3,
-            "Quentin Smith",     3,
-            "Nancy Wheeler",     3,
-            "Felix Richter",     3,
-            "Adam Francis",      3
-        )
-        arr := []
-        for n, v in m
-        {
-            arr.Push(71 - v . " - " . n)
-        }
-        codebase.collectionOperations.arrayOperations.arrSort(&arr)
-        MsgBox(A_Clipboard := codebase.elemsOut(
-            arr
-        ))
-    }
-
-    ^+ü::
-    {
-        static lenu := codebase.collectionOperations.arrayOperations.arrayConcat(codebase.constants.lowercaseAsc, codebase.constants.numbersAsc)
-        url := "https://prnt.sc/"
-        Loop 6
-        {
-            url .= lenu[Random(1, lenu.Length)]
-        }
-        Run(url)
-        return
-
-        MsgBox(A_Clipboard := codebase.elemsOut(
-            
-        ))
-    }
-
-    ^+#::
-    {
-        n := codebase.range(3, 6, 1/3)
-        throw Error()
-        MsgBox(A_Clipboard := codebase.elemsOut(
-            n
-        ))
-    }
-
-    SC00D::Send("``{Space}")
-    +SC00D::Send("``{Space}")
- 
-    ; Pixel-perfect mouse movement which literally just breaks on any but the primary monitor IF Windows's DPI scaling is set to anything but 100%
-    #HotIf !WinActive("VSCode")
-    NumpadDot & Numpad2::MouseMove(0, 1, 50, "R")
-    NumpadDot & Numpad4::MouseMove(-1, 0, 50, "R")
-    NumpadDot & Numpad6::MouseMove(1, 0, 50, "R")
-    NumpadDot & Numpad8::MouseMove(0, -1, 50, "R")
-    NumpadDot & Numpad7::Click()
-    NumpadDot & Numpad9::Click("Right")
-
-    :*?b0:(::){Left}
-    :*?b0:[::]{Left}
-    :*?b0:{::{}}{Left}
-
-    :*?:>;3::23
-
-    #HotIf
-
-    #!Left::WinMove(-1920, 0, 1920 / 3, 1080, "A")
-    #!Right::WinMove(-1920 + (1920 / 3), 0, (1920 * (2 / 3)), 1080, "A")
-    
-    ^+!c::
-    ^+!x::
-    {
-        sep := "`n"
-
-        old := A_Clipboard
-        A_Clipboard := ""
-        Send("^" . SubStr(A_ThisHotkey, -1, 1))
-        if (ClipWait())
-        {
-            A_Clipboard := Trim(old, '`t ') . sep . Trim(A_Clipboard, '`t ')
-            codebase.Tool("Appended!")
-        }
-        else
-        {
-            A_Clipboard := old
-            codebase.Tool("Error...")
-        }
-    }
-
-    ; AltGr
-    <^>!ü::
-    {
-        elemW := 300
-        chosenTime := A_Now
-        MouseGetPos(&x, &y)
-
-        /**
-         * Functions returning values from open windows should operate on this handle as the WinTitle parameter `"A"` will target the GUI window instead of the previously intended target window.
-         */
-        window := WinActive("A")
-        /**
-         * Sometimes, the window to be operated on is immediately destroyed upon focus loss. Therefore, attempt to construct a winInfo object before this happens.
-         */
-        try
-        {
-            info := codebase.WinInfo(window)
-        }
-        catch (Error as e)
-        {
-            throw e
-            ; return MsgBox("Failed to construct winInfo object on window handle ``" . window . "``. It was most likely closed before any info could be obtained.")
-        }
-        col := PixelGetColor(x, y)
-
-        try
-        {
-            ;altgrgui_Exit()
-        }
-        Sleep(100)
-
-        /**
-         * Destroys the altgrgui's GUI window and reactivates the previously active window.
-         */
-        altgrgui_Exit(*)
-        {
-            altgrgui.Hide()
-            altgrgui.Destroy()
-            
-            /**
-             * Whether to allow the reactivation of the previous window to fail.
-             *
-             * Specify `true` to re-throw caught Errors during reactivation of the previous window.
-             *
-             * Specify `false` to ignore any caught Errors.
-             * This is generally preferred because there is no downside, and actually helps when dealing with windows that are immediately destroyed upon focus loss.
-             */
-            throwReactivationErrors := false
-
-            try
-            {
-                WinActivate(window)
-                WinWaitActive(window)
-            }
-            catch (Error as e)
-            {
-                if (throwReactivationErrors)
-                {
-                    throw e
-                }
-            }
-        }
-
-        altgrgui := Gui(, "altgrgui [" . info.ahk_hwnd . "]")
-        altgrgui.OnEvent("Close", altgrgui_Exit)
-        altgrgui.OnEvent("Escape", altgrgui_Exit)
-
-        /**
-         * Retrieves the command line of the previously active window by getting the `commandline` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        cmdl_Click(*)
-        {
-            A_Clipboard := ""
-            A_Clipboard := info.commandline
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-
-            altgrgui_Exit()
-        }
-        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy command line of active window")
-        cmdl.OnEvent("Click", cmdl_Click)
-
-        /**
-         * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        exec_Click(*)
-        {
-            A_Clipboard := ""
-            A_Clipboard := info.ahk_exe
-            if (A_Clipboard)
-                codebase.Tool("Copied!")
-
-            altgrgui_Exit()
-        }
-        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy executable name of active window")
-        cmdl.OnEvent("Click", exec_Click)
-
-        /**
-         * Sets the clipboard equal to the position of and color under the cursor before the GUI window was opened. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        mpos_Click(*)
-        {
-            A_Clipboard := ""
-            A_Clipboard := codebase.stringOperations.strJoin(", ", true, x, y, col)
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-
-            altgrgui_Exit()
-        }
-        mpos := altgrgui.Add("Button", "Default r2 w" . elemW, "Copy mouse position and color under`ncursor when this window was opened (Enter)")
-        mpos.OnEvent("Click", mpos_Click)
-
-        /**
-         * Retrieves the chosen time from the DateTime GUI element and sets `chosenTime` equal to it.
-         */
-        cal_Change(obj, *)
-        {
-            global chosenTime := obj.Value
-            codebase.Tool("Changed")
-        }
-        cal := altgrgui.Add("DateTime", "Choose" . chosenTime . " w" . elemW, "MM/dd/yyyy    HH:mm:ss")
-        cal.OnEvent("Change", cal_Change)
-
-        /**
-         * Sets the clipboard equal to the chosen date and time as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        calts_Click(*)
-        {
-            global chosenTime
-            A_Clipboard := ""
-            A_Clipboard := DateDiff(chosenTime, codebase.constants.ahkTimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-
-            altgrgui_Exit()
-        }
-        calts := altgrgui.Add("Button", "w" . elemW, "Copy Unix time of chosen timestamp (UTC, Discord timestamp-compatible)")
-        calts.OnEvent("Click", calts_Click)
-
-        /**
-         * Sets the clipboard equal to the current date and time (relative to UTC) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        unix0ts_Click(*)
-        {
-            A_Clipboard := ""
-            A_Clipboard := codebase.getUnixTimeUTC()
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-
-            altgrgui_Exit()
-        }
-        unix0ts := altgrgui.Add("Button", "w" . elemW, "Copy current Unix time (UTC, Discord timestamp-compatible)")
-        unix0ts.OnEvent("Click", unix0ts_Click)
-
-        /**
-         * Sets the clipboard equal to the chosen date and time (in the current time zone) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        unixlts_Click(*)
-        {
-            A_Clipboard := ""
-            A_Clipboard := codebase.getUnixTimeLocal()
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-            
-            altgrgui_Exit()
-        }
-        unixlts := altgrgui.Add("Button", "w" . elemW, "Copy current Unix time (local time)")
-        unixlts.OnEvent("Click", unixlts_Click)
-
-        /**
-         * Sets the clipboard equal to the absolute value (always positive) of the difference between the chosen date and time in seconds. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        tdiff_Click(*)
-        {
-            global chosenTime
-            A_Clipboard := ""
-            A_Clipboard := DateDiff(A_Now, chosenTime, "s") < 0 ? -DateDiff(A_Now, chosenTime, "s") : DateDiff(A_Now, chosenTime, "s")
-            if (A_Clipboard)
-            {
-                codebase.Tool("Copied!")
-            }
-            
-            altgrgui_Exit()
-        }
-        tdiff := altgrgui.Add("Button", "w" . elemW, "Copy difference between A_Now and chosen timestamp")
-        tdiff.OnEvent("Click", tdiff_Click)
-
-        /**
-         * If ShutdownBlocker is running on the system, calls it with the `-allow` parameter per command line to allow a shutdown to be scheduled. Then calls `shutdown` per command line to schedule a shutdown of the system at the chosen timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
-         */
-        tdiffsd_Click(*)
-        {
-            global chosenTime
-            try
-            {
-                WinActivate("Shutdown Blocker")
-                sdb := WinExist("Shutdown Blocker")
-                Run(A_ComSpec . ' /c ' . codebase.WinInfo(sdb).processQueryResult.ExecutablePath . ' -allow')
-            }
-
-            Sleep(1000)
-            
-            sdtime := Abs(DateDiff(A_Now, chosenTime, "s"))
-            ex := RunWait('shutdown -s -t ' . sdtime)
-            
-            if (!ex)
-            {
-                MsgBox("Shutting down in`n" . codebase.formatMilliseconds(sdtime * 1000, false, 0))
-            }
-            else if (ex == 1190)
-            {
-                MsgBox("Failed to schedule a shutdown as one is already scheduled.`nCall ``shutdown -a`` to abort that one and retry.")
-            }
-            else ; literal last resort
-            {
-                RunWait(A_ComSpec . ' /k err ' . ex)
-                throw Error("Failed to schedule a shutdown.")
-            }
-            
-            altgrgui_Exit()
-        }
-        tdiffsd := altgrgui.Add("Button", "w" . elemW, "Shutdown at chosen timestamp")
-        tdiffsd.OnEvent("Click", tdiffsd_Click)
-
-        altgrgui.Show()
-    }
-
-    ; RShift + ß
-    >+SC00C::
-    {
-        global
- 
         input := ""
         patterns := []
 
@@ -1177,16 +648,495 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 }
             }
 
-            if (input == "")
+            if (input)
             {
-                Exit(0)
+                WinActivate(window)
+                WinWaitActive(window)
+
+                Send("{Raw}" . input)
+            }
+        }
+    }
+
+; Post-autorun return call
+return
+
+; Alt-F4 Intercept and Behavior Alteration
+#Include #Includes\alt-f4.ah2
+
+; Shortcut Keys (for keyboards that do not have media buttons)
+; Might have to change 'AppsKey' if it is unavailable
+AppsKey & F2::Run("ribbons.scr /s")
+AppsKey & F6::Send("{Media_Prev}")
+AppsKey & F7::Send("{Media_Play_Pause}")
+AppsKey & F8::Send("{Media_Next}")
+AppsKey & F10::Send("{Volume_Down}")
+AppsKey & F11::Send("{Volume_Up}")
+AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
+
+; Reload with Ctrl+S
+
+#HotIf !WinActive("ahk_exe HITMAN3.exe")
+    && !WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe")
+    && !WinActive("ahk_exe Shipping-ThiefGame.exe")
+    && !WinActive("ahk_exe javaw.exe")
+    && !WinActive("ahk_exe Mafia3DefinitiveEdition.exe")
+    && !WinActive("ahk_exe FarCry5.exe")
+    && !WinActive("ahk_exe OLGame.exe")
+    && !WinActive("ahk_exe csgo.exe")
+    && !WinActive("ahk_exe re8.exe")
+    && !WinActive("ahk_exe RustClient.exe")
+    && !WinActive("ahk_exe LittleNightmares.exe")
+    && !WinActive("ahk_exe hl2.exe")
+    && !WinActive("ahk_exe NewColossus_x64vk.exe")
+    && !WinActive("ahk_exe left4dead2.exe")
+    && !WinActive("Roblox")
+    && !WinActive("ahk_exe r5apex.exe")
+    && !WinActive("ahk_exe EvilDead-Win64-Shipping.exe")
+    && !WinActive("ahk_exe Aragami.exe")
+~^s::
+{
+    ; Script process duplication due to rapid reloading should be prevented by this
+    Send("{Ctrl up}{s up}")
+    Sleep(100)
+    DetectHiddenWindows(true)
+    for hwnd in WinGetList("ahk_class AutoHotkey")
+    {
+        if (hwnd == A_ScriptHwnd)
+        {
+            continue
+        }
+        PostMessage(0x0111, 65303, , , hwnd)
+    }
+    Reload()
+}
+
+; Hotkeys
+
+#HotIf ; Global hotkeys
+    SC002::return
+    SC029::SC002
+    SC00D::Send("``{Space}")
+    LShift & SC00D::Send("``{Space}")
+
+#HotIf ; Context-insensitive hotkeys
+    <+>^ü::
+    {
+        procs := ["Launcher.exe", "RockstarErrorHandler.exe", "RockstarService.exe", "SocialClubHelper.exe", "PlayGTAV.exe"]
+        for pname in procs
+        {
+            while (ProcessClose(pname))
+            {
+                
+            }
+        }
+    }
+
+    ; ö::WinMove(4000, 5, , , "Mein Dominique")
+
+    ScrollLock::
+    ^ScrollLock::
+    {
+        SetScrollLockState(false)
+
+        simple := false
+
+        n := ""
+        math := codebase.math
+        vec := math.vectorGeometry
+        prob := math.probability
+        mat := math.matrixComputation
+
+        arr := [
+            
+        ]
+
+        if (!simple)
+        {
+            l := 0
+            for op in siege.atkdef
+            {
+                for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
+                {
+                    if ((name := StrLen(w.dps)) > l)
+                    {
+                        l := name
+                    }
+                }
+            }
+            for class in [siege.attackers(), siege.defenders()]
+            {
+                for op in class
+                {
+                    for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
+                    {
+                        if (
+                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
+                            && true
+                        )
+                        {
+                            arr.Push(Format("{1:-" . (l + 4) . "}{2}", w.dps, w.name))
+                        }
+                    }
+                }
+            }
+        }
+        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
+
+        if (!(arr.Length))
+        {
+            codebase.Tool("Exited.", codebase.Tool.center)
+            return
+        }
+
+        MsgBox(A_Clipboard := Trim(codebase.elemsOut(arr), '`n `t`r'))
+    }
+
+    CtrlBreak::
+    Pause::
+    ^CtrlBreak::
+    ^Pause::
+    {
+        SNIP := "E:\YOUTUBE\ETC DATA\Snip"
+
+        replacepairs := Map(
+            "$", "s"
+        )
+
+        artist := FileRead(SNIP . "\Snip_Artist.txt")
+        track := FileRead(SNIP . "\Snip_Track.txt")
+
+        for find, rep in replacepairs
+        {
+            artist := StrReplace(artist, find, rep)
+            track := StrReplace(track, find, rep)
+        }
+
+        artist := StrSplit(artist, ",", " `t")[1]
+        track := StrSplit(track, [" - "], " `t")[1]
+
+        artist := StrLower(RegExReplace(artist, "[^a-zA-Z]+", "-"))
+        track := StrLower(RegExReplace(track, "[^a-zA-Z]+", "-"))
+
+        Run("https://genius.com/" . artist . "-" . track . "-lyrics")
+    }
+
+    ^+ö::
+    {
+        ; TODO: Create GUI for this with instant lookup and display of results
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            ; Dictionary.contains(w, true, 5)
+        ))
+    }
+
+    ^+ä::
+    {
+        
+    }
+    
+    ^!+ä::
+    {
+        
+    }
+
+    ^+ü::
+    {
+        static lenu := codebase.collectionOperations.arrayOperations.arrayConcat(codebase.constants.lowercaseAsc, codebase.constants.numbersAsc)
+        url := "https://prnt.sc/"
+        Loop 6
+        {
+            url .= lenu[Random(1, lenu.Length)]
+        }
+        Run(url)
+        return
+
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            
+        ))
+    }
+
+    ^+#::
+    {
+        n := codebase.range(3, 6, 1/3)
+        throw Error()
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            n
+        ))
+    }
+
+    ; Pixel-perfect mouse movement which literally just breaks on any but the primary monitor IF Windows's DPI scaling is set to anything but 100%
+    #HotIf !WinActive("VSCode")
+    NumpadDot & Numpad2::MouseMove(0, 1, 50, "R")
+    NumpadDot & Numpad4::MouseMove(-1, 0, 50, "R")
+    NumpadDot & Numpad6::MouseMove(1, 0, 50, "R")
+    NumpadDot & Numpad8::MouseMove(0, -1, 50, "R")
+    NumpadDot & Numpad7::Click()
+    NumpadDot & Numpad9::Click("Right")
+
+    :*?b0:(::){Left}
+    :*?b0:[::]{Left}
+    :*?b0:{::{}}{Left}
+
+    #HotIf
+
+    #!Left::WinMove(-1920, 0, 1920 / 3, 1080, "A")
+    #!Right::WinMove(-1920 + (1920 / 3), 0, (1920 * (2 / 3)), 1080, "A")
+    
+    ^+!c::
+    ^+!x::
+    {
+        sep := "`n"
+
+        old := A_Clipboard
+        A_Clipboard := ""
+        Send("^" . SubStr(A_ThisHotkey, -1, 1))
+        if (ClipWait())
+        {
+            A_Clipboard := Trim(old, '`t ') . sep . Trim(A_Clipboard, '`t ')
+            codebase.Tool("Appended!")
+        }
+        else
+        {
+            A_Clipboard := old
+            codebase.Tool("Error...")
+        }
+    }
+
+    ; AltGr
+    <^>!ü::
+    {
+        elemW := 300
+        chosenTime := A_Now
+        MouseGetPos(&x, &y)
+
+        /**
+         * Functions returning values from open windows should operate on this handle as the WinTitle parameter `"A"` will target the GUI window instead of the previously intended target window.
+         */
+        window := WinActive("A")
+        /**
+         * Sometimes, the window to be operated on is immediately destroyed upon focus loss. Therefore, attempt to construct a winInfo object before this happens.
+         */
+        try
+        {
+            info := codebase.WinInfo(window)
+        }
+        catch (Error as e)
+        {
+            throw e
+            ; return MsgBox("Failed to construct winInfo object on window handle ``" . window . "``. It was most likely closed before any info could be obtained.")
+        }
+        col := PixelGetColor(x, y)
+
+        try
+        {
+            ;altgrgui_Exit()
+        }
+        Sleep(100)
+
+        /**
+         * Destroys the altgrgui's GUI window and reactivates the previously active window.
+         */
+        altgrgui_Exit(*)
+        {
+            altgrgui.Hide()
+            altgrgui.Destroy()
+            
+            /**
+             * Whether to allow the reactivation of the previous window to fail.
+             *
+             * Specify `true` to re-throw caught Errors during reactivation of the previous window.
+             *
+             * Specify `false` to ignore any caught Errors.
+             * This is generally preferred because there is no downside, and actually helps when dealing with windows that are immediately destroyed upon focus loss.
+             */
+            throwReactivationErrors := false
+
+            try
+            {
+                WinActivate(window)
+                WinWaitActive(window)
+            }
+            catch (Error as e)
+            {
+                if (throwReactivationErrors)
+                {
+                    throw e
+                }
+            }
+        }
+
+        altgrgui := Gui(, "altgrgui [" . info.ahk_id . "]")
+        altgrgui.OnEvent("Close", altgrgui_Exit)
+        altgrgui.OnEvent("Escape", altgrgui_Exit)
+
+        /**
+         * Retrieves the command line of the previously active window by getting the `commandline` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        cmdl_Click(*)
+        {
+            A_Clipboard := ""
+            A_Clipboard := info.commandline
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
             }
 
-            WinActivate(window)
-            WinWaitActive(window)
-
-            Send("{Raw}" . input)
+            altgrgui_Exit()
         }
+        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy command line of active window")
+        cmdl.OnEvent("Click", cmdl_Click)
+
+        /**
+         * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        exec_Click(*)
+        {
+            A_Clipboard := ""
+            A_Clipboard := info.ahk_exe
+            if (A_Clipboard)
+                codebase.Tool("Copied!")
+
+            altgrgui_Exit()
+        }
+        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy executable name of active window")
+        cmdl.OnEvent("Click", exec_Click)
+
+        /**
+         * Sets the clipboard equal to the position of and color under the cursor before the GUI window was opened. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        mpos_Click(*)
+        {
+            A_Clipboard := ""
+            A_Clipboard := codebase.stringOperations.strJoin(", ", true, x, y, col)
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+
+            altgrgui_Exit()
+        }
+        mpos := altgrgui.Add("Button", "Default r2 w" . elemW, "Copy mouse position and color under`ncursor when this window was opened (Enter)")
+        mpos.OnEvent("Click", mpos_Click)
+
+        /**
+         * Retrieves the chosen time from the DateTime GUI element and sets `chosenTime` equal to it.
+         */
+        cal_Change(obj, *)
+        {
+            global chosenTime := obj.Value
+            codebase.Tool("Changed")
+        }
+        cal := altgrgui.Add("DateTime", "Choose" . chosenTime . " w" . elemW, "MM/dd/yyyy    HH:mm:ss")
+        cal.OnEvent("Change", cal_Change)
+
+        /**
+         * Sets the clipboard equal to the chosen date and time as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        calts_Click(*)
+        {
+            global chosenTime
+            A_Clipboard := ""
+            A_Clipboard := DateDiff(chosenTime, codebase.constants.ahkTimeZero, "s") + (codebase.getUnixTimeUTC() - codebase.getUnixTimeLocal())
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+
+            altgrgui_Exit()
+        }
+        calts := altgrgui.Add("Button", "w" . elemW, "Copy Unix time of chosen timestamp (UTC, Discord timestamp-compatible)")
+        calts.OnEvent("Click", calts_Click)
+
+        /**
+         * Sets the clipboard equal to the current date and time (relative to UTC) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        unix0ts_Click(*)
+        {
+            A_Clipboard := ""
+            A_Clipboard := codebase.getUnixTimeUTC()
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+
+            altgrgui_Exit()
+        }
+        unix0ts := altgrgui.Add("Button", "w" . elemW, "Copy current Unix time (UTC, Discord timestamp-compatible)")
+        unix0ts.OnEvent("Click", unix0ts_Click)
+
+        /**
+         * Sets the clipboard equal to the chosen date and time (in the current time zone) as a Unix timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        unixlts_Click(*)
+        {
+            A_Clipboard := ""
+            A_Clipboard := codebase.getUnixTimeLocal()
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+            
+            altgrgui_Exit()
+        }
+        unixlts := altgrgui.Add("Button", "w" . elemW, "Copy current Unix time (local time)")
+        unixlts.OnEvent("Click", unixlts_Click)
+
+        /**
+         * Sets the clipboard equal to the absolute value (always positive) of the difference between the chosen date and time in seconds. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        tdiff_Click(*)
+        {
+            global chosenTime
+            A_Clipboard := ""
+            A_Clipboard := DateDiff(A_Now, chosenTime, "s") < 0 ? -DateDiff(A_Now, chosenTime, "s") : DateDiff(A_Now, chosenTime, "s")
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+            
+            altgrgui_Exit()
+        }
+        tdiff := altgrgui.Add("Button", "w" . elemW, "Copy difference between A_Now and chosen timestamp")
+        tdiff.OnEvent("Click", tdiff_Click)
+
+        /**
+         * If ShutdownBlocker is running on the system, calls it with the `-allow` parameter per command line to allow a shutdown to be scheduled. Then calls `shutdown` per command line to schedule a shutdown of the system at the chosen timestamp. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        tdiffsd_Click(*)
+        {
+            global chosenTime
+            try
+            {
+                WinActivate("Shutdown Blocker")
+                sdb := WinExist("Shutdown Blocker")
+                Run(A_ComSpec . ' /c ' . codebase.WinInfo(sdb).processQueryResult.ExecutablePath . ' -allow')
+            }
+
+            Sleep(1000)
+            
+            sdtime := Abs(DateDiff(A_Now, chosenTime, "s"))
+            ex := RunWait('shutdown -s -t ' . sdtime)
+            
+            if (!ex)
+            {
+                MsgBox("Shutting down in`n" . codebase.formatMilliseconds(sdtime * 1000, false, 0))
+            }
+            else if (ex == 1190)
+            {
+                MsgBox("Failed to schedule a shutdown as one is already scheduled.`nCall ``shutdown -a`` to abort that one and retry.")
+            }
+            else ; literal last resort
+            {
+                RunWait(A_ComSpec . ' /k err ' . ex)
+                throw Error("Failed to schedule a shutdown.")
+            }
+            
+            altgrgui_Exit()
+        }
+        tdiffsd := altgrgui.Add("Button", "w" . elemW, "Shutdown at chosen timestamp")
+        tdiffsd.OnEvent("Click", tdiffsd_Click)
+
+        altgrgui.Show()
     }
 
 ; Context-sensitive hotkeys
@@ -2165,3 +2115,41 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 #HotIf WinActive("ahk_exe HuntGame.exe")
     +b::huntrapid.inc()
     +n::huntrapid.dec()
+
+#HotIf WinActive("ahk_exe starwarsbattlefrontii.exe")
+    *LWin::return
+    *RWin::return
+
+    XButton2::F12
+    
+    +b::swrapid.inc()
+
+    ~LButton::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("LButton", "P") && swrapid.is()))
+            {
+                break
+            }
+            
+            Send("{LButton}")
+            Sleep(10)
+        }
+    }
+
+    ~Space::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("Space", "P") && swrapid.is()))
+            {
+                break
+            }
+            
+            Send("{Space}")
+            Sleep(10)
+        }
+    }
