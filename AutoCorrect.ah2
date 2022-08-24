@@ -1,7 +1,7 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
 #Include #Includes\ahk-codebase.ah2
 #Include #Includes\siege.ah2
-#Include #Includes\Dictionary.ah2
+; #Include #Includes\Dictionary.ah2
 codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
 
 ; Function / Variable / Object / Class Declarations
@@ -732,8 +732,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
-    ; ö::WinMove(4000, 5, , , "Mein Dominique")
-
     ScrollLock::
     ^ScrollLock::
     {
@@ -831,7 +829,16 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+ä::
     {
-        
+        arr := [
+            codebase.math.roundMultiple(-175, 10),
+            codebase.math.roundMultiple(-134.43, 0.5),
+            codebase.math.roundMultiple(-10, 10),
+            codebase.math.roundMultiple(-4500, 1000),
+            codebase.math.roundMultiple(-4500, 5000)
+        ]
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            arr
+        ))
     }
     
     ^!+ä::

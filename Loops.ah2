@@ -644,14 +644,44 @@ functions()
         }
     }
 
-    if (WinExist("ahk_exe msedge.exe"))
+    killList := [
+        "ahk_exe msedge.exe",
+        "Feedback Hub",
+        "Steam - News"
+    ]
+    for win in killList
     {
-        WinKill("ahk_exe msedge.exe")
+        if (WinExist(win))
+        {
+            WinKill(win)
+        }
     }
 
-    if (WinExist("Feedback Hub"))
+    showList := [
+        "R6 Analyst - Multi Monitor page",
+    ]
+    for win in showList
     {
-        WinKill("Feedback Hub")
+        if (WinExist(win))
+        {
+            WinKill(win)
+        }
+    }
+
+    if (
+        p := WinExist("WhatsApp video call")
+     || p := WinExist("WhatsApp voice call")
+    )
+    {
+        WinMove(3840, 0, 1920, 1080, p)
+        WinSetAlwaysOnTop(1, p)
+    }
+
+    if (WinExist("Friends") && WinExist("Add friends"))
+    {
+        WinGetPos(&x, &y, , , "Friends")
+        WinGetPos(, , &w, , "Add friends")
+        WinMove(x - w - 5, y, , , "Add friends")
     }
 
     if (WinActive("Shut Down Windows"))
@@ -662,18 +692,25 @@ functions()
         }
     }
 
+    noPH := false
     if (WinExist("ahk_exe FortniteClient-Win64-Shipping.exe"))
     {
-        while (RunWait('sc stop kprocesshacker3') !== 1060)
+        if (!noPH)
         {
-            noPH := true
-            Sleep(1000)
+            while (true)
+            {
+                if (RunWait('sc stop kprocesshacker3') == 1060)
+                {
+                    noPH := true
+                    break
+                    Sleep(1000)
+                }
+            }
         }
     }
-
-    if (WinExist("R6 Analyst - Multi Monitor page"))
+    else if (noPH)
     {
-        WinShow("R6 Analyst - Multi Monitor page")
+        noPH := false
     }
 
     if (WinExist("ahk_exe RainbowSix.exe"))
@@ -724,7 +761,7 @@ functions()
                     dodgedCE := false
 
                     celoop:
-                    Run("E:\Programs\Cheat Engine 7.2\cheatengine-x86_64-SSE4-AVX2.exe", "E:\Programs\Cheat Engine 7.2")
+                    Run("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine.lnk", "C:\Program Files\Cheat Engine 7.4")
                     Sleep(2500)
 
                     if (!WinExist("Cheat Engine") || MsgBox("Did Cheat Engine start correctly?", "Correct CE startup", "0x4 T5") == "No")
@@ -803,20 +840,6 @@ functions()
         }
     }
 
-    /*
-    if (WinActive("ahk_exe vlc.exe"))
-    {
-        try
-        {
-            WinGetPos(&x, &y, &w, &h, "ahk_exe vlc.exe")
-            if (w !== 1600 || h !== 900)
-            {
-                WinMove(x, y, 1600, 900, "ahk_exe vlc.exe")
-            }
-        }
-    }
-    */
-
     if (WinExist("ahk_exe sndvol.exe"))
     {
         try
@@ -842,14 +865,6 @@ functions()
         while (GetKeyState("CapsLock", "T") && !GetKeyState("CapsLock", "P"))
         {
             SetCapsLockState(false)
-        }
-    }
-
-    if (WinExist("Steam - News"))
-    {
-        try
-        {
-            WinClose("Steam - News")
         }
     }
 
@@ -1005,16 +1020,16 @@ discordThemeUpdate()
 }
 
 #HotIf WinActive("ahk_group lock")
-F9::
-{
-    global
-    codebase.Tool(lock := !lock, codebase.Tool.center, 500)
+~*F9::
+{  
+    global lock := !lock
 }
 
 ; Autorun
 
 GroupAdd("lock", "Sea of Thieves ahk_exe ApplicationFrameHost.exe")
-;GroupAdd("lock", "ahk_exe RainbowSix.exe")
+GroupAdd("lock", "ahk_exe RainbowSix.exe")
+GroupAdd("lock", "ahk_exe TslGame.exe")
 
 GroupAdd("noCaps", "ahk_exe RainbowSix.exe")
 GroupAdd("noCaps", "ahk_exe r5apex.exe")
@@ -1063,6 +1078,9 @@ csBombTimerEnd := 0
 ; AFK GUI
 elemWidth := 300
 afkgui := Gui("AlwaysOnTop", "AFK GUI")
+afkgui.OnEvent("Escape", (*) => WinMinimize(afkgui.Hwnd))
+afkgui.OnEvent("Close", (*) => WinMinimize(afkgui.Hwnd))
+
 afkgui.Add("Text", "", "A_TimeIdlePhysical:")
 idletime := afkgui.Add("Edit", "ReadOnly r2 w" . elemWidth, "")
 
@@ -1092,6 +1110,7 @@ editBtn := afkgui.Add("Button", "w" . elemWidth, "Reload")
 editBtn.OnEvent("Click", (*) => Reload())
 
 afkgui.Show("X5 Y5")
+WinMinimize(afkgui.Hwnd)
 
 codebase.Tool("Reloaded Loops.ah2", true, , , 50)
 

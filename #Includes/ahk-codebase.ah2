@@ -41,28 +41,34 @@ InstallKeybdHook(true, true)
 InstallMouseHook(true, true)
 #UseHook true
 
+#WinActivateForce
+
 CoordMode("ToolTip", "Screen")
 CoordMode("Mouse", "Screen")
 CoordMode("Pixel", "Screen")
 
 SetKeyDelay(30, 10)
 SetKeyDelay(30, 10, "Play")
+SetMouseDelay(30)
+SetMouseDelay(30, "Play")
 SetScrollLockState(false)
 
 scriptStartupDate := A_Now
 scriptStartupTick := A_TickCount
 /**
- * Whether a debugger has been attached to the script since script launch or reload.
+ * Whether a debugger has been attached to the script since script launch or reload (the latter of which is nearly impossible).
  *
  * Allows full control over what a script does and does not do if a debugger is attached. For example, timers may interrupt debugging sessions if their periods expire while the script is paused.
  * @note This is not 100% reliable:
  * - Does not update in real-time.
  * - Does not reflect the actual status if a debugger has attached to a running script.
  * - If the script calls `Reload` or is reloaded through `PostMessage`, a debug session, if any, is terminated. After a reload in this manner, this variable will most likely be `false`.
+ *
+ * Because of this, it is discouraged to attach a debugger to a script that is running.
  */
 A_IsDebuggerAttached := !!InStr(codebase.WinInfo(A_ScriptHwnd, false).processQueryResult.CommandLine, "/Debug")
 
-Object.Prototype.DefineProp("GetOwnPropsCount", { Call: codebase.collectionOperations.objectOperations.getOwnPropsCount.Bind({ }) })
+; Support the AHKv2-native practice of calling an object's `ToString` method if it cannot be stringified directly (which makes no sense if you think about it, cause there is no native `ToString` method)
 Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString.Bind({ }) })
 
 /**
@@ -94,6 +100,10 @@ class codebase
      * @returns The current Unix time (seconds since midnight, January 1, 1970) relative to the local time zone.
      */
     static getUnixTimeLocal() => DateDiff(A_Now, codebase.constants.ahkTimeZero, "s")
+    /**
+     * @returns The current Unix time (seconds since midnight, January 1, 1970) relative to the local time zone.
+     */
+    static getLocalTimezoneOffset() => A_NowUTC
 
     /**
      * Changes the state of one or multiple Windows Firewall rules.
@@ -343,8 +353,8 @@ class codebase
             }
             else if (elem is Object)
             {
-                out .= "[" . Type(elem) . " (`n"
-                props := StrSplit(Trim(codebase.collectionOperations.objectOperations.toString, '`n ') . "`n", '`n')
+                out .= "[" . Type(elem) . Format(" ({1:})]`n", elem.OwnProps().Length)
+                props := StrSplit(Trim(codebase.collectionOperations.objectOperations.toString(elem), '`n ') . "`n", '`n')
                 str := ""
                 for line in props
                 {
@@ -559,7 +569,7 @@ class codebase
          * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
          * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
          * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.ErrorHandler.notify` if omitted.
-         * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
+         * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
          * @returns An `ErrorHandler` object.
          */
         __New(types?, mode := 1, custom?)
@@ -584,7 +594,10 @@ class codebase
             OnError(this.handle, 0)
         }
 
-        __Item[n] => this.errs[n]
+        __Item[n]
+        {
+            get => this.errs[n]
+        }
 
         handle(e, ret)
         {
@@ -595,6 +608,7 @@ class codebase
                     this.errs.Push(e)
                     break
                 }
+                return
             }
 
             switch (this.mode)
@@ -2051,24 +2065,21 @@ class codebase
 
             /**
              * Swaps two elements of an Array.
-             * @param arr The Array to swap elements in.
+             * @param arr A `VarRef` to the Array to swap elements in.
              * @param i The index of the first element to swap.
              * @param j The index of the second element to swap.
              * @throws `TypeError` if `array` is not an Array.
-             * @returns The Array with the swapped elements.
              */
-            static arrSwap(arr, i, j)
+            static arrSwap(&arr, i, j)
             {
                 if (Type(arr) !== "Array")
                 {
                     throw TypeError("Invalid type for ``arr``. Received ``" . Type(arr) . "``, expected ``Array``.")
                 }
 
-                ret := arr.Clone()
-                temp := ret[i]
-                ret[i] := ret[j]
-                ret[j] := temp
-                return ret
+                temp := arr[i]
+                arr[i] := arr[j]
+                arr[j] := temp
             }
 
             static arrShuffle(arr)
@@ -2082,7 +2093,7 @@ class codebase
                 for i in codebase.range(1, arr.Length, 1)
                 {
                     j := Random(1, arr.Length)
-                    nArr := codebase.collectionOperations.arrayOperations.arrSwap(nArr, i, j)
+                    codebase.collectionOperations.arrayOperations.arrSwap(&nArr, i, j)
                 }
                 return nArr
             }
@@ -2094,13 +2105,15 @@ class codebase
              * @param arr A `VarRef` to the Array to be sorted.
              * @param sortDesc Whether to sort the Array in descending order. Defaults to `false` if omitted.
              * @param stringComp Whether to use string comparison for sorting. If omitted, the sort method will be determined automatically from the Array's contents.
+             * - Initially, numerical comparison is used.
+             * - If any value in `arr` is not a number, string comparison is used instead.
              * @param l The lower index of the range to sort. Defaults to `1` if omitted.
              * @param r The upper index of the range to sort. Defaults to `arr.Length` if omitted.
              * @note When `stringComp` is truthy, `StrCompare` with the `"Logical"` setting is used as the sort callback function. The following problems arise when comparing strings containing both letters _and_ numbers, numerical strings and strings containing _only_ letters:
-             * - `"39.21"` is considered greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, _but_ `"39.21" < "39.30"`).
+             * - `"39.21"` is numerically less than, but lexically greater than `"39.3"` (`"39.21" > "39.3"`, but `"39.2" < "39.3"`, _but_ `"39.21" < "39.30"`).
              * - The above applies to mixed strings like `"a39.21"`.
-             * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision.
-             * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]`. This allows sorting floats as strings to prevent floating-point precision errors. To create a string from a float so that it works with this sort function, use `String(Round())` on all floats to be sorted and round them to the _same_ precision.
+             * - Rules such as `"39.21" < "39.30"` only hold if the compared items are both strings and have the same decimal precision (see 1st bullet).
+             * - Pure numbers and numerical strings are considered less than mixed and letter-only strings: `[1, "2.3", 7.33, "a", "b", "b6", "b7", "b7.3", "b7.21", "c"]` (this is "correctly" sorted). This allows sorting floats as strings to prevent floating-point precision errors. To create a string from a float so that it works with this sort function, use `String(Round())` on all floats to be sorted and round them to the _same_ precision.
              * @throws `Error` when attempting to compare strings numerically.
              * @throws `TypeError` if `arr` is not a `VarRef` to an Array.
              */
@@ -2185,7 +2198,7 @@ class codebase
                             return j
                         }
 
-                        pArr := codebase.collectionOperations.arrayOperations.arrSwap(pArr, i, j)
+                        codebase.collectionOperations.arrayOperations.arrSwap(&pArr, i, j)
                     }
                 }
                 
@@ -4621,6 +4634,13 @@ class codebase
 
             return [(-b + d) / 2, (-b - d) / 2]
         }
+
+        /**
+         * Rounds a number to the nearest multiple of a number.
+         * @param n The number to round.
+         * @param m TODO
+         */
+        static roundMultiple(n, m) => Round(n / m) * m
 
         class sequences
         {

@@ -71,7 +71,18 @@ class siege
          *
          * Currently broken, returns Buck's object, when it should be Thunderbird's.
          */
-        static longestOperatorNick := codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)[(a := codebase.collectionOperations.arrayOperations.evaluate((x) => StrLen(x.nickname), codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)))[codebase.collectionOperations.arrayOperations.arrayContains(a, Max(a*))[1]]]
+        static longestOperatorNick := {}
+        
+        /*
+         * Has no value. Exists to call the function `siege.misc._init()` which populates the following static fields:
+         * - `siege.misc.longestOperatorNick`
+         */
+        static init := siege.misc._init()
+        static _init()
+        {
+            codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)[(a := codebase.collectionOperations.arrayOperations.evaluate((x) => StrLen(x.nickname), codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)))[codebase.collectionOperations.arrayOperations.arrayContains(a, Max(a*))[1]]]
+        }
+        
     }
 
     class Operator
@@ -301,8 +312,10 @@ class siege
          * ~It is also unknown whether the resulting float is rounded up or down, but as far as the evidence I have suggests, it's rounded up.~
          *
          * Further testing has shown that the calculated suppressed damage value is _not_ always rounded up, but instead rounded to the nearest integer.
+         *
+         * As of Y7S3, the suppressor's damage reduction has been removed. As such, the multiplier applied to damage when calculating suppressed damage is `1`. For compatibility reasons, a `Weapon` object's `suppresseddamage` OwnProp remains and its value is still calculated.
          */
-        static suppressedDamageMultiplier := 0.837697879481015
+        static suppressedDamageMultiplier := 1 ; 0.837697879481015
 
         class types
         {
@@ -354,20 +367,20 @@ class siege
             static handcannon := codebase.Bitfield("1000000000").Value()
 
             static list := Map(
-                "Assault Rifle", this.assaultrifle,
-                "Handgun", this.handgun,
-                "Light Machine Gun", this.lightmachinegun,
-                "Machine Pistol", this.machinepistol,
-                "Marksman Rifle", this.marksmanrifle,
-                "Shield", this.shield,
-                "Slug Shotgun", this.shotgunSlug,
-                "Shotgun", this.shotgunShot,
-                "Submachine Gun", this.submachinegun,
-                "Hand Cannon", this.handcannon
+                "Assault Rifle", siege.Weapon.types.assaultrifle,
+                "Handgun", siege.Weapon.types.handgun,
+                "Light Machine Gun", siege.Weapon.types.lightmachinegun,
+                "Machine Pistol", siege.Weapon.types.machinepistol,
+                "Marksman Rifle", siege.Weapon.types.marksmanrifle,
+                "Shield", siege.Weapon.types.shield,
+                "Slug Shotgun", siege.Weapon.types.shotgunSlug,
+                "Shotgun", siege.Weapon.types.shotgunShot,
+                "Submachine Gun", siege.Weapon.types.submachinegun,
+                "Hand Cannon", siege.Weapon.types.handcannon
             )
-            __Enum(p*) => this.list.__Enum(p*)
-            __New(*) => this.list.__Enum(1)
-            __Call(*) => this.list.__Enum(1)
+            __Enum(p*) => siege.Weapon.types.list.__Enum(p*)
+            __New(*) => siege.Weapon.types.list.__Enum(1)
+            __Call(*) => siege.Weapon.types.list.__Enum(1)
         }
 
         class firingmodes
@@ -382,20 +395,22 @@ class siege
             static fullauto := codebase.Bitfield("10").Value()
 
             static list := Map(
-                "Single Shot", this.singleshot,
-                "Full Auto", this.fullauto
+                "Single Shot", siege.Weapon.firingmodes.singleshot,
+                "Full Auto", siege.Weapon.firingmodes.fullauto
             )
-            __Enum(p*) => this.list.__Enum(p*)
-            __New(*) => this.list.__Enum(1)
-            __Call(*) => this.list.__Enum(1)
+            __Enum(p*) => siege.Weapon.firingmodes.list.__Enum(p*)
+            __New(*) => siege.Weapon.firingmodes.list.__Enum(1)
+            __Call(*) => siege.Weapon.firingmodes.list.__Enum(1)
         }
 
         /**
-         * Since Y7S1 (Demon Veil), _all_ weapons (excepting most secondaries and, for example, Glaz's "OTs-03" DMR, which does not have access to Reflex C) have access to _all_ non-magnifying scopes (Red Dot, Holo, Reflex), or more precisely, _all_ of their variants (no matter if standard, Russian, alternate etc.). Because of this, I've decided to combine them into the option `nonmag`. Checking for magnifying scopes still works as before.
+         * As of Y7S1, _all_ weapons (excepting most secondaries and, for example, Glaz's "OTs-03" DMR, which does not have access to Reflex C) have access to _all_ non-magnifying scopes (Red Dot, Holo, Reflex), or more precisely, _all_ of their variants (no matter if standard, Russian, alternate etc.). Because of this, I've decided to combine them into the option `nonmag`. Checking for magnifying scopes still works as before.
          *
          * However, as mentioned above, exceptions such as Glaz's "OTs-03" DMR, which cannot be equipped with Reflex C, are not (yet?) handled differently.
          *
          * Additionally, since there are two 2.5x scope variants, the two options `x25` and `rux25` have also been combined into the option `x25`.
+         *
+         * As of Y7S3, all weapons that have access to scopes of a specific magnification level now automatically have access to all magnifications levels _up to_ that level. This does not apply to Kali's "CSRX 300". Because of this, the `sights` Bitfields have been redefined to act as maximum indicators (if a `Weapon` object's `sights` flag matches `siege.Weapon.sights.x25`, bitwise-and comparison with `siege.Weapon.sights.x15` yields a truthy value).
          */
         class sights
         {
@@ -404,44 +419,44 @@ class siege
              */
             static other := codebase.Bitfield("0000001").Value()
             /**
-             * Indicates that all non-magnifying scope variant can be or one of them is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
+             * Indicates that all non-magnifying scope variants can be or one of them is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
             static nonmag := codebase.Bitfield("0000010").Value()
             static nonmags := ["Red Dot A", "Red Dot B", "Red Dot C", "Holo A", "Holo B", "Holo C", "Holo D", "Reflex B", "Reflex A", "Reflex C"]
             /**
              * Indicates that the 1.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x15 := codebase.Bitfield("0000100").Value()
+            static x15 := codebase.Bitfield("0000110").Value()
             /**
              * Indicates that the 2x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x2 := codebase.Bitfield("0001000").Value()
+            static x2 := codebase.Bitfield("0001110").Value()
             /**
              * Indicates that the 2.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x25 := codebase.Bitfield("0010000").Value()
+            static x25 := codebase.Bitfield("0011110").Value()
             static x25s := ["2.5x A", "2.5x B"]
             /**
              * Indicates that the 3x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x3 := codebase.Bitfield("0100000").Value()
+            static x3 := codebase.Bitfield("0111110").Value()
             /**
              * Indicates that the 6x and 12x sights are equipped on the weapon (this currently uniquely identifies Kali's "CSRX 300"). Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
             static x612 := codebase.Bitfield("1000000").Value()
 
             static list := Map(
-                "Other", this.other,
-                "Non-magnifying", this.nonmag,
-                "1.5x", this.x15,
-                "2x", this.x2,
-                "2.5x", this.x25,
-                "3x", this.x3,
-                "6x/12x", this.x612
+                "Other", siege.Weapon.sights.other,
+                "Non-magnifying", siege.Weapon.sights.nonmag,
+                "1.5x", siege.Weapon.sights.x15,
+                "2x", siege.Weapon.sights.x2,
+                "2.5x", siege.Weapon.sights.x25,
+                "3x", siege.Weapon.sights.x3,
+                "6x/12x", siege.Weapon.sights.x612
             )
-            __Enum(p*) => this.list.__Enum(p*)
-            __New(*) => this.list.__Enum(1)
-            __Call(*) => this.list.__Enum(1)
+            __Enum(p*) => siege.Weapon.sights.list.__Enum(p*)
+            __New(*) => siege.Weapon.sights.list.__Enum(1)
+            __Call(*) => siege.Weapon.sights.list.__Enum(1)
         }
 
         class barrels
@@ -468,15 +483,15 @@ class siege
             static extendedbarrel := codebase.Bitfield("10000").Value()
 
             static list := Map(
-                "Suppressor", this.suppressor,
-                "Flash Hider", this.flashhider,
-                "Compensator", this.compensator,
-                "Muzzle Brake", this.muzzlebrake,
-                "Extended Barrel", this.extendedbarrel
+                "Suppressor", siege.Weapon.barrels.suppressor,
+                "Flash Hider", siege.Weapon.barrels.flashhider,
+                "Compensator", siege.Weapon.barrels.compensator,
+                "Muzzle Brake", siege.Weapon.barrels.muzzlebrake,
+                "Extended Barrel", siege.Weapon.barrels.extendedbarrel
             )
-            __Enum(p*) => this.list.__Enum(p*)
-            __New(*) => this.list.__Enum(1)
-            __Call(*) => this.list.__Enum(1)
+            __Enum(p*) => siege.Weapon.barrels.list.__Enum(p*)
+            __New(*) => siege.Weapon.barrels.list.__Enum(1)
+            __Call(*) => siege.Weapon.barrels.list.__Enum(1)
         }
 
         class grips
@@ -491,12 +506,12 @@ class siege
             static angledgrip := codebase.Bitfield("10").Value()
 
             static list := Map(
-                "Vertical Grip", this.verticalgrip,
-                "Angled Grip", this.angledgrip
+                "Vertical Grip", siege.Weapon.grips.verticalgrip,
+                "Angled Grip", siege.Weapon.grips.angledgrip
             )
-            __Enum(p*) => this.list.__Enum(p*)
-            __New(*) => this.list.__Enum(1)
-            __Call(*) => this.list.__Enum(1)
+            __Enum(p*) => siege.Weapon.grips.list.__Enum(p*)
+            __New(*) => siege.Weapon.grips.list.__Enum(1)
+            __Call(*) => siege.Weapon.grips.list.__Enum(1)
         }
 
         class gadgets
@@ -504,66 +519,71 @@ class siege
             /**
              * Indicates that a Frag Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static fraggrenade := codebase.Bitfield("000000000001").Value()
+            static fraggrenade := codebase.Bitfield("0000000000001").Value()
             /**
              * Indicates that a Breach Charge can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static breachcharge := codebase.Bitfield("000000000010").Value()
+            static breachcharge := codebase.Bitfield("0000000000010").Value()
             /**
              * Indicates that a Claymore can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static claymore := codebase.Bitfield("000000000100").Value()
+            static claymore := codebase.Bitfield("0000000000100").Value()
             /**
              * Indicates that a Hard Breach Charge can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static hardbreachcharge := codebase.Bitfield("000000001000").Value()
+            static hardbreachcharge := codebase.Bitfield("0000000001000").Value()
             /**
              * Indicates that a Smoke Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static smokegrenade := codebase.Bitfield("000000010000").Value()
+            static smokegrenade := codebase.Bitfield("0000000010000").Value()
             /**
              * Indicates that a Stun Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static stungrenade := codebase.Bitfield("000000100000").Value()
+            static stungrenade := codebase.Bitfield("0000000100000").Value()
             
             /**
              * Indicates that Barbed Wire can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static barbedwire := codebase.Bitfield("000001000000").Value()
+            static barbedwire := codebase.Bitfield("0000001000000").Value()
             /**
              * Indicates that a Deployable Shield can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static deployableshield := codebase.Bitfield("000010000000").Value()
+            static deployableshield := codebase.Bitfield("0000010000000").Value()
             /**
              * Indicates that a Nitro Cell can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static nitrocell := codebase.Bitfield("000100000000").Value()
+            static nitrocell := codebase.Bitfield("0000100000000").Value()
             /**
              * Indicates that a Bulletproof Camera can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static bulletproofcamera := codebase.Bitfield("001000000000").Value()
+            static bulletproofcamera := codebase.Bitfield("0001000000000").Value()
             /**
              * Indicates that a Proximity Alarm can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static proximityalarm := codebase.Bitfield("010000000000").Value()
+            static proximityalarm := codebase.Bitfield("0010000000000").Value()
             /**
              * Indicates that an Impact Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static impactgrenade := codebase.Bitfield("100000000000").Value()
+            static impactgrenade := codebase.Bitfield("0100000000000").Value()
+            /**
+             * Indicates that an EMP Impact Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
+             */
+            static empgrenade := codebase.Bitfield("1000000000000").Value()
 
             static list := Map(
-                "Frag Grenade", this.fraggrenade,
-                "Breach Charge", this.breachcharge,
-                "Claymore", this.claymore,
-                "Hard Breach Charge", this.hardbreachcharge,
-                "Smoke Grenade", this.smokegrenade,
-                "Stun Grenade", this.stungrenade,
-                "Barbed Wire", this.barbedwire,
-                "Deployable Shield", this.deployableshield,
-                "Nitro Cell", this.nitrocell,
-                "Bulletproof Camera", this.bulletproofcamera,
-                "Proximity Alarm", this.proximityalarm,
-                "Impact Grenade", this.impactgrenade
+                "Frag Grenade", siege.Weapon.gadgets.fraggrenade,
+                "Breach Charge", siege.Weapon.gadgets.breachcharge,
+                "Claymore", siege.Weapon.gadgets.claymore,
+                "Hard Breach Charge", siege.Weapon.gadgets.hardbreachcharge,
+                "Smoke Grenade", siege.Weapon.gadgets.smokegrenade,
+                "Stun Grenade", siege.Weapon.gadgets.stungrenade,
+                "Barbed Wire", siege.Weapon.gadgets.barbedwire,
+                "Deployable Shield", siege.Weapon.gadgets.deployableshield,
+                "Nitro Cell", siege.Weapon.gadgets.nitrocell,
+                "Bulletproof Camera", siege.Weapon.gadgets.bulletproofcamera,
+                "Proximity Alarm", siege.Weapon.gadgets.proximityalarm,
+                "Impact Grenade", siege.Weapon.gadgets.impactgrenade,
+                "EMP Impact Grenade", siege.Weapon.gadgets.empgrenade
             )
             __New(*) => this.list.__Enum(1)
             __Enum(p*) => this.list.__Enum(p*)
@@ -705,9 +725,9 @@ class siege
                     47,
                     670,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -725,7 +745,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
             'Tactical Breaching Hammer "The Caber"',
             "SAS",
             "John O'Groats, Scotland",
@@ -746,7 +766,7 @@ class siege
                     41,
                     749,
                     25,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -758,9 +778,9 @@ class siege
                     47,
                     670,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -811,8 +831,8 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -825,7 +845,7 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -888,7 +908,7 @@ class siege
                     47,
                     690,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -941,8 +961,8 @@ class siege
                     37,
                     980,
                     25,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true
                 ),
@@ -953,9 +973,9 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1050,7 +1070,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.empgrenade,
             'Extendable Shield "Le Roc"',
             "GIGN",
             "Bordeaux, France",
@@ -1072,9 +1092,9 @@ class siege
                     360,
                     10,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    0,
-                    false
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.grips.verticalgrip,
+                    true
                 )
             ],
             [
@@ -1115,7 +1135,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.fraggrenade,
+            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.claymore,
             "HDS Flip Sight OTs-03 MARKSMAN Rifle",
             "SPETSNAZ",
             "Vladivostok, Russia",
@@ -1148,9 +1168,9 @@ class siege
                     46,
                     680,
                     100,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x25,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1160,7 +1180,7 @@ class siege
                     45,
                     850,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1189,10 +1209,10 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
-                    false
+                    true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.hardbreachcharge,
+            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade,
             'APM-6 Cluster Charge "Matryoshka"',
             "SPETSNAZ",
             "Samarkand, Uzbekistan",
@@ -1254,7 +1274,7 @@ class siege
                     42,
                     720,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
                     0,
                     true
@@ -1266,8 +1286,8 @@ class siege
                     48,
                     690,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1319,7 +1339,7 @@ class siege
                     40,
                     837,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
@@ -1331,8 +1351,8 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
@@ -1349,6 +1369,18 @@ class siege
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
+                ),
+                siege.Weapon(
+                    "GONNE-6",
+                    siege.Weapon.types.handcannon,
+                    siege.Weapon.firingmodes.singleshot,
+                    10,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    false
                 )
             ],
             siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.hardbreachcharge,
@@ -1372,7 +1404,7 @@ class siege
                     49,
                     585,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1384,9 +1416,9 @@ class siege
                     61,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -1404,7 +1436,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
             "TARS Mk 0-Transparent Armored Rifle Shield",
             "NAVY SEAL",
             "Bellevue, Washington",
@@ -1425,7 +1457,7 @@ class siege
                     48,
                     650,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1437,9 +1469,9 @@ class siege
                     48,
                     650,
                     100,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -1455,6 +1487,18 @@ class siege
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
+                ),
+                siege.Weapon(
+                    "GONNE-6",
+                    siege.Weapon.types.handcannon,
+                    siege.Weapon.firingmodes.singleshot,
+                    10,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    false
                 )
             ],
             siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.hardbreachcharge,
@@ -1478,7 +1522,7 @@ class siege
                     40,
                     850,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1543,7 +1587,7 @@ class siege
                     46,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1555,8 +1599,8 @@ class siege
                     34,
                     800,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1620,7 +1664,7 @@ class siege
                     46,
                     650,
                     80,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1673,9 +1717,9 @@ class siege
                     41,
                     720,
                     150,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1685,7 +1729,7 @@ class siege
                     45,
                     730,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1726,8 +1770,8 @@ class siege
                     60,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1738,7 +1782,7 @@ class siege
                     125,
                     500,
                     2,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     0,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1779,10 +1823,10 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    false
+                    true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
             "Logic Bomb",
             "707th SMB",
             "Seoul, South Korea",
@@ -1803,7 +1847,7 @@ class siege
                     44,
                     700,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1815,9 +1859,9 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1871,7 +1915,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.empgrenade,
             "EE-ONE-D Scanning Drone",
             "CBRN THREAT UNIT",
             "Toulouse, France",
@@ -1892,9 +1936,9 @@ class siege
                     42,
                     700,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x2,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1904,9 +1948,9 @@ class siege
                     46,
                     680,
                     100,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x2,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -1957,10 +2001,10 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
-                    false
+                    true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade,
             "Adrenal Surge",
             "CBRN THREAT UNIT",
             "Gomel, Belarus",
@@ -1981,7 +2025,7 @@ class siege
                     62,
                     450,
                     10,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -1993,7 +2037,7 @@ class siege
                     44,
                     750,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2013,7 +2057,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore,
             "Breaching Torch",
             "GSUTR",
             "Boston, Massachusetts",
@@ -2034,7 +2078,7 @@ class siege
                     44,
                     650,
                     40,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
@@ -2046,9 +2090,9 @@ class siege
                     47,
                     700,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    0,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -2099,9 +2143,9 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -2111,9 +2155,9 @@ class siege
                     48,
                     650,
                     60,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -2155,7 +2199,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.breachcharge,
+            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.empgrenade,
             "Trax Stingers",
             "SASR",
             "Longreach, Central Queensland, Australia",
@@ -2176,8 +2220,8 @@ class siege
                     34,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2220,7 +2264,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.hardbreachcharge,
+            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.empgrenade,
             "HEL Presence Reduction",
             "JAEGER CORPS",
             "[REDACTED]",
@@ -2241,10 +2285,10 @@ class siege
                     37,
                     850,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    false
+                    true
                 ),
                 siege.Weapon(
                     "Supernova",
@@ -2269,7 +2313,7 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -2333,7 +2377,7 @@ class siege
                     980,
                     20,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -2347,7 +2391,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    false
+                    true
                 ),
                 siege.Weapon(
                     "P226 MK 25",
@@ -2383,9 +2427,9 @@ class siege
                     47,
                     700,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -2395,8 +2439,8 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2413,18 +2457,6 @@ class siege
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
-                ),
-                siege.Weapon(
-                    "GONNE-6",
-                    siege.Weapon.types.handcannon,
-                    siege.Weapon.firingmodes.singleshot,
-                    10,
-                    0,
-                    1,
-                    0,
-                    0,
-                    0,
-                    false
                 )
             ],
             siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.smokegrenade,
@@ -2448,7 +2480,7 @@ class siege
                     45,
                     850,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2501,7 +2533,7 @@ class siege
                     45,
                     850,
                     25,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2513,8 +2545,8 @@ class siege
                     32,
                     900,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -2566,7 +2598,7 @@ class siege
                     41,
                     749,
                     25,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2578,9 +2610,9 @@ class siege
                     61,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -2595,7 +2627,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
-                    false
+                    true
                 )
             ],
             siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore,
@@ -2619,7 +2651,7 @@ class siege
                     47,
                     690,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2631,8 +2663,8 @@ class siege
                     34,
                     800,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2651,7 +2683,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.empgrenade,
             "Talon-8 Clear Shield",
             "NIGHTHAVEN",
             "Split, Croatia",
@@ -2672,7 +2704,7 @@ class siege
                     35,
                     740,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2684,8 +2716,8 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15 + siege.Weapon.sights.x2 + siege.Weapon.sights.x25 + siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x3,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true
                 )
@@ -2726,6 +2758,59 @@ class siege
             { month: 3, day: 3, age: 30 },
             1
         )
+
+        static grim := siege.Operator(
+            "Grim",
+            [
+                siege.Weapon(
+                    "552 Commando",
+                    siege.Weapon.types.assaultrifle,
+                    siege.Weapon.firingmodes.fullauto,
+                    48,
+                    690,
+                    30,
+                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
+                    true
+                ),
+                siege.Weapon(
+                    "SG-CQB",
+                    siege.Weapon.types.shotgunShot,
+                    siege.Weapon.firingmodes.singleshot,
+                    53,
+                    85,
+                    7,
+                    siege.Weapon.sights.nonmag,
+                    0,
+                    siege.Weapon.grips.verticalgrip,
+                    true
+                )
+            ],
+            [
+                siege.Weapon(
+                    "P229",
+                    siege.Weapon.types.handgun,
+                    siege.Weapon.firingmodes.singleshot,
+                    51,
+                    550,
+                    12,
+                    0,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    0,
+                    true
+                )
+            ],
+            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            "Kawan Hive Launcher",
+            "NIGHTHAVEN",
+            "Jurong, Singapore",
+            179,
+            89.8,
+            "Charlie Tho Keng Boon",
+            { month: 4, day: 5, age: 39 },
+            3
+        )
     
         static list := [
             siege.attackers.sledge,
@@ -2759,7 +2844,8 @@ class siege
             siege.attackers.zero,
             siege.attackers.flores,
             siege.attackers.osa,
-            siege.attackers.sens
+            siege.attackers.sens,
+            siege.attackers.grim
         ]
         __Enum(p*) => siege.attackers.list.__Enum(p*)
         __New(*) => siege.attackers.list.__Enum(1)
@@ -2778,8 +2864,8 @@ class siege
                     34,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2818,7 +2904,7 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -2843,8 +2929,8 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2883,7 +2969,7 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -2908,7 +2994,7 @@ class siege
                     38,
                     600,
                     25,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -2985,7 +3071,7 @@ class siege
                     38,
                     600,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -3050,9 +3136,9 @@ class siege
                     27,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -3062,8 +3148,8 @@ class siege
                     22,
                     970,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -3115,8 +3201,8 @@ class siege
                     22,
                     970,
                     50,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3127,9 +3213,9 @@ class siege
                     27,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.sights.x2,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -3192,8 +3278,8 @@ class siege
                     34,
                     750,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3233,7 +3319,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
-                    false
+                    true
                 )
             ],
             siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.nitrocell,
@@ -3270,7 +3356,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3286,7 +3372,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     0,
-                    false
+                    true
                 ),
                 siege.Weapon(
                     "PMM",
@@ -3308,7 +3394,7 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -3348,7 +3434,7 @@ class siege
                     25,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -3388,7 +3474,7 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3452,9 +3538,9 @@ class siege
                     45,
                     575,
                     34,
-                    siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.angledgrip,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -3506,7 +3592,7 @@ class siege
                     830,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3559,7 +3645,7 @@ class siege
                     550,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3623,7 +3709,7 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     0,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -3650,7 +3736,7 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -3678,7 +3764,7 @@ class siege
                     25,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -3754,8 +3840,8 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    0,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
@@ -3848,7 +3934,7 @@ class siege
                     720,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
                 ),
@@ -3876,7 +3962,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    false
+                    true
                 ),
                 siege.Weapon(
                     "SMG-12",
@@ -3924,7 +4010,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     0,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -3977,7 +4063,7 @@ class siege
                     26,
                     950,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true
@@ -3989,7 +4075,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     0,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -4069,7 +4155,7 @@ class siege
                     980,
                     20,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -4107,7 +4193,7 @@ class siege
                     36,
                     700,
                     31,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
@@ -4119,7 +4205,7 @@ class siege
                     63,
                     450,
                     10,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -4184,7 +4270,7 @@ class siege
                     26,
                     980,
                     15,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -4237,8 +4323,8 @@ class siege
                     26,
                     830,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -4290,9 +4376,9 @@ class siege
                     23,
                     1200,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -4302,7 +4388,7 @@ class siege
                     63,
                     450,
                     10,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -4355,8 +4441,8 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -4408,9 +4494,9 @@ class siege
                     28,
                     900,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    0,
+                    siege.Weapon.sights.x15,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -4474,8 +4560,8 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -4538,7 +4624,7 @@ class siege
                     60,
                     450,
                     20,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
@@ -4580,8 +4666,8 @@ class siege
                     700,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
                 siege.Weapon(
@@ -4606,7 +4692,7 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -4685,7 +4771,7 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    false
+                    true
                 )
             ],
             siege.Weapon.gadgets.deployableshield + siege.Weapon.gadgets.barbedwire,
@@ -4710,7 +4796,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4721,7 +4807,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15,
                     0,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
