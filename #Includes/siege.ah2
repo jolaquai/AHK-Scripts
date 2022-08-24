@@ -726,7 +726,7 @@ class siege
                     670,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -740,12 +740,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
             'Tactical Breaching Hammer "The Caber"',
             "SAS",
             "John O'Groats, Scotland",
@@ -767,7 +767,7 @@ class siege
                     749,
                     25,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -779,7 +779,7 @@ class siege
                     670,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -805,12 +805,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             "EG Mk 0-EMP Grenade",
             "SAS",
             "Bideford, England",
@@ -832,7 +832,7 @@ class siege
                     780,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -844,7 +844,7 @@ class siege
                     860,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -858,7 +858,7 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -870,12 +870,12 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             "M120 CREM Breaching Rounds",
             "FBI SWAT",
             "Jerusalem, Israel",
@@ -909,7 +909,7 @@ class siege
                     690,
                     30,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -923,7 +923,7 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -935,12 +935,12 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade,
             "Brimstone BC-3 Exothermic Charges",
             "FBI SWAT",
             "Plano, Texas",
@@ -962,7 +962,7 @@ class siege
                     980,
                     25,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true
                 ),
@@ -974,7 +974,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1000,7 +1000,7 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1017,7 +1017,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.smokegrenade,
             "RSD Model 1 - Shock Drone",
             "GIGN",
             "Nancy, France",
@@ -1053,7 +1053,7 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1070,7 +1070,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.empgrenade,
             'Extendable Shield "Le Roc"',
             "GIGN",
             "Bordeaux, France",
@@ -1092,7 +1092,7 @@ class siege
                     360,
                     10,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true
                 )
@@ -1106,7 +1106,7 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1130,12 +1130,12 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.claymore,
             "HDS Flip Sight OTs-03 MARKSMAN Rifle",
             "SPETSNAZ",
             "Vladivostok, Russia",
@@ -1169,7 +1169,7 @@ class siege
                     680,
                     100,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1181,7 +1181,7 @@ class siege
                     850,
                     30,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -1195,7 +1195,7 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1207,12 +1207,12 @@ class siege
                     550,
                     18,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade,
             'APM-6 Cluster Charge "Matryoshka"',
             "SPETSNAZ",
             "Samarkand, Uzbekistan",
@@ -1248,12 +1248,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.breachcharge,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.breachcharge,
             "G52-Tactical Light Shield",
             "GSG 9",
             "Bremen, Germany",
@@ -1275,7 +1275,7 @@ class siege
                     720,
                     30,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -1287,7 +1287,7 @@ class siege
                     690,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1299,7 +1299,7 @@ class siege
                     850,
                     50,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -1313,12 +1313,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             'Electronics Detector RED Mk III "Spectre"',
             "GSG 9",
             "Leipzig, Germany",
@@ -1340,7 +1340,7 @@ class siege
                     837,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -1352,7 +1352,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
@@ -1366,7 +1366,7 @@ class siege
                     550,
                     13,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1383,7 +1383,7 @@ class siege
                     false
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.hardbreachcharge,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.hardbreachcharge,
             "Skeleton Key SK 4-12",
             "JTF2",
             "Montréal, Quebec",
@@ -1405,7 +1405,7 @@ class siege
                     585,
                     20,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1417,7 +1417,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -1431,12 +1431,12 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
             "TARS Mk 0-Transparent Armored Rifle Shield",
             "NAVY SEAL",
             "Bellevue, Washington",
@@ -1458,7 +1458,7 @@ class siege
                     650,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1470,7 +1470,7 @@ class siege
                     650,
                     100,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -1484,7 +1484,7 @@ class siege
                     450,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1501,7 +1501,7 @@ class siege
                     false
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.hardbreachcharge,
+            siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.hardbreachcharge,
             "Tactical Crossbow TAC Mk0",
             "BOPE",
             "Nova Iguaçu, Brazil",
@@ -1523,7 +1523,7 @@ class siege
                     850,
                     20,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1549,7 +1549,7 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1561,12 +1561,12 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.breachcharge,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.breachcharge,
             "X-KAIROS Grenade Launcher",
             "SAT",
             "Tokyo, Japan (Suginami-ki)",
@@ -1588,7 +1588,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1600,7 +1600,7 @@ class siege
                     800,
                     50,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1626,7 +1626,7 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1643,7 +1643,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.smokegrenade,
             "Eyenox Model III",
             "GEO",
             "Ceuta, Spain",
@@ -1665,7 +1665,7 @@ class siege
                     650,
                     80,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1691,12 +1691,12 @@ class siege
                     550,
                     10,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade,
             "Candela Cluster Charges",
             "SDU",
             "Hong Kong, Central",
@@ -1718,7 +1718,7 @@ class siege
                     720,
                     150,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1730,7 +1730,7 @@ class siege
                     730,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -1744,12 +1744,12 @@ class siege
                     550,
                     15,
                     siege.Weapon.sights.other,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             "KS79 Lifeline",
             "GROM",
             "Wrocław, Poland",
@@ -1771,7 +1771,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1826,7 +1826,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
             "Logic Bomb",
             "707th SMB",
             "Seoul, South Korea",
@@ -1848,7 +1848,7 @@ class siege
                     700,
                     50,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1860,7 +1860,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1910,12 +1910,12 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.empgrenade,
             "EE-ONE-D Scanning Drone",
             "CBRN THREAT UNIT",
             "Toulouse, France",
@@ -1937,7 +1937,7 @@ class siege
                     700,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1949,7 +1949,7 @@ class siege
                     680,
                     100,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -1975,7 +1975,7 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -1999,12 +1999,12 @@ class siege
                     550,
                     18,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade,
             "Adrenal Surge",
             "CBRN THREAT UNIT",
             "Gomel, Belarus",
@@ -2026,7 +2026,7 @@ class siege
                     450,
                     10,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2038,7 +2038,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2052,12 +2052,12 @@ class siege
                     450,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore,
             "Breaching Torch",
             "GSUTR",
             "Boston, Massachusetts",
@@ -2079,7 +2079,7 @@ class siege
                     650,
                     40,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -2091,7 +2091,7 @@ class siege
                     700,
                     20,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2117,12 +2117,12 @@ class siege
                     450,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.breachcharge,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.breachcharge,
             "Airjab Launcher",
             "GIGR",
             "Marrakesh, Morocco",
@@ -2144,7 +2144,7 @@ class siege
                     780,
                     30,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2156,7 +2156,7 @@ class siege
                     650,
                     60,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2194,12 +2194,12 @@ class siege
                     450,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.empgrenade,
             "Trax Stingers",
             "SASR",
             "Longreach, Central Queensland, Australia",
@@ -2221,7 +2221,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2247,7 +2247,7 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -2259,12 +2259,12 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.empgrenade,
             "HEL Presence Reduction",
             "JAEGER CORPS",
             "[REDACTED]",
@@ -2286,7 +2286,7 @@ class siege
                     850,
                     50,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2312,7 +2312,7 @@ class siege
                     1270,
                     16,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2341,7 +2341,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.stungrenade,
+            siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.stungrenade,
             "Garra Hook",
             "APCA",
             "Cojata, Peru",
@@ -2377,7 +2377,7 @@ class siege
                     980,
                     20,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -2401,12 +2401,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.breachcharge,
+            siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.breachcharge,
             "Low Velocity (LV) Explosive Lance",
             "NIGHTHAVEN",
             "Amreli, India",
@@ -2428,7 +2428,7 @@ class siege
                     700,
                     20,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2440,7 +2440,7 @@ class siege
                     780,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2454,12 +2454,12 @@ class siege
                     550,
                     13,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.fraggrenade + siege.Weapon.gadgets.smokegrenade,
+            siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.smokegrenade,
             "Gemini Replicator",
             "REU",
             "Katwijk, Netherlands",
@@ -2481,7 +2481,7 @@ class siege
                     850,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2507,12 +2507,12 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             "S.E.L.M.A. Aqua Breacher",
             "NIGHTHAVEN",
             "Lærdalsøyri, Norway",
@@ -2534,7 +2534,7 @@ class siege
                     850,
                     25,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2546,7 +2546,7 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -2577,7 +2577,7 @@ class siege
                     false
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
             "ARGUS Launcher",
             "ROS",
             "Baltimore, Maryland",
@@ -2599,7 +2599,7 @@ class siege
                     749,
                     25,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2611,7 +2611,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2625,12 +2625,12 @@ class siege
                     550,
                     18,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.stungrenade + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore,
             "RCE-Ratero Charge",
             "UNAFFILIATED",
             "Buenos Aires, Argentina",
@@ -2652,7 +2652,7 @@ class siege
                     690,
                     30,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2664,7 +2664,7 @@ class siege
                     800,
                     50,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -2678,12 +2678,12 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.smokegrenade + siege.Weapon.gadgets.claymore + siege.Weapon.gadgets.empgrenade,
+            siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.empgrenade,
             "Talon-8 Clear Shield",
             "NIGHTHAVEN",
             "Split, Croatia",
@@ -2705,7 +2705,7 @@ class siege
                     740,
                     50,
                     siege.Weapon.sights.x25,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2717,7 +2717,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x3,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true
                 )
@@ -2731,7 +2731,7 @@ class siege
                     450,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -2748,7 +2748,7 @@ class siege
                     false
                 )
             ],
-            siege.Weapon.gadgets.hardbreachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
             "R.O.U. Projector System",
             "SFG",
             "Brussels, Belgium",
@@ -2770,7 +2770,7 @@ class siege
                     690,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -2796,12 +2796,12 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.breachcharge + siege.Weapon.gadgets.claymore,
+            siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
             "Kawan Hive Launcher",
             "NIGHTHAVEN",
             "Jurong, Singapore",
@@ -2865,7 +2865,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2891,7 +2891,7 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -2903,12 +2903,12 @@ class siege
                     1270,
                     16,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
             "Compound Z8 Grenades",
             "SAS",
             "London, England (King's Cross)",
@@ -2930,7 +2930,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -2956,7 +2956,7 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -2968,12 +2968,12 @@ class siege
                     1270,
                     16,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
             ],
-            siege.Weapon.gadgets.nitrocell + siege.Weapon.gadgets.bulletproofcamera,
+            siege.Weapon.gadgets.nitrocell | siege.Weapon.gadgets.bulletproofcamera,
             '"Moni" GC90 Signal Disruptor',
             "SAS",
             "York, England",
@@ -2995,7 +2995,7 @@ class siege
                     600,
                     25,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3021,7 +3021,7 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3038,7 +3038,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.proximityalarm,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.proximityalarm,
             "UTP1-Universal Tactical Panel",
             "FBI SWAT",
             "Sherman Oaks, California",
@@ -3072,7 +3072,7 @@ class siege
                     600,
                     25,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3086,7 +3086,7 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3098,12 +3098,12 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
             "HB-5 Cardiac Sensor",
             "FBI SWAT",
             "Goldsboro, North Carolina",
@@ -3137,7 +3137,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3149,7 +3149,7 @@ class siege
                     970,
                     50,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -3163,7 +3163,7 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3180,7 +3180,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.barbedwire,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.barbedwire,
             "MPD-0 STIM PISTOL",
             "GIGN",
             "Paris, France",
@@ -3202,7 +3202,7 @@ class siege
                     970,
                     50,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3214,7 +3214,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.x2,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3252,12 +3252,12 @@ class siege
                     550,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.proximityalarm + siege.Weapon.gadgets.impactgrenade,
+            siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.impactgrenade,
             'R1N "Rhino" Armor - Armor Pack',
             "GIGN",
             "Tours, France",
@@ -3279,7 +3279,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3305,7 +3305,7 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3317,12 +3317,12 @@ class siege
                     550,
                     18,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
             "EDD Mk II Tripwires",
             "SPETSNAZ",
             "Kovrov, Russia",
@@ -3356,7 +3356,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3370,7 +3370,7 @@ class siege
                     550,
                     18,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3382,7 +3382,7 @@ class siege
                     550,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3394,12 +3394,12 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
             "Shumikha Grenade Launcher",
             "SPETSNAZ",
             "Saint Petersburg, Russia",
@@ -3433,7 +3433,7 @@ class siege
                     740,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3447,12 +3447,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.barbedwire,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.barbedwire,
             'ADS-Mk IV "Magpie" Automated Defense System',
             "GSG 9",
             "Düsseldorf, Germany",
@@ -3474,7 +3474,7 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3500,12 +3500,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
             'CED-1 Crude Electrical Device "Shock Wires"',
             "GSG 9",
             "Berlin, Germany",
@@ -3539,7 +3539,7 @@ class siege
                     575,
                     34,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3553,7 +3553,7 @@ class siege
                     550,
                     13,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3570,7 +3570,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.deployableshield,
             "Sterling Mk2 LHT leg-hold trap (Welcome Mat)",
             "JTF2",
             "Vancouver, British Columbia",
@@ -3592,7 +3592,7 @@ class siege
                     830,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3618,12 +3618,12 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
             'Gyro Cam Mk2 "Black Eye"',
             "NAVY SEAL",
             "Oceanside, California",
@@ -3645,7 +3645,7 @@ class siege
                     550,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -3676,7 +3676,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.proximityalarm,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.proximityalarm,
             "Silent Step",
             "BOPE",
             "Rinópolis, Brazil",
@@ -3724,7 +3724,7 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3736,12 +3736,12 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.deployableshield,
             "Yokai Hovering Drone",
             "SAT",
             "Suginami, Tokyo, Japan",
@@ -3763,7 +3763,7 @@ class siege
                     1200,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -3789,7 +3789,7 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -3806,7 +3806,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.proximityalarm + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.nitrocell,
             "Black Mirror",
             "GEO",
             "Madrid, Spain",
@@ -3840,7 +3840,7 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3854,12 +3854,12 @@ class siege
                     550,
                     10,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.bulletproofcamera,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.bulletproofcamera,
             "Gu Mines",
             "SDU",
             "Hong Kong, Junk Bay (Tseung Kwan O)",
@@ -3881,7 +3881,7 @@ class siege
                     1080,
                     40,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
                 ),
@@ -3893,7 +3893,7 @@ class siege
                     400,
                     10,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -3907,12 +3907,12 @@ class siege
                     550,
                     15,
                     siege.Weapon.sights.other,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
             "GRZMOT Mine",
             "GROM",
             "Wrocław, Poland",
@@ -3934,7 +3934,7 @@ class siege
                     720,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
                 ),
@@ -3977,7 +3977,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.impactgrenade,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.impactgrenade,
             "ERC-7 Electronic Rendering Cloak",
             "707TH SMB",
             "[REDACTED]",
@@ -3999,7 +3999,7 @@ class siege
                     900,
                     80,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true
                 ),
@@ -4037,12 +4037,12 @@ class siege
                     450,
                     6,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.impactgrenade,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.impactgrenade,
             'Compact Laser Emplacement Mk V "Evil Eye"',
             "GIS",
             "Rome, Italy",
@@ -4064,7 +4064,7 @@ class siege
                     950,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true
                 ),
@@ -4090,7 +4090,7 @@ class siege
                     450,
                     6,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -4107,7 +4107,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.deployableshield,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.deployableshield,
             "Prisma",
             "GIS",
             "Tripoli, Libya",
@@ -4155,7 +4155,7 @@ class siege
                     980,
                     20,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -4167,12 +4167,12 @@ class siege
                     450,
                     15,
                     siege.Weapon.sights.other,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.impactgrenade,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.impactgrenade,
             "Crowd Control Electric Shield",
             "GSUTR",
             "London, England",
@@ -4194,7 +4194,7 @@ class siege
                     700,
                     31,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
                 ),
@@ -4237,7 +4237,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.nitrocell + siege.Weapon.gadgets.barbedwire,
+            siege.Weapon.gadgets.nitrocell | siege.Weapon.gadgets.barbedwire,
             "Rtila Electroclaw",
             "GIGR",
             "Aroumd, Morocco",
@@ -4259,7 +4259,7 @@ class siege
                     780,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
                     true
                 ),
@@ -4271,7 +4271,7 @@ class siege
                     980,
                     15,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -4285,12 +4285,12 @@ class siege
                     450,
                     16,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
             "Pest Launcher",
             "SASR",
             "Portland, Australia",
@@ -4324,7 +4324,7 @@ class siege
                     830,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -4338,7 +4338,7 @@ class siege
                     450,
                     15,
                     siege.Weapon.sights.other,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -4355,7 +4355,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.deployableshield + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.deployableshield | siege.Weapon.gadgets.nitrocell,
             "Glance Smart Glasses",
             "SECRET SERVICE",
             "Louisville, Kentucky",
@@ -4377,7 +4377,7 @@ class siege
                     1200,
                     25,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4403,12 +4403,12 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.proximityalarm + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.nitrocell,
             "Volcán Canister",
             "FUERZAS ESPECIALES",
             "Culiacán Rosales, Mexico",
@@ -4430,7 +4430,7 @@ class siege
                     720,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true
                 ),
@@ -4442,7 +4442,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 )
@@ -4456,7 +4456,7 @@ class siege
                     450,
                     6,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -4468,12 +4468,12 @@ class siege
                     550,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.proximityalarm,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.proximityalarm,
             "Magnetic Neutralizing Electronic Targeting (Mag-NET) System",
             "NIGHTHAVEN",
             "Lamu, Kenya",
@@ -4495,7 +4495,7 @@ class siege
                     900,
                     30,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4533,12 +4533,12 @@ class siege
                     550,
                     12,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.proximityalarm,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.proximityalarm,
             "Remah Dash",
             "[UNAFFILIATED]",
             "Azraq, Jordan",
@@ -4560,7 +4560,7 @@ class siege
                     800,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4586,12 +4586,12 @@ class siege
                     550,
                     15,
                     siege.Weapon.sights.other,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.bulletproofcamera + siege.Weapon.gadgets.impactgrenade,
+            siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.impactgrenade,
             "Banshee Sonic Defense",
             "INKABA TASK FORCE",
             "Louwsburg, South Africa",
@@ -4613,7 +4613,7 @@ class siege
                     980,
                     15,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4625,7 +4625,7 @@ class siege
                     450,
                     20,
                     siege.Weapon.sights.x15,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 )
@@ -4639,12 +4639,12 @@ class siege
                     450,
                     15,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.barbedwire + siege.Weapon.gadgets.bulletproofcamera,
+            siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.bulletproofcamera,
             "Surya Gate",
             "NIGHTHAVEN",
             "Ta Phraya District, Thailand",
@@ -4666,7 +4666,7 @@ class siege
                     700,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4692,7 +4692,7 @@ class siege
                     1100,
                     25,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true
                 ),
@@ -4704,12 +4704,12 @@ class siege
                     550,
                     10,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.nitrocell,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
             "Kóna Healing Station",
             "STAR-NET AVIATION",
             "Nakoda Territories",
@@ -4731,7 +4731,7 @@ class siege
                     700,
                     22,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4757,7 +4757,7 @@ class siege
                     450,
                     8,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 ),
@@ -4774,7 +4774,7 @@ class siege
                     true
                 )
             ],
-            siege.Weapon.gadgets.deployableshield + siege.Weapon.gadgets.barbedwire,
+            siege.Weapon.gadgets.deployableshield | siege.Weapon.gadgets.barbedwire,
             "Razorbloom Shell",
             "EMERGENCY RESPONSE UNIT",
             "County Kildare, Ireland",
@@ -4796,7 +4796,7 @@ class siege
                     750,
                     30,
                     siege.Weapon.sights.nonmag,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.flashhider + siege.Weapon.barrels.compensator + siege.Weapon.barrels.muzzlebrake + siege.Weapon.barrels.extendedbarrel,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
                     true
                 ),
@@ -4822,12 +4822,12 @@ class siege
                     550,
                     7,
                     0,
-                    siege.Weapon.barrels.suppressor + siege.Weapon.barrels.muzzlebrake,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true
                 )
             ],
-            siege.Weapon.gadgets.impactgrenade + siege.Weapon.gadgets.barbedwire,
+            siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.barbedwire,
             "Kiba Barrier",
             "UNAFFILIATED",
             "Kyoto, Japan",

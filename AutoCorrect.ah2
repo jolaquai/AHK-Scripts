@@ -405,9 +405,10 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 ~X & WheelUp::Send("{LAlt down}{PgDn}{LAlt Up}")
 
 ; Surround symbols
+/*
 #HotIf !WinActive("VSCode")
     && !WinActive("ahk_exe discord.exe")
-    RShift & SC00D:: ; RShift+`
+    RShift & SC00D:: ; RShift + `
     {
         window := WinActive("A")
         symbols := StrSplit(InputBox("Input between one and three options to surround the selection with or insert, separated by a space.`nZero or more than three options causes the thread to exit here.").Value, A_Space)
@@ -433,7 +434,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
          * @param leftSymbol The left symbol to insert.
          * @param rightSymbol The right symbol to insert. Defaults to `leftSymbol` if omitted.
          * @param moveLeft The amount of left movements to make. Defaults to `StrLen(rightSymbol)` if omitted.
-         */
+         /
         surroundSymbols(leftSymbol, rightSymbol?, moveLeft?)
         {
             if (!IsSet(rightSymbol))
@@ -657,6 +658,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
             }
         }
     }
+*/
 
 ; Post-autorun return call
 return
@@ -990,8 +992,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
             altgrgui_Exit()
         }
-        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy command line of active window")
-        cmdl.OnEvent("Click", cmdl_Click)
+        altgrgui.Add("Button", "w" . elemW, "Copy command line of active window").OnEvent("Click", cmdl_Click)
 
         /**
          * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
@@ -1005,8 +1006,25 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
             altgrgui_Exit()
         }
-        cmdl := altgrgui.Add("Button", "w" . elemW, "Copy executable name of active window")
-        cmdl.OnEvent("Click", exec_Click)
+        altgrgui.Add("Button", "w" . elemW, "Copy executable name of active window").OnEvent("Click", exec_Click)
+
+        /**
+         * Retrieves the executable name of the previously active window by getting the `ahk_exe` property of the `info` object that was constructed earlier, then sets the clipboard equal to the retrieved value. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
+         */
+        cmdpath_Click(*)
+        {
+            SplitPath(info.processQueryResult.ExecutablePath, , &path)
+            A_Clipboard := ""
+            A_Clipboard := path
+
+            if (A_Clipboard)
+            {
+                codebase.Tool("Copied!")
+            }
+
+            altgrgui_Exit()
+        }
+        altgrgui.Add("Button", "w" . elemW, "Copy executable path of active window").OnEvent("Click", cmdpath_Click)
 
         /**
          * Sets the clipboard equal to the position of and color under the cursor before the GUI window was opened. Finally calls `altgrgui_Exit` to close the GUI window and return to the previously active window.
@@ -2160,3 +2178,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             Sleep(10)
         }
     }
+
+#HotIf WinActive("ahk_exe Phasmophobia.exe")
+    <^>!.::\

@@ -353,7 +353,7 @@ class codebase
             }
             else if (elem is Object)
             {
-                out .= "[" . Type(elem) . Format(" ({1:})]`n", elem.OwnProps().Length)
+                out .= "[" . Type(elem) . Format(" ({1:})]`n", codebase.collectionOperations.objectOperations.getOwnPropsCount(elem))
                 props := StrSplit(Trim(codebase.collectionOperations.objectOperations.toString(elem), '`n ') . "`n", '`n')
                 str := ""
                 for line in props
