@@ -223,6 +223,56 @@ class codebase
     }
 
     /**
+     * Set the 
+     * @param prio The priority to set for target processes. Must be one of the following values:
+     * - One of the words `Low`, `Below`, `Normal`, `Above`, `High` or `Realtime`
+     * - One of the letters `LBNAHR`
+     * - A number between `0` and `5` inclusive, corresponding to `Low` through `Realtime`
+     * @param proc Any number of identifiers for processes.
+     * - Strings are handled as follows:
+     * - - Attempt to use the string as an AHKv2 _WinTitle_ parameter.
+     * - - If this fails, assume the string to be an executable name. All processes matching the name will be operated upon.
+     * - Numbers are assumed to be HWNDs, NOT PIDs. As such, use an `ahk_pid` _WinTitle_ parameter to pass a PID.
+     */
+    static setProcessPriority(prio, proc*)
+    {
+        switch (StrLower(prio))
+        {
+            case "l", "low", 0:
+                prio := "L"
+            case "b", "below", 1:
+                prio := "B"
+            case "n", "normal", 2:
+                prio := "N"
+            case "a", "above", 3:
+                prio := "A"
+            case "h", "high", 4:
+                prio := "H"
+            case "r", "realtime", 5:
+                prio := "R"
+            default:
+                throw ValueError("Invalid value for ``prio``. Received ``" . prio . "``, expected any of the expected values described in the description of ``codebase.setProcessPriority``.")
+        }
+
+        for p in proc
+        {
+            try
+            {
+                processes := WinGetList(p)
+            }
+            catch
+            {
+                processes := WinGetList(WinGetPID(p))
+            }
+
+            for process in processes
+            {
+                ProcessSetPriority(prio, WinGetPID(process))
+            }
+        }
+    }
+
+    /**
      * Collects numbers between a start and stop bound. Also operates in reverse and with non-integer bounds and step widths, contrary to the inspiring `range` object in Python. Additionally, this does not return an `Enumerator`, but _can_ be used in its place everywhere as it returns an Array of collected numbers. This is more practical anyway since the return Array of this function is used a lot in the `codebase`.
      * @param start The inclusive start bound of the range of numbers.
      * @param stop The inclusive stop bound of the range of numbers.
@@ -5941,7 +5991,7 @@ class codebase
 
         /**
          * Instantiates a new `codebase.WinInfo` object.
-         * @param identifier An AHK _WinTitle_ parameter to identify the window the data is to be retrieved about / from.
+         * @param identifier An AHKv2 _WinTitle_ parameter to identify the window the data is to be retrieved about / from.
          * @throws `TargetError` if the HWND of the target window could not be retrieved.
          * @returns An instance of the `WinInfo` class with data about the window specified by `identifier`.
          */

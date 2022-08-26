@@ -3343,7 +3343,7 @@ class siege
                     49,
                     550,
                     70,
-                    siege.Weapon.sights.other,
+                    siege.Weapon.sights.other | siege.Weapon.sights.nonmag,
                     0,
                     0,
                     false

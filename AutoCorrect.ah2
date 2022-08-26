@@ -720,12 +720,14 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     SC029::SC002
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
+    <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
+    <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
 
 #HotIf ; Context-insensitive hotkeys
     <+>^ü::
     {
         procs := ["Launcher.exe", "RockstarErrorHandler.exe", "RockstarService.exe", "SocialClubHelper.exe", "PlayGTAV.exe"]
-        for pname in procs
+        for pname in procs 
         {
             while (ProcessClose(pname))
             {
@@ -2180,4 +2182,3 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
 #HotIf WinActive("ahk_exe Phasmophobia.exe")
-    <^>!.::\
