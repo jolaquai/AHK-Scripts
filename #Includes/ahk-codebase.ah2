@@ -69,7 +69,7 @@ scriptStartupTick := A_TickCount
 A_IsDebuggerAttached := !!InStr(codebase.WinInfo(A_ScriptHwnd, false).processQueryResult.CommandLine, "/Debug")
 
 ; Support the AHKv2-native practice of calling an object's `ToString` method if it cannot be stringified directly (which makes no sense if you think about it, cause there is no native `ToString` method)
-Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString.Bind({ }) })
+Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString })
 
 /**
  * The `codebase` class containing all the subclasses and functions.
@@ -170,29 +170,23 @@ class codebase
 
     /**
      * Changes the processor affinity of one or more processes.
-     * @param affinity The affinity to set for the processes.
-     * - If this is an integer, it is interpreted as the value of a `codebase.Bitfield` object constructed with the amount of bits equal to the environment variable `NUMBER_OF_PROCESSORS`, e.g. `0000111111111111` if the system has 16 processors (which would select all but the first 4 processors).
-     * - If this is a string, it is used directly to instantiate a `codebase.Bitfield` object.
+     * @param affinity The affinity to set for the processes. Identified by a string that is directly used to instantiate a `codebase.Bitfield` object.
      * @param proc One or more names of processes to target. All processes with this name will be affected. Not case-sensitive.
      * @note If the amount of bits used to construct the `affinity` parameter is less than the `NUMBER_OF_PROCESSORS` environment variable, if `n` is the number of missing bits, the first `n` processors are deselected, after which the passed pattern takes effect.
      * @note For ease of use, passing `0` for `affinity` will select all processors.
-     * @returns An Array of objects constructed from `SetProcessAffinityMask` calls, the length of which being the amount of process names _found_, _not_ the amount of executable names passed. The objects are constructed as follows: `{ hwnd: Integer, executableName: String, returnValue: Integer }`.
+     * @returns An Array of objects constructed from `SetProcessAffinityMask` calls, the length of which being the amount of process names _found_, _not_ the amount of executable names passed. The objects are constructed as follows: `{ pid: Integer, hwnd: Integer, executableName: String, returnValue: Integer }`. If an object's `hwnd` prop is `0`, the process does not have any associated windows.
      */
     static setProcessAffinity(affinity, proc*)
     {
         processors := EnvGet("NUMBER_OF_PROCESSORS")
 
-        if (IsNumber(affinity))
+        if (affinity is Number)
         {
-            affinity := codebase.stringOperations.strReverse(codebase.convert.DecToBin(affinity, processors))
-            if (affinity == codebase.stringOperations.strRepeat(processors, '0'))
-            {
-                affinity := codebase.Bitfield(codebase.stringOperations.strRepeat(processors, '1')).Value()
-            }
+            throw TypeError("Invalid type for ``affinity``. Received a number, expected ``String``.")
         }
         else
         {
-            affinity := codebase.Bitfield(affinity).Value()
+            affinity := codebase.Bitfield(codebase.stringOperations.strReverse(String(affinity))).Value()
         }
 
         returns := []
@@ -204,20 +198,22 @@ class codebase
                 processes.Push(p.ProcessId)
             }
         }
-        for hwnd in processes
+        for pid in processes
         {
             ret := 0
-            if (hwnd)
+            if (pid)
             {
-                hProcess := DllCall("OpenProcess", "UInt", 0x1F0FFF, "Int", 0, "UInt", hwnd)
-                ret := DllCall("SetProcessAffinityMask", "UInt", hProcess, "UInt", codebase.Bitfield(affinity).Value())
+                hProcess := DllCall("OpenProcess", "UInt", 0x1F0FFF, "Int", 0, "UInt", pid)
+                ret := DllCall("SetProcessAffinityMask", "UInt", hProcess, "UInt", affinity)
                 DllCall("CloseHandle", "UInt", hProcess)
+
+                returns.Push({
+                    pid: pid,
+                    hwnd: WinExist("ahk_pid " . pid),
+                    executableName: ProcessGetName(pid),
+                    returnValue: ret
+                })
             }
-            returns.Push({
-                hwnd: hwnd,
-                executableName: WinGetProcessName("ahk_pid " . hwnd),
-                returnValue: ret
-            })
         }
         return returns
     }
@@ -254,22 +250,28 @@ class codebase
                 throw ValueError("Invalid value for ``prio``. Received ``" . prio . "``, expected any of the expected values described in the description of ``codebase.setProcessPriority``.")
         }
 
+        returns := []
         for p in proc
         {
-            try
+            processes := []
+            for p in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
             {
-                processes := WinGetList(p)
+                if (codebase.collectionOperations.arrayOperations.arrayContainsPartial(proc, p.Name).Length)
+                {
+                    processes.Push(p.ProcessId)
+                }
             }
-            catch
+            for pid in processes
             {
-                processes := WinGetList(WinGetPID(p))
-            }
-
-            for process in processes
-            {
-                ProcessSetPriority(prio, WinGetPID(process))
+                returns.Push({
+                    pid: pid,
+                    hwnd: WinExist("ahk_pid " . pid),
+                    executableName: ProcessGetName(pid),
+                    ret: !!ProcessSetPriority(prio, pid)
+                })
             }
         }
+        return returns
     }
 
     /**
@@ -1215,7 +1217,7 @@ class codebase
             {
                 extra := StrLen(str)
             }
-            else if (IsNumber(extra))
+            else if (extra is Number)
             {
 
             }
@@ -2182,7 +2184,7 @@ class codebase
                     stringComp := false
                     for elem in arr
                     {
-                        if (!IsNumber(elem))
+                        if (!(elem is Number))
                         {
                             stringComp := true
                             break
@@ -2825,6 +2827,35 @@ class codebase
             }
 
             /**
+             * Creates a new function by smoothing two input functions into one another.
+             * @param f The first function for the smoothing operation.
+             * @param g The second function for the smoothing operation.
+             * @param xStart The `x` value of where to begin smoothing, i.e. where to begin decreasing the impact of `f` and increasing the impact of `g` on the output function.
+             * @param xEnd The `x` value of where to finish smoothing, i.e. from where `f` is multiplied by `0` and `g` is multiplied by `1`.
+             * @returns A new function `f(p1)` which smoothly combines `f` and `g` between `xStart` and `xEnd`.
+             */
+            static smoothFunctions(f, g, xStart, xEnd)
+            {
+                smoothf(x)
+                {
+                    if (x > xEnd)
+                    {
+                        return 1
+                    }
+                    else if (x < xStart)
+                    {
+                        return 0
+                    }
+                    else
+                    {
+                        return ((x - xStart) ** 2) / (((x - xStart) ** 2) + ((xEnd - x) ** 2))
+                    }
+                }
+
+                return (p) => (smoothf(p) * f(p)) + (smoothf(xEnd - p) * g(p))
+            }
+
+            /**
              * Returns the fractional part of a number.
              * @param n The number to return the fractional part of.
              * @returns The fractional part of `n`. Between `0` inclusive and `1` exclusive.
@@ -2893,6 +2924,34 @@ class codebase
                     return {
                         sin: (this, d) => rSin * Sin((d / resolution) * (2 * codebase.math.constants.pi)) + x,
                         cos: (this, d) => rCos * (-Cos((d / resolution) * (2 * codebase.math.constants.pi))) + y
+                    }
+                }
+
+                /**
+                 * Generates a random point in a circle with a set radius around a given center point.
+                 * @param x The `x`-coordinate of the center point of the circle.
+                 * @param y The `y`-coordinate of the center point of the circle.
+                 * @param r The radius of the circle around `x` and `y`.
+                 * @note https://www.geogebra.org/calculator/x4jy2quk
+                 * @returns An object in the pattern `{ x: Integer, y: Integer }`.
+                 */
+                static pointInCircle(x, y, r)
+                {
+                    tX := x - r
+                    tY := y - r
+
+                    pX := 0
+                    pY := 0
+                    d := r + 1
+                    while (Abs(d) > r)
+                    {
+                        pX := tX + Random(0, 2 * r)
+                        pY := tY + Random(0, 2 * r)
+                        d := Sqrt(((x - pX) ** 2) + ((y - pY) ** 2))
+                    }
+                    return {
+                        x: pX,
+                        y: pY
                     }
                 }
             }
@@ -4348,7 +4407,7 @@ class codebase
                             )
                         )
                     }
-                    ; Determine the sign of the determinant determinant
+                    ; Determine the sign of the determinant
                     s := Mod(A_Index, 2) ? 1 : -1
                     ; Multiply the current determinant's sign by the current element and the determinant of the sub-matrix and add to the total
                     total += s * element * codebase.math.matrixComputation.matrixDeterminantLaplaceExpansion(codebase.math.matrixComputation.Matrix(k*))
@@ -4688,7 +4747,8 @@ class codebase
         /**
          * Rounds a number to the nearest multiple of a number.
          * @param n The number to round.
-         * @param m TODO
+         * @param m The number any multiple of which `n` is to be rounded to.
+         * @returns `n` rounded to the nearest multiple of `m`.
          */
         static roundMultiple(n, m) => Round(n / m) * m
 
@@ -5193,7 +5253,7 @@ class codebase
                     }
                     remove(caller, files)
                     {
-                        str := codebase.stringOperations.strJoin('`n+ ', true, '', files*)
+                        str := codebase.stringOperations.strJoin('`n- ', true, '', files*)
                         codebase.Tool(files.Length . " file" . (files.Length != 1 ? "s" : "") . " removed from `"" . this.path . "`":" . str, codebase.Tool.coords, this.tooltipTime, this.x, this.y)
                     }
 
@@ -5659,7 +5719,7 @@ class codebase
 
             for j in hex
             {
-                res += (IsNumber(j) ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
+                res += (j is Number ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
             }
 
             if (neg)
@@ -5879,6 +5939,11 @@ class codebase
      */
     class requests
     {
+        static urlEscape()
+        {
+            
+        }
+
         /**
          * Send a HTTP request and return its response data as well as a parsed version of the JSON response.
          * @param url The URL to send the request to.

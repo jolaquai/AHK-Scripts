@@ -70,7 +70,7 @@ class Rapidvar
      * @note If no arguments are passed, the current value of the `Rapidvar` is returned. Equivalent to calling this method and passing all values in the range `[1, Rapidvar.max]`.
      * @returns `true` if the `Rapidvar`'s value is equal to any of the passed values, `false` otherwise.
      */
-    is(anyof*)
+    check(anyof*)
     {
         if (!(anyof.Length))
         {
@@ -251,6 +251,7 @@ Hotstring(":*?:<;3", ">;3")
 :*?:=/=::≠
 :*?:math_corr::≙
 :*?:math_est::≙
+:*?:math_caret::^
 
 :*?:math_diameter::Ø
 :*?:math_average::Ø
@@ -577,7 +578,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
             ; Change weird arrow to "normal" ones (broken, "" may be more than just broken *arrows*)
             ; Word usually interprets "weird" arrows as ""
             input := StrReplace(input, "", "→")
-            ; Replace corrupted Office newlines by their "normal" counterparts
+            ; Replace vertical tabs by "normal" newlines
             input := StrReplace(input, "", "`n`n")
             ; Make all formatted quotation marks into normal ones
             ; Word will still create the appropriate ones should this tool be used to paste text in there
@@ -741,7 +742,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        simple := false
+        simple := true
 
         n := ""
         math := codebase.math
@@ -750,34 +751,23 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         mat := math.matrixComputation
 
         arr := [
-            
+            Random(1, 250)
         ]
 
         if (!simple)
         {
-            l := 0
-            for op in siege.atkdef
-            {
-                for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
-                {
-                    if ((name := StrLen(w.dps)) > l)
-                    {
-                        l := name
-                    }
-                }
-            }
-            for class in [siege.attackers(), siege.defenders()]
+            for class in [siege.defenders()] ; [siege.attackers(), siege.defenders()]
             {
                 for op in class
                 {
                     for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
                     {
                         if (
-                               !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
-                            && true
+                            !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
+                         && w.type & siege.Weapon.types.assaultrifle
                         )
                         {
-                            arr.Push(Format("{1:-" . (l + 4) . "}{2}", w.dps, w.name))
+                            arr.Push(op.nickname . " - " . w.name)
                         }
                     }
                 }
@@ -825,29 +815,23 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+ö::
     {
-        ; TODO: Create GUI for this with instant lookup and display of results
         MsgBox(A_Clipboard := codebase.elemsOut(
-            ; Dictionary.contains(w, true, 5)
+            
         ))
     }
 
     ^+ä::
     {
-        arr := [
-            codebase.math.roundMultiple(-175, 10),
-            codebase.math.roundMultiple(-134.43, 0.5),
-            codebase.math.roundMultiple(-10, 10),
-            codebase.math.roundMultiple(-4500, 1000),
-            codebase.math.roundMultiple(-4500, 5000)
-        ]
         MsgBox(A_Clipboard := codebase.elemsOut(
-            arr
+            
         ))
     }
     
     ^!+ä::
     {
-        
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            
+        ))
     }
 
     ^+ü::
@@ -868,10 +852,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^+#::
     {
-        n := codebase.range(3, 6, 1/3)
-        throw Error()
         MsgBox(A_Clipboard := codebase.elemsOut(
-            n
+            
         ))
     }
 
@@ -1214,12 +1196,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.is(1))
+            if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.check(1))
             {
                 Send("{LAlt up}{Click}")
                 Sleep(10)
             }
-            else if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.is(2))
+            else if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.check(2))
             {
                 Send("{Click}{LButton up}")
                 break
@@ -1266,7 +1248,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             }
         }
 
-        codebase.Tool(out, codebase.Tool.coords, , A_ScreenWidth / 2 + 10, A_ScreenHeight / 2 + 10)
+        codebase.Tool(out, codebase.Tool.coords, , 10, 10)
     }
 
     ~f::
@@ -1318,7 +1300,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && xtrctnrapid.is()))
+            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && xtrctnrapid.check()))
             {
                 break
             }
@@ -1416,7 +1398,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         Loop
         {
-            if (!(GetKeyState("Space", "P") && dbdrapid.is()))
+            if (!(GetKeyState("Space", "P") && dbdrapid.check()))
             {
                 break
             }
@@ -1529,7 +1511,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         Loop
         {
-            if (!(WinActive("ahk_exe ACOdyssey.exe") && GetKeyState("Space", "P") && acorapid.is()))
+            if (!(WinActive("ahk_exe ACOdyssey.exe") && GetKeyState("Space", "P") && acorapid.check()))
             {
                 break
             }
@@ -1644,7 +1626,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && csrapid.is()))
+            if (!(GetKeyState("LButton", "P") && csrapid.check()))
             {
                 break
             }
@@ -1658,7 +1640,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         Loop
         {
-            if (!(GetKeyState("Space", "P") && csrapid.is()))
+            if (!(GetKeyState("Space", "P") && csrapid.check()))
             {
                 break
             }
@@ -1686,7 +1668,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && hlrapid.is()))
+            if (!(GetKeyState("LButton", "P") && hlrapid.check()))
             {
                 break
             }
@@ -1730,7 +1712,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && wsrapid.is()))
+            if (!(GetKeyState("LButton", "P") && wsrapid.check()))
             {
                 break
             }
@@ -1771,7 +1753,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         Loop
         {
-            if (!(GetKeyState("Space", "P") && strapid.is()))
+            if (!(GetKeyState("Space", "P") && strapid.check()))
             {
                 break
             }
@@ -1852,7 +1834,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && rbrapid.is(1, 3)))
+            if (!(GetKeyState("LButton", "P") && rbrapid.check(1, 3)))
             {
                 break
             }
@@ -1864,7 +1846,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     hkfunc(ThisHotkey)
     {
-        if (!(WinActive("Roblox") && rbrapid.is(2, 3)))
+        if (!(WinActive("Roblox") && rbrapid.check(2, 3)))
         {
             return
         }
@@ -1949,7 +1931,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("B", "P") && rbrapid.is()))
+            if (!(GetKeyState("B", "P") && rbrapid.check()))
             {
                 break
             }
@@ -2001,7 +1983,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("Space", "P") && sfrapid.is()))
+            if (!(GetKeyState("Space", "P") && sfrapid.check()))
             {
                 break
             }
@@ -2017,11 +1999,15 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     /*
     ~RButton & LButton::
+    last(*)
     {
         global
+        static last
+        last := A_Clipboard
+
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && fnrapid.is()))
+            if (!(GetKeyState("LButton", "P") && fnrapid.check()))
             {
                 break
             }
@@ -2040,7 +2026,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("Space", "P") && owrapid.is()))
+            if (!(GetKeyState("Space", "P") && owrapid.check()))
             {
                 break
             }
@@ -2055,7 +2041,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && owrapid.is(2)))
+            if (!(GetKeyState("LButton", "P") && owrapid.check(2)))
             {
                 break
             }
@@ -2076,7 +2062,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && apexrapid.is()))
+            if (!(GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && apexrapid.check()))
             {
                 break
             }
@@ -2091,7 +2077,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("Y", "P") && apexrapid.is()))
+            if (!(GetKeyState("Y", "P") && apexrapid.check()))
             {
                 break
             }
@@ -2111,7 +2097,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("E", "P") && f13rapid.is()))
+            if (!(GetKeyState("E", "P") && f13rapid.check()))
             {
                 break
             }
@@ -2129,7 +2115,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && mwrapid.is()))
+            if (!(GetKeyState("LButton", "P") && mwrapid.check()))
             {
                 break
             }
@@ -2156,7 +2142,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && swrapid.is()))
+            if (!(GetKeyState("LButton", "P") && swrapid.check()))
             {
                 break
             }
@@ -2171,7 +2157,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         global
         Loop
         {
-            if (!(GetKeyState("Space", "P") && swrapid.is()))
+            if (!(GetKeyState("Space", "P") && swrapid.check()))
             {
                 break
             }

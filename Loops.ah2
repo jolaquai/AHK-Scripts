@@ -112,13 +112,9 @@ sendAfk(exe := "")
     }
     else if (exe == "RobloxPlayerBeta.exe")
     {
-        Send("{Space}")
-        return
-        Send("{w down}")
-        Sleep(490)
-        Send("{s down}{w up}{Click}")
-        Sleep(500)
-        Send("{s up}")
+        Send("{e down}")
+        Sleep(2000)
+        Send("{e up}")
     }
     else if (exe == "RainbowSix.exe")
     {
@@ -647,7 +643,8 @@ functions()
     killList := [
         "ahk_exe msedge.exe",
         "Feedback Hub",
-        "Steam - News"
+        "Steam - News",
+        "Quick Assist"
     ]
     for win in killList
     {
@@ -692,27 +689,6 @@ functions()
         }
     }
 
-    noPH := false
-    if (WinExist("ahk_exe FortniteClient-Win64-Shipping.exe"))
-    {
-        if (!noPH)
-        {
-            while (true)
-            {
-                if (RunWait('sc stop kprocesshacker3') == 1060)
-                {
-                    noPH := true
-                    break
-                    Sleep(1000)
-                }
-            }
-        }
-    }
-    else if (noPH)
-    {
-        noPH := false
-    }
-
     if (WinExist("ahk_exe RainbowSix.exe"))
     {
         if (!ProcessExist("CrossOver.exe"))
@@ -721,6 +697,22 @@ functions()
             Sleep(10000)
             return
         }
+    }
+
+    if (WinExist("PhasmoMenu") && WinExist("Teleport"))
+    {
+        old := A_TitleMatchMode
+        SetTitleMatchMode(3)
+
+        wins := ["PhasmoMenu v0.3.9.3", "Player", "Ghost", "GhostInfo", "PlayerInfo", "ItemInfo", "Spawn", "Evidence", "Cash/Items/Exp", "CursedObjects", "KeyBinds ", "Teleport"]
+        
+        for n in codebase.range(2, wins.Length)
+        {
+            WinGetPos(&x, &y, &w, &h, wins[n - 1])
+            WinMove(x + w, y, , , wins[n])
+        }
+
+        SetTitleMatchMode(old)
     }
 
     readOnlyFiles := [
@@ -1051,7 +1043,7 @@ triggers := [
     "ahk_exe VALORANT-Win64-Shipping.exe",
     "ahk_exe bf1.exe",
     "ahk_exe DeadByDaylight-Win64-Shipping.exe",
-    ; roblox,
+    roblox,
     "ahk_exe Rocksmith2014.exe",
     "Sea of Thieves",
     ;"Notepad"

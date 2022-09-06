@@ -51,12 +51,16 @@ outputchoose.OnEvent("Click", output_rc)
 output_rc(*)
 {
     global dir, ext, fn
-    sel := FileSelect("S", initdir . "\" . fn . "-c." . ext)
+    sel := FileSelect("S", initdir . "\" . fn . "-c." . ext, , StrUpper(ext) . " Video File (*." . ext . ")")
     SplitPath(sel, , &d, &e, &f)
     if (sel)
+    {
         output.Value := f . ext
+    }
     else
+    {
         output_reset()
+    }
 
 }
 outputreset := g.Add("Button", , "Reset output")
@@ -65,7 +69,9 @@ output_reset(*)
 {
     global dir, ext, fn
     if (input.Value == "")
+    {
         return
+    }
 
     try
     {

@@ -1,9 +1,11 @@
 /**
+ * This script is my "rainbowedit" Google Sheets Spreadsheet (https://docs.google.com/spreadsheets/d/1BmvpCvjGQJ4FyqPY-hZDXP673PMx5YotaUIiUDLgxm4/edit?usp=sharing), improved and expanded upon. Importing it allows access to information about Rainbow Six Siege's Operators, their loadouts with all statistics and more.
+ *
  * To check for an Operator's properties, use standard comparison operators and bitwise-and `&` and bitwise-or `|`. For example, if a `siege.Operator` (object) is stored in `op`...
  * - ...can a Hard Breach Charge _or_ a Breach Charge be chosen with this Operator? `op.gadgets & (siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.breachcharge)`
  *
  * To check for an Operator's weapons' properties, use bitwise-and `&` and bitwise-or `|`. For example, if a `siege.Weapon` (object) is stored in `prim`...
- * - ...can a 2x, 2.5x or Russian 2.5x sight be equipped? `prim.sights & (siege.Weapon.sights.x25 | siege.Weapon.sights.x2)`
+ * - ...can a 2.5x or Russian 2 sight be equipped? `prim.sights & (siege.Weapon.sights.x25 | siege.Weapon.sights.x2)`
  * - ...is this weapon _not_ a slug shotgun _or_ a light machine gun? `prim.type & ~(siege.Weapon.types.shotgunSlug | siege.Weapon.types.lightmachinegun)`
  */
 notes := ""
@@ -12,6 +14,15 @@ notes := ""
 
 class siege
 {
+    /**
+     * The `list` Arrays from the `siege.attackers` and `siege.defenders` subclasses concatenated into one in that order to allow for easier looping.
+     */
+    static atkdef := codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)
+    /**
+     * The `list` Arrays from the `siege.defenders` and `siege.attackers` subclasses concatenated into one in that order to allow for easier looping.
+     */
+    static defatk := codebase.collectionOperations.arrayOperations.arrayConcat(siege.defenders.list, siege.attackers.list)
+
     class misc
     {
         /**
@@ -68,19 +79,42 @@ class siege
 
         /**
          * The Operator with the longest nickname in-game.
-         *
-         * Currently broken, returns Buck's object, when it should be Thunderbird's.
          */
-        static longestOperatorNick := {}
+        static longestOperatorNick := { }
+
+        /**
+         * The longest weapon name in-game.
+         */
+        static longestWeaponName := ""
         
         /*
          * Has no value. Exists to call the function `siege.misc._init()` which populates the following static fields:
          * - `siege.misc.longestOperatorNick`
+         * - `siege.misc.longestWeaponName`
          */
         static init := siege.misc._init()
         static _init()
         {
-            codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)[(a := codebase.collectionOperations.arrayOperations.evaluate((x) => StrLen(x.nickname), codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)))[codebase.collectionOperations.arrayOperations.arrayContains(a, Max(a*))[1]]]
+            lName := 0
+            lWep := 0
+
+            for op in siege.atkdef
+            {
+                if (StrLen(op.nickname) > lName)
+                {
+                    lName := StrLen(op.nickname)
+                    siege.misc.longestOperatorNick := op
+                }
+
+                for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
+                {
+                    if (StrLen(w.name) > lWep)
+                    {
+                        lWep := StrLen(w.name)
+                        siege.misc.longestWeaponName := w.name
+                    }
+                }
+            }
         }
         
     }
@@ -302,7 +336,7 @@ class siege
     /**
      * A class to hold information about a single weapon in the game.
      *
-     * This is never universal among all Operators; for example, there must be at least two `Weapon` objects holding information about the "SPEAR .308", as Finka and Thunderbird both use this weapon, but the barrel extensions they may use differ.
+     * This is never universal among all Operators using one specific weapon.
      */
     class Weapon
     {
@@ -661,14 +695,41 @@ class siege
          * The damage of the weapon with a Suppressor equipped on it.
          *
          * - This is `0` for Shields.
+         * - This is `0` if the weapon cannot be equipped with a Suppressor.
          */
         suppresseddamage := ""
         /**
-         * The amount of damage per second the weapon can deal.
+         * The amount of damage per second the weapon can deal, considering magazine capacity, fire rate and reload time.
+         * @note While also easily calculable using `damage * (rpm / 60)`, this desperately needed an overhaul due to that formula ranking the "BOSG.12.2" as the most powerful gun in the game dps-wise. I think we all agree that that's not true in all aspects.
+         * @note This is calculated using a weapon's `capacity` and `reloadTactical` props. For example, if `capacity` is `30`, it is assumed that the last of the actual `30 + 1` rounds is left in the chamber to allow continuous tactical reloads.
          *
          * - This is `0` for Shields.
          */
         dps := ""
+        /**
+         * How long it takes to reload the gun when there is a round chambered, i.e. the bolt does not have to be pulled before the gun is ready to fire.
+         * @note This has been timed from recorded 60-fps clips in-game. Timings are accurate to 60 milliseconds.
+         * - Timing start explanation (tactical reload): Pressing the Reload button causes the background of the highlighted (equipped) weapon at the bottom-right to turn slightly transparent. Timing starts on the first frame where this is the case.
+         * - Timing start explanation (forced reload on last round expended): See timing for tactical reloads. Used only when capturing footage of Clash's P-10C (for which I could've also used Warden, yes, but I honestly didn't think that far, it's 11 pm, give me a break).
+         * - Timing start explanation (empty reload): Switching to the weapon also switches the highlighted (equipped) weapon at the bottom right. The new weapon's background begins turning white (and slightly transparent for the reason mentioned above) on the same frame on which the reload animation starts (except when switching from Clash's CCE Shield). Timing starts on the first frame where this is the case.
+         * - Timing end explanation: In every instance, timing ends on the first frame AFTER the reload has been completed, i.e. when the ammo count has been reflecting the completed reload for one frame.
+         *
+         * - This is `0` for Shields.
+         * - This is `0` for the "GONNE-6".
+         * - For Shotguns that are not magazine-fed, this assumes one shell remaining in the breech.
+         * - For Shotguns that are magazine-fed, this is usually the same as `reloadEmpty`.
+         * - For Machine Guns that are belt-fed, this is _usually_ the same as `reloadEmpty`.
+         */
+        reloadTactical := ""
+        /**
+         * How long it takes to reload the gun when no round is chambered, i.e. the bolt has to be pulled before the gun is ready to fire.
+         *
+         * - This is `0` for Shields.
+         * - This is `0` for the "GONNE-6".
+         * - For Shotguns that are magazine-fed, this is usually the same as `reloadTactical`.
+         * - For Machine Guns that are belt-fed, this is _usually_ the same as `reloadTactical`.
+         */
+        reloadEmpty := ""
 
         /**
          * Instantiate a new `Weapon` object.
@@ -682,9 +743,11 @@ class siege
          * @param barrels The values of one or more `codebase.Bitfield` objects summed up to indicate which barrels / barrel extensions can be equipped on the weapon.
          * @param grips The values of one or more `codebase.Bitfield` objects summed up to indicate which grips can be equipped on the weapon.
          * @param underbarrel Whether the weapon has an underbarrel slot (i.e. a laser can be equipped).
+         * @param reloadTactical How long it takes to reload the gun when there is a round chambered, i.e. the bolt does not have to be pulled before the gun is ready to fire. For shotguns that are not magazine-fed, this assumes one shell remaining in the breech.
+         * @param reloadEmpty How long it takes to reload the gun when no round is chambered, i.e. the bolt has to be pulled before the gun is ready to fire.
          * @returns A `Weapon` object.
          */
-        __New(name, type, firingmode, damage, rpm, capacity, sights, barrels, grips, underbarrel)
+        __New(name, type, firingmode, damage, rpm, capacity, sights, barrels, grips, underbarrel, reloadTactical, reloadEmpty)
         {
             this.name := name
             this.type := type
@@ -697,7 +760,13 @@ class siege
             this.grips := grips
             this.underbarrel := underbarrel
             this.suppresseddamage := Round(this.barrels & siege.Weapon.barrels.suppressor ? this.damage * siege.Weapon.suppressedDamageMultiplier : 0)
-            this.dps := Round(this.damage * (this.rpm / 60))
+            this.reloadTactical := reloadTactical
+            this.reloadEmpty := reloadEmpty
+            try this.dps := Round((this.damage * this.capacity) / ((this.reloadTactical / 1000) + (this.capacity / (this.rpm / 60))))
+            catch
+            {
+                this.dps := 0
+            }
         }
     }
 
@@ -716,7 +785,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4030, 60),
+                    codebase.math.roundMultiple(4510, 60)
                 ),
                 siege.Weapon(
                     "L85A2",
@@ -727,8 +798,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1500, 60),
+                    codebase.math.roundMultiple(2360, 60)
                 )
             ],
             [
@@ -742,7 +815,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 )
             ],
             siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
@@ -768,8 +843,10 @@ class siege
                     25,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(2310, 60)
                 ),
                 siege.Weapon(
                     "L85A2",
@@ -780,8 +857,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1500, 60),
+                    codebase.math.roundMultiple(2360, 60)
                 ),
                 siege.Weapon(
                     "M590A1",
@@ -793,7 +872,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4030, 60),
+                    codebase.math.roundMultiple(4510, 60)
                 )
             ],
             [
@@ -807,7 +888,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -833,8 +916,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2340, 60)
                 ),
                 siege.Weapon(
                     "R4-C",
@@ -845,8 +930,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1330, 60),
+                    codebase.math.roundMultiple(2200, 60)
                 )
             ],
             [
@@ -860,7 +947,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1100, 60),
+                    codebase.math.roundMultiple(1300, 60)
                 ),
                 siege.Weapon(
                     "5.7 USG",
@@ -872,7 +961,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -899,7 +990,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4450, 60),
+                    codebase.math.roundMultiple(5330, 60)
                 ),
                 siege.Weapon(
                     "556XI",
@@ -910,8 +1003,10 @@ class siege
                     30,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1460, 60),
+                    codebase.math.roundMultiple(2410, 60)
                 )
             ],
             [
@@ -925,7 +1020,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1100, 60),
+                    codebase.math.roundMultiple(1300, 60)
                 ),
                 siege.Weapon(
                     "5.7 USG",
@@ -937,7 +1034,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade,
@@ -964,7 +1063,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1420, 60),
+                    codebase.math.roundMultiple(2320, 60)
                 ),
                 siege.Weapon(
                     "417",
@@ -975,8 +1076,10 @@ class siege
                     20,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1350, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 ),
                 siege.Weapon(
                     "SG-CQB",
@@ -988,7 +1091,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4090, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             [
@@ -1002,7 +1107,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 ),
                 siege.Weapon(
                     "LFP586",
@@ -1014,7 +1121,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.smokegrenade,
@@ -1041,7 +1150,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             [
@@ -1055,7 +1166,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 ),
                 siege.Weapon(
                     "LFP586",
@@ -1067,7 +1180,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.empgrenade,
@@ -1094,7 +1209,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -1108,7 +1225,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1120,7 +1239,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "Bearing 9",
@@ -1132,7 +1253,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.claymore,
@@ -1159,7 +1282,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "6P41",
@@ -1170,8 +1295,10 @@ class siege
                     100,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(6580, 60),
+                    codebase.math.roundMultiple(7160, 60)
                 ),
                 siege.Weapon(
                     "AK-12",
@@ -1182,8 +1309,10 @@ class siege
                     30,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2260, 60)
                 )
             ],
             [
@@ -1197,7 +1326,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "GSH-18",
@@ -1209,7 +1340,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1470, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade,
@@ -1236,7 +1369,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             [
@@ -1250,7 +1385,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1230, 60),
+                    codebase.math.roundMultiple(1560, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.breachcharge,
@@ -1277,7 +1414,9 @@ class siege
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1470, 60),
+                    codebase.math.roundMultiple(2340, 60)
                 ),
                 siege.Weapon(
                     "552 Commando",
@@ -1288,8 +1427,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1390, 60),
+                    codebase.math.roundMultiple(2170, 60)
                 ),
                 siege.Weapon(
                     "G8A1",
@@ -1300,8 +1441,10 @@ class siege
                     50,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(2120, 60),
+                    codebase.math.roundMultiple(3220, 60)
                 )
             ],
             [
@@ -1315,7 +1458,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1230, 60),
+                    codebase.math.roundMultiple(1560, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -1342,7 +1487,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1370, 60),
+                    codebase.math.roundMultiple(1540, 60)
                 ),
                 siege.Weapon(
                     "CAMRS",
@@ -1354,7 +1501,9 @@ class siege
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1460, 60),
+                    codebase.math.roundMultiple(2290, 60)
                 )
             ],
             [
@@ -1368,7 +1517,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1110, 60),
+                    codebase.math.roundMultiple(1320, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1380,7 +1531,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.hardbreachcharge,
@@ -1406,8 +1559,10 @@ class siege
                     20,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2230, 60)
                 ),
                 siege.Weapon(
                     "SR-25",
@@ -1418,8 +1573,10 @@ class siege
                     20,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1380, 60),
+                    codebase.math.roundMultiple(2400, 60)
                 )
             ],
             [
@@ -1433,7 +1590,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
@@ -1459,8 +1618,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(2000, 60),
+                    codebase.math.roundMultiple(2300, 60)
                 ),
                 siege.Weapon(
                     "M249",
@@ -1471,8 +1632,10 @@ class siege
                     100,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(6320, 60),
+                    codebase.math.roundMultiple(6320, 60)
                 )
             ],
             [
@@ -1486,7 +1649,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1498,7 +1663,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.hardbreachcharge,
@@ -1524,8 +1691,10 @@ class siege
                     20,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1340, 60),
+                    codebase.math.roundMultiple(2320, 60)
                 ),
                 siege.Weapon(
                     "Supernova",
@@ -1537,7 +1706,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4080, 60),
+                    codebase.math.roundMultiple(4560, 60)
                 )
             ],
             [
@@ -1551,7 +1722,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 ),
                 siege.Weapon(
                     "Bearing 9",
@@ -1563,7 +1736,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.breachcharge,
@@ -1589,8 +1764,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1140, 60),
+                    codebase.math.roundMultiple(2010, 60)
                 ),
                 siege.Weapon(
                     "PDW9",
@@ -1601,8 +1778,10 @@ class siege
                     50,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1490, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 ),
                 siege.Weapon(
                     "ITA12L",
@@ -1614,7 +1793,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(5440, 60),
+                    codebase.math.roundMultiple(7190, 60)
                 )
             ],
             [
@@ -1628,7 +1809,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(1410, 60)
                 ),
                 siege.Weapon(
                     "ITA12S",
@@ -1640,7 +1823,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3200, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.smokegrenade,
@@ -1666,8 +1851,10 @@ class siege
                     80,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 ),
                 siege.Weapon(
                     "SIX12",
@@ -1679,7 +1866,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1400, 60),
+                    codebase.math.roundMultiple(1400, 60)
                 )
             ],
             [
@@ -1693,7 +1882,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1140, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.smokegrenade,
@@ -1719,8 +1910,10 @@ class siege
                     150,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(6180, 60),
+                    codebase.math.roundMultiple(5430, 60)
                 ),
                 siege.Weapon(
                     "M762",
@@ -1731,8 +1924,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1590, 60),
+                    codebase.math.roundMultiple(2350, 60)
                 )
             ],
             [
@@ -1746,7 +1941,9 @@ class siege
                     siege.Weapon.sights.other,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1200, 60),
+                    codebase.math.roundMultiple(1370, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -1772,8 +1969,10 @@ class siege
                     20,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1490, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 ),
                 siege.Weapon(
                     "BOSG.12.2",
@@ -1784,8 +1983,10 @@ class siege
                     2,
                     siege.Weapon.sights.x25,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1160, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 )
             ],
             [
@@ -1798,8 +1999,10 @@ class siege
                     32,
                     siege.Weapon.sights.nonmag,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2300, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1811,7 +2014,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "C75 Auto",
@@ -1823,7 +2028,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.empgrenade,
@@ -1849,8 +2056,10 @@ class siege
                     50,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1550, 60),
+                    codebase.math.roundMultiple(2330, 60)
                 ),
                 siege.Weapon(
                     "417",
@@ -1861,8 +2070,10 @@ class siege
                     20,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1350, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 ),
                 siege.Weapon(
                     "SG-CQB",
@@ -1874,7 +2085,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4090, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             [
@@ -1888,7 +2101,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1900,7 +2115,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "P9",
@@ -1912,7 +2129,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.empgrenade,
@@ -1938,8 +2157,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1510, 60),
+                    codebase.math.roundMultiple(2460, 60)
                 ),
                 siege.Weapon(
                     "6P41",
@@ -1950,8 +2171,10 @@ class siege
                     100,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(6580, 60),
+                    codebase.math.roundMultiple(7160, 60)
                 ),
                 siege.Weapon(
                     "SASG-12",
@@ -1962,8 +2185,10 @@ class siege
                     10,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1520, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 )
             ],
             [
@@ -1977,7 +2202,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -1989,7 +2216,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "GSH-18",
@@ -2001,7 +2230,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1470, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.stungrenade,
@@ -2027,8 +2258,10 @@ class siege
                     10,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2120, 60)
                 ),
                 siege.Weapon(
                     "M4",
@@ -2039,8 +2272,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1530, 60),
+                    codebase.math.roundMultiple(2400, 60)
                 )
             ],
             [
@@ -2054,7 +2289,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1240, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore,
@@ -2081,7 +2318,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 ),
                 siege.Weapon(
                     "ARX200",
@@ -2092,8 +2331,10 @@ class siege
                     20,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1420, 60),
+                    codebase.math.roundMultiple(2350, 60)
                 )
             ],
             [
@@ -2107,7 +2348,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "PRB92",
@@ -2119,7 +2362,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.breachcharge,
@@ -2145,8 +2390,10 @@ class siege
                     30,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1380, 60),
+                    codebase.math.roundMultiple(2290, 60)
                 ),
                 siege.Weapon(
                     "M249 SAW",
@@ -2157,8 +2404,10 @@ class siege
                     60,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(2030, 60),
+                    codebase.math.roundMultiple(3560, 60)
                 )
             ],
             [
@@ -2172,7 +2421,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2450, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -2184,7 +2435,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "SDP 9mm",
@@ -2196,7 +2449,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1050, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.empgrenade,
@@ -2223,7 +2478,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1420, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 ),
                 siege.Weapon(
                     "SIX12 SD",
@@ -2235,7 +2492,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1400, 60),
+                    codebase.math.roundMultiple(1400, 60)
                 )
             ],
             [
@@ -2249,7 +2508,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 ),
                 siege.Weapon(
                     "D-50",
@@ -2261,7 +2522,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.empgrenade,
@@ -2287,8 +2550,10 @@ class siege
                     50,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(2120, 60),
+                    codebase.math.roundMultiple(3220, 60)
                 ),
                 siege.Weapon(
                     "Supernova",
@@ -2300,7 +2565,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4080, 60),
+                    codebase.math.roundMultiple(4560, 60)
                 )
             ],
             [
@@ -2313,8 +2580,10 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1270, 60),
+                    codebase.math.roundMultiple(2130, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -2326,7 +2595,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 ),
                 siege.Weapon(
                     "ITA12S",
@@ -2338,7 +2609,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3200, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.stungrenade,
@@ -2365,7 +2638,9 @@ class siege
                     siege.Weapon.sights.x612,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(1500, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -2379,7 +2654,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1350, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 ),
                 siege.Weapon(
                     "C75 Auto",
@@ -2391,7 +2668,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "P226 MK 25",
@@ -2403,7 +2682,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.breachcharge,
@@ -2429,8 +2710,10 @@ class siege
                     20,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1420, 60),
+                    codebase.math.roundMultiple(2350, 60)
                 ),
                 siege.Weapon(
                     "G36C",
@@ -2441,8 +2724,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2340, 60)
                 )
             ],
             [
@@ -2456,7 +2741,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1110, 60),
+                    codebase.math.roundMultiple(1320, 60)
                 )
             ],
             siege.Weapon.gadgets.fraggrenade | siege.Weapon.gadgets.smokegrenade,
@@ -2482,8 +2769,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2260, 60)
                 ),
                 siege.Weapon(
                     "M1014",
@@ -2495,7 +2784,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4450, 60),
+                    codebase.math.roundMultiple(5330, 60)
                 )
             ],
             [
@@ -2509,7 +2800,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -2535,8 +2828,10 @@ class siege
                     25,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1520, 60),
+                    codebase.math.roundMultiple(2470, 60)
                 ),
                 siege.Weapon(
                     "MP7",
@@ -2548,7 +2843,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2250, 60)
                 )
             ],
             [
@@ -2560,9 +2857,11 @@ class siege
                     550,
                     20,
                     0,
-                    siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    0,
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -2574,7 +2873,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
@@ -2600,8 +2901,10 @@ class siege
                     25,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(2310, 60)
                 ),
                 siege.Weapon(
                     "SR-25",
@@ -2612,8 +2915,10 @@ class siege
                     20,
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1380, 60),
+                    codebase.math.roundMultiple(2400, 60)
                 )
             ],
             [
@@ -2627,7 +2932,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1470, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.claymore,
@@ -2653,8 +2960,10 @@ class siege
                     30,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1460, 60),
+                    codebase.math.roundMultiple(2410, 60)
                 ),
                 siege.Weapon(
                     "PDW9",
@@ -2665,8 +2974,10 @@ class siege
                     50,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1490, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -2680,7 +2991,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 )
             ],
             siege.Weapon.gadgets.smokegrenade | siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.empgrenade,
@@ -2706,8 +3019,10 @@ class siege
                     50,
                     siege.Weapon.sights.x25,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1470, 60),
+                    codebase.math.roundMultiple(2240, 60)
                 ),
                 siege.Weapon(
                     "417",
@@ -2719,7 +3034,9 @@ class siege
                     siege.Weapon.sights.x3,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1350, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 )
             ],
             [
@@ -2733,7 +3050,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1050, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 ),
                 siege.Weapon(
                     "GONNE-6",
@@ -2745,7 +3064,9 @@ class siege
                     0,
                     0,
                     0,
-                    false
+                    false,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
@@ -2771,8 +3092,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1390, 60),
+                    codebase.math.roundMultiple(2170, 60)
                 ),
                 siege.Weapon(
                     "SG-CQB",
@@ -2784,7 +3107,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4090, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             [
@@ -2798,7 +3123,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.breachcharge | siege.Weapon.gadgets.claymore,
@@ -2867,7 +3194,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1420, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 ),
                 siege.Weapon(
                     "M590A1",
@@ -2879,7 +3208,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4030, 60),
+                    codebase.math.roundMultiple(4510, 60)
                 )
             ],
             [
@@ -2893,7 +3224,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 ),
                 siege.Weapon(
                     "SMG-11",
@@ -2904,8 +3237,10 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1270, 60),
+                    codebase.math.roundMultiple(2130, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
@@ -2932,7 +3267,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2150, 60)
                 ),
                 siege.Weapon(
                     "M590A1",
@@ -2944,7 +3281,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4030, 60),
+                    codebase.math.roundMultiple(4510, 60)
                 )
             ],
             [
@@ -2958,7 +3297,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 ),
                 siege.Weapon(
                     "SMG-11",
@@ -2969,8 +3310,10 @@ class siege
                     16,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1270, 60),
+                    codebase.math.roundMultiple(2130, 60)
                 )
             ],
             siege.Weapon.gadgets.nitrocell | siege.Weapon.gadgets.bulletproofcamera,
@@ -2996,8 +3339,10 @@ class siege
                     25,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1480, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 ),
                 siege.Weapon(
                     "M1014",
@@ -3009,7 +3354,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4450, 60),
+                    codebase.math.roundMultiple(5330, 60)
                 )
             ],
             [
@@ -3023,7 +3370,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 ),
                 siege.Weapon(
                     "Super Shorty",
@@ -3035,7 +3384,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2450, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.proximityalarm,
@@ -3062,7 +3413,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4450, 60),
+                    codebase.math.roundMultiple(5330, 60)
                 ),
                 siege.Weapon(
                     "UMP45",
@@ -3073,8 +3426,10 @@ class siege
                     25,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1480, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 )
             ],
             [
@@ -3088,7 +3443,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1100, 60),
+                    codebase.math.roundMultiple(1300, 60)
                 ),
                 siege.Weapon(
                     "5.7 USG",
@@ -3100,7 +3457,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1490, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
@@ -3127,7 +3486,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4090, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 ),
                 siege.Weapon(
                     "MP5",
@@ -3138,8 +3499,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "P90",
@@ -3151,7 +3514,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1560, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 )
             ],
             [
@@ -3165,7 +3530,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 ),
                 siege.Weapon(
                     "LFP586",
@@ -3177,7 +3544,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.barbedwire,
@@ -3204,7 +3573,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1560, 60),
+                    codebase.math.roundMultiple(2190, 60)
                 ),
                 siege.Weapon(
                     "MP5",
@@ -3215,8 +3586,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "SG-CQB",
@@ -3228,7 +3601,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4090, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             [
@@ -3242,7 +3617,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 ),
                 siege.Weapon(
                     "P9",
@@ -3254,7 +3631,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.impactgrenade,
@@ -3280,8 +3659,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "SASG-12",
@@ -3292,8 +3673,10 @@ class siege
                     10,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1520, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 )
             ],
             [
@@ -3307,7 +3690,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "GSH-18",
@@ -3319,7 +3704,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1470, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
@@ -3346,7 +3733,9 @@ class siege
                     siege.Weapon.sights.other | siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    false
+                    false, 
+                    codebase.math.roundMultiple(2490, 60),
+                    codebase.math.roundMultiple(3340, 60)
                 ),
                 siege.Weapon(
                     "9x19VSN",
@@ -3357,8 +3746,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 )
             ],
             [
@@ -3372,7 +3763,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1260, 60),
+                    codebase.math.roundMultiple(1470, 60)
                 ),
                 siege.Weapon(
                     "PMM",
@@ -3384,7 +3777,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "Bearing 9",
@@ -3396,7 +3791,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
@@ -3423,7 +3820,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3410, 60),
+                    codebase.math.roundMultiple(4360, 60)
                 ),
                 siege.Weapon(
                     "416-C Carbine",
@@ -3434,8 +3833,10 @@ class siege
                     25,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1340, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 )
             ],
             [
@@ -3449,7 +3850,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1230, 60),
+                    codebase.math.roundMultiple(1560, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.barbedwire,
@@ -3476,7 +3879,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2250, 60)
                 ),
                 siege.Weapon(
                     "M870",
@@ -3488,7 +3893,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3410, 60),
+                    codebase.math.roundMultiple(4360, 60)
                 )
             ],
             [
@@ -3502,7 +3909,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1230, 60),
+                    codebase.math.roundMultiple(1560, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
@@ -3529,7 +3938,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4320, 60),
+                    codebase.math.roundMultiple(5180, 60)
                 ),
                 siege.Weapon(
                     "9mm C1",
@@ -3540,8 +3951,10 @@ class siege
                     34,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1290, 60),
+                    codebase.math.roundMultiple(2070, 60)
                 )
             ],
             [
@@ -3555,7 +3968,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1110, 60),
+                    codebase.math.roundMultiple(1320, 60)
                 ),
                 siege.Weapon(
                     "ITA12S",
@@ -3567,7 +3982,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3200, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.deployableshield,
@@ -3593,8 +4010,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1310, 60),
+                    codebase.math.roundMultiple(2040, 60)
                 ),
                 siege.Weapon(
                     "SPAS-12",
@@ -3606,7 +4025,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3470, 60),
+                    codebase.math.roundMultiple(4430, 60)
                 )
             ],
             [
@@ -3620,7 +4041,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
@@ -3647,7 +4070,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1290, 60),
+                    codebase.math.roundMultiple(2170, 60)
                 ),
                 siege.Weapon(
                     "SPAS-15",
@@ -3659,7 +4084,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1180, 60),
+                    codebase.math.roundMultiple(2020, 60)
                 )
             ],
             [
@@ -3673,7 +4100,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.proximityalarm,
@@ -3700,7 +4129,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4080, 60),
+                    codebase.math.roundMultiple(4560, 60)
                 ),
                 siege.Weapon(
                     "MP5SD",
@@ -3711,8 +4142,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2260, 60)
                 )
             ],
             [
@@ -3726,7 +4159,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 ),
                 siege.Weapon(
                     "Bearing 9",
@@ -3738,7 +4173,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.deployableshield,
@@ -3764,8 +4201,10 @@ class siege
                     25,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1330, 60),
+                    codebase.math.roundMultiple(2170, 60)
                 ),
                 siege.Weapon(
                     "ITA12L",
@@ -3777,7 +4216,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(5440, 60),
+                    codebase.math.roundMultiple(7190, 60)
                 )
             ],
             [
@@ -3791,7 +4232,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(1410, 60)
                 ),
                 siege.Weapon(
                     "ITA12S",
@@ -3803,7 +4246,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3200, 60),
+                    codebase.math.roundMultiple(4580, 60)
                 )
             ],
             siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.nitrocell,
@@ -3830,7 +4275,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1400, 60),
+                    codebase.math.roundMultiple(1400, 60)
                 ),
                 siege.Weapon(
                     "T-5 SMG",
@@ -3841,8 +4288,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1400, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 )
             ],
             [
@@ -3856,7 +4305,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1140, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.bulletproofcamera,
@@ -3882,8 +4333,10 @@ class siege
                     40,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
-                    true
+                    siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "FO-12",
@@ -3894,8 +4347,10 @@ class siege
                     10,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1440, 60),
+                    codebase.math.roundMultiple(2360, 60)
                 )
             ],
             [
@@ -3909,7 +4364,9 @@ class siege
                     siege.Weapon.sights.other,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1200, 60),
+                    codebase.math.roundMultiple(1370, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.deployableshield,
@@ -3935,8 +4392,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
-                    true
+                    siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1470, 60),
+                    codebase.math.roundMultiple(2280, 60)
                 ),
                 siege.Weapon(
                     "BOSG.12.2",
@@ -3947,8 +4406,10 @@ class siege
                     2,
                     siege.Weapon.sights.nonmag + siege.Weapon.sights.x25,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1160, 60),
+                    codebase.math.roundMultiple(1430, 60)
                 )
             ],
             [
@@ -3962,7 +4423,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "SMG-12",
@@ -3973,8 +4436,10 @@ class siege
                     32,
                     siege.Weapon.sights.nonmag,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2300, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.impactgrenade,
@@ -4001,7 +4466,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(5200, 60),
+                    codebase.math.roundMultiple(4480, 60)
                 ),
                 siege.Weapon(
                     "ACS12",
@@ -4012,8 +4479,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1590, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -4027,7 +4496,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3260, 60),
+                    codebase.math.roundMultiple(3370, 60)
                 ),
                 siege.Weapon(
                     "Keratos .357",
@@ -4039,7 +4510,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3020, 60),
+                    codebase.math.roundMultiple(3020, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.impactgrenade,
@@ -4066,7 +4539,9 @@ class siege
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1570, 60),
+                    codebase.math.roundMultiple(2200, 60)
                 ),
                 siege.Weapon(
                     "ACS12",
@@ -4077,8 +4552,10 @@ class siege
                     30,
                     siege.Weapon.sights.x2,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1590, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -4092,7 +4569,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3020, 60),
+                    codebase.math.roundMultiple(3020, 60)
                 ),
                 siege.Weapon(
                     "Bailiff 410",
@@ -4104,7 +4583,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3260, 60),
+                    codebase.math.roundMultiple(3370, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.deployableshield,
@@ -4131,7 +4612,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(00, 60),
+                    codebase.math.roundMultiple(00, 60)
                 )
             ],
             [
@@ -4145,7 +4628,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2450, 60)
                 ),
                 siege.Weapon(
                     "SPSMG9",
@@ -4157,7 +4642,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1350, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 ),
                 siege.Weapon(
                     "P-10C",
@@ -4169,7 +4656,9 @@ class siege
                     siege.Weapon.sights.other,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1240, 60),
+                    codebase.math.roundMultiple(1380, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.impactgrenade,
@@ -4195,8 +4684,10 @@ class siege
                     31,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
-                    true
+                    siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1480, 60),
+                    codebase.math.roundMultiple(2310, 60)
                 ),
                 siege.Weapon(
                     "TCSG12",
@@ -4207,8 +4698,10 @@ class siege
                     10,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1410, 60),
+                    codebase.math.roundMultiple(2290, 60)
                 )
             ],
             [
@@ -4222,7 +4715,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(0590, 60),
+                    codebase.math.roundMultiple(1280, 60)
                 ),
                 siege.Weapon(
                     "LFP586",
@@ -4234,7 +4729,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(2540, 60),
+                    codebase.math.roundMultiple(2540, 60)
                 )
             ],
             siege.Weapon.gadgets.nitrocell | siege.Weapon.gadgets.barbedwire,
@@ -4260,8 +4757,10 @@ class siege
                     25,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.weapon.grips.verticalgrip + siege.weapon.grips.angledgrip,
-                    true
+                    siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1200, 60),
+                    codebase.math.roundMultiple(1540, 60)
                 ),
                 siege.Weapon(
                     "P10 RONI",
@@ -4272,8 +4771,10 @@ class siege
                     15,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1120, 60),
+                    codebase.math.roundMultiple(2200, 60)
                 )
             ],
             [
@@ -4287,7 +4788,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1050, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.nitrocell,
@@ -4314,7 +4817,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4030, 60),
+                    codebase.math.roundMultiple(4510, 60)
                 ),
                 siege.Weapon(
                     "MPX",
@@ -4325,8 +4830,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1310, 60),
+                    codebase.math.roundMultiple(2040, 60)
                 )
             ],
             [
@@ -4340,7 +4847,9 @@ class siege
                     siege.Weapon.sights.other,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1240, 60),
+                    codebase.math.roundMultiple(1380, 60)
                 ),
                 siege.Weapon(
                     "SMG-12",
@@ -4351,8 +4860,10 @@ class siege
                     32,
                     siege.Weapon.sights.nonmag,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2300, 60)
                 )
             ],
             siege.Weapon.gadgets.deployableshield | siege.Weapon.gadgets.nitrocell,
@@ -4378,8 +4889,10 @@ class siege
                     25,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1330, 60),
+                    codebase.math.roundMultiple(2170, 60)
                 ),
                 siege.Weapon(
                     "TCSG12",
@@ -4390,8 +4903,10 @@ class siege
                     10,
                     siege.Weapon.sights.x2,
                     siege.Weapon.barrels.suppressor,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1410, 60),
+                    codebase.math.roundMultiple(2290, 60)
                 )
             ],
             [
@@ -4405,7 +4920,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1220, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.proximityalarm | siege.Weapon.gadgets.nitrocell,
@@ -4432,7 +4949,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1470, 60),
+                    codebase.math.roundMultiple(2340, 60)
                 ),
                 siege.Weapon(
                     "MP5K",
@@ -4444,7 +4963,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2150, 60)
                 )
             ],
             [
@@ -4458,7 +4979,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3020, 60),
+                    codebase.math.roundMultiple(3020, 60)
                 ),
                 siege.Weapon(
                     "P12",
@@ -4470,7 +4993,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1230, 60),
+                    codebase.math.roundMultiple(1560, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.proximityalarm,
@@ -4496,8 +5021,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1400, 60),
+                    codebase.math.roundMultiple(2180, 60)
                 ),
                 siege.Weapon(
                     "SPAS-12",
@@ -4509,7 +5036,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3470, 60),
+                    codebase.math.roundMultiple(4430, 60)
                 )
             ],
             [
@@ -4523,7 +5052,9 @@ class siege
                     0,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3260, 60),
+                    codebase.math.roundMultiple(3370, 60)
                 ),
                 siege.Weapon(
                     "USP40",
@@ -4535,7 +5066,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1250, 60),
+                    codebase.math.roundMultiple(1410, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.proximityalarm,
@@ -4561,8 +5094,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1280, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "Super 90",
@@ -4574,7 +5109,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(4320, 60),
+                    codebase.math.roundMultiple(5180, 60)
                 )
             ],
             [
@@ -4588,7 +5125,9 @@ class siege
                     siege.Weapon.sights.other,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1200, 60),
+                    codebase.math.roundMultiple(1370, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.impactgrenade,
@@ -4614,8 +5153,10 @@ class siege
                     15,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1120, 60),
+                    codebase.math.roundMultiple(2200, 60)
                 ),
                 siege.Weapon(
                     "Mk 14 EBR",
@@ -4626,8 +5167,10 @@ class siege
                     20,
                     siege.Weapon.sights.x15,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1490, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -4641,7 +5184,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1590, 60)
                 )
             ],
             siege.Weapon.gadgets.barbedwire | siege.Weapon.gadgets.bulletproofcamera,
@@ -4667,8 +5212,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1510, 60),
+                    codebase.math.roundMultiple(2460, 60)
                 ),
                 siege.Weapon(
                     "SPAS-15",
@@ -4680,7 +5227,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1180, 60),
+                    codebase.math.roundMultiple(2020, 60)
                 )
             ],
             [
@@ -4694,7 +5243,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1300, 60),
+                    codebase.math.roundMultiple(2210, 60)
                 ),
                 siege.Weapon(
                     "Q-929",
@@ -4706,7 +5257,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1140, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.nitrocell,
@@ -4732,8 +5285,10 @@ class siege
                     22,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1370, 60),
+                    codebase.math.roundMultiple(2300, 60)
                 ),
                 siege.Weapon(
                     "M870",
@@ -4745,7 +5300,9 @@ class siege
                     siege.Weapon.sights.nonmag,
                     0,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(3410, 60),
+                    codebase.math.roundMultiple(4360, 60)
                 )
             ],
             [
@@ -4759,7 +5316,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1240, 60),
+                    codebase.math.roundMultiple(1440, 60)
                 ),
                 siege.Weapon(
                     "C75 Auto",
@@ -4771,7 +5330,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 )
             ],
             siege.Weapon.gadgets.deployableshield | siege.Weapon.gadgets.barbedwire,
@@ -4797,8 +5358,10 @@ class siege
                     30,
                     siege.Weapon.sights.nonmag,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1430, 60),
+                    codebase.math.roundMultiple(2220, 60)
                 ),
                 siege.Weapon(
                     "ACS12",
@@ -4809,8 +5372,10 @@ class siege
                     30,
                     siege.Weapon.sights.x15,
                     0,
-                    siege.Weapon.grips.verticalgrip + siege.Weapon.grips.angledgrip,
-                    true
+                    siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
+                    true,
+                    codebase.math.roundMultiple(1590, 60),
+                    codebase.math.roundMultiple(2440, 60)
                 )
             ],
             [
@@ -4824,7 +5389,9 @@ class siege
                     0,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
-                    true
+                    true,
+                    codebase.math.roundMultiple(1320, 60),
+                    codebase.math.roundMultiple(1450, 60)
                 )
             ],
             siege.Weapon.gadgets.impactgrenade | siege.Weapon.gadgets.barbedwire,
@@ -4879,15 +5446,6 @@ class siege
         __New(*) => siege.defenders.list.__Enum(1)
         __Call(*) => siege.defenders.list.__Enum(1)
     }
-
-    /**
-     * The `list` Arrays from the `siege.attackers` and `siege.defenders` subclasses concatenated into one in that order to allow for easier looping.
-     */
-    static atkdef := codebase.collectionOperations.arrayOperations.arrayConcat(siege.attackers.list, siege.defenders.list)
-    /**
-     * The `list` Arrays from the `siege.defenders` and `siege.attackers` subclasses concatenated into one in that order to allow for easier looping.
-     */
-    static defatk := codebase.collectionOperations.arrayOperations.arrayConcat(siege.defenders.list, siege.attackers.list)
 
     class challenges
     {
@@ -5327,6 +5885,7 @@ class siege
         /*
          * Has no value. Exists to call the function `siege.BattlePass._init()` which populates the following static fields:
          * - `siege.BattlePass.Y7S2`
+         * - `siege.BattlePass.Y7S3`
          */
         static init := siege.BattlePass._init()
         static _init()

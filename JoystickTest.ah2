@@ -2,7 +2,7 @@
 joysticks := []
 Loop 16
 {
-    if (GetKeyState(A_Index "JoyName"))
+    if (GetKeyState(A_Index . "JoyName"))
         joysticks.Push(A_Index)
 }
 
@@ -59,7 +59,7 @@ Loop
         if InStr(joy_info, "P")
             axis_info .= "  POV" Round(GetKeyState(js . "JoyPOV"))
 
-        val :=
+        val := 
         (
             axis_info
             "`nButtons:`n"

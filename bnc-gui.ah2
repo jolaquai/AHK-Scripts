@@ -45,7 +45,7 @@ km_exec(*)
         km_n.Value == "",
         !IsInteger(km_n.Value),
         km_p.Value == "",
-        !IsNumber(km_p.Value),
+        !(km_p.Value is Number),
         (km_v.Value !== "" && !IsInteger(km_v.Value)),
         (km_b.Value !== "" && !IsInteger(km_b.Value))
     ))

@@ -36,19 +36,29 @@ dict()
     cnt := 1
 
     try
+    {
         for entry in req.Get("JSON")
+        {
             for meaning in entry.Get("meanings")
+            {
                 for definition in meaning.Get("definitions")
-                    {
-                        out .= cnt . ": " . definition.Get("definition") . "`n"
-                        cnt++
-                    }
+                {
+                    out .= cnt . ": " . definition.Get("definition") . "`n"
+                    cnt++
+                }
+            }
+        }
+    }
     catch (Error as e)
     {
         if (req.Get("JSON").Get("title") == "No Definitions Found")
+        {
             out := "No definitions found. Check for typos in your query."
+        }
         else
+        {
             throw e
+        }
     }
 
     MsgBox(out)
@@ -63,8 +73,12 @@ solve()
 {
     showExtraInfo := false
     if (A_Args.Has(3))
+    {
         if (A_Args[3] == "true")
+        {
             showExtraInfo := true
+        }
+    }
 
     input := Trim(A_Args[2], '`t `r`n"`'')
     input := StrReplace(input, "+", "%2B")
@@ -76,31 +90,39 @@ solve()
     firstFound := false
 
     for line in txt
+    {
         if (RegExMatch(line, "<plaintext>(.*)<\/plaintext>", &match))
+        {
             if (!firstFound)
             {
                 out .= Trim(StrReplace(match[1] . "`n", A_Space, ""))
                 firstFound := true
             }
             else
+            {
                 if (showExtraInfo)
+                {
                     out .= Trim(match[1] . "`n")
+                }
+            }
+        }
+    }
 
     MsgBox(out)
 }
 
-switch (A_Args[1])
+ol()
 {
-    case "edit":
-        Edit()
-    case "isbn":
-        isbn()
-    case "gesetz":
-        gesetz()
-    case "dict":
-        dict()
-    case "solve":
-        solve()
-    default:
-        throw ValueError("Unrecognized lookup action ``" . A_Args[1] . "``.")
+    uri := 'https://onelook.com/thesaurus/?s=' . StrReplace(StrReplace(A_Args[2], "-", ""), " ", "+")
+    Run(uri)
+}
+
+try %A_Args[1]%()
+catch
+{
+    try %A_Args[1]%(codebase.collectionOperations.arrayOperations.subarray(A_Args, 2)*)
+    catch
+    {
+        throw ValueError("Unrecognized lookup action ``" . A_Args[1] . "``.") 
+    }
 }
