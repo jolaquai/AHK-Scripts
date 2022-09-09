@@ -248,7 +248,7 @@ class siege
             primsight := []
             for n, v in siege.Weapon.sights.list
             {
-                if (prim.sights & v)
+                if (prim.sights & v) ; massively broken
                 {
                     primsight.Push(n)
                 }
@@ -444,7 +444,7 @@ class siege
          *
          * Additionally, since there are two 2.5x scope variants, the two options `x25` and `rux25` have also been combined into the option `x25`.
          *
-         * As of Y7S3, all weapons that have access to scopes of a specific magnification level now automatically have access to all magnifications levels _up to_ that level. This does not apply to Kali's "CSRX 300". Because of this, the `sights` Bitfields have been redefined to act as maximum indicators (if a `Weapon` object's `sights` flag matches `siege.Weapon.sights.x25`, bitwise-and comparison with `siege.Weapon.sights.x15` yields a truthy value).
+         * As of Y7S3, all weapons that have access to scopes of a specific magnification level now automatically have access to all magnifications levels _up to_ that level. This does not apply to Kali's "CSRX 300". Because of this, the `sights` Bitfields have been redefined to act as maximum indicators (if bitwise-and comparison of a `Weapon` object's `sights` flag with `siege.Weapon.sights.x25` yields a truthy value, bitwise-and comparison with all lower sight flags also yields a truthy value).
          */
         class sights
         {
@@ -2149,7 +2149,7 @@ class siege
             "Finka",
             [
                 siege.Weapon(
-                    "SPEAR .308",
+                    "Spear .308",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
                     42,
@@ -5204,7 +5204,7 @@ class siege
             "Thunderbird",
             [
                 siege.Weapon(
-                    "SPEAR .308",
+                    "Spear .308",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
                     42,
@@ -5804,7 +5804,7 @@ class siege
                  * - `siege.BattlePass.Tier.Reward.types.weapon`: Which weapon the skin is for. None if universal, "Seasonal" if seasonal (all weapons up to this season).
                  * - `siege.BattlePass.Tier.Reward.types.attachment`: Which weapon the attachment skin is for. None if universal.
                  * - `siege.BattlePass.Tier.Reward.types.background`: Which Operator the card background can be used with. None if universal.
-                 * - `siege.BattlePass.Tier.Reward.types.portrait`: Which Operator the protrait picture is for.
+                 * - `siege.BattlePass.Tier.Reward.types.portrait`: Which Operator the portrait picture is for.
                  * - `siege.BattlePass.Tier.Reward.types.alpha`: None.
                  * - `siege.BattlePass.Tier.Reward.types.bravo`: None.
                  * - `siege.BattlePass.Tier.Reward.types.boosterRenown`: The active duration of this booster in days.
@@ -5820,10 +5820,10 @@ class siege
                  * @param extra Any value to provide extra information about the reward. The meaning of this value depends on `this.type`.
                  * @returns A `siege.BattlePass.Tier.Reward` object.
                  */
-                __New(name, typ, rarity, extra)
+                __New(name, type, rarity, extra)
                 {
                     this.name := name
-                    this.type := typ
+                    this.type := type
                     this.rarity := rarity
                     this.extra := extra
                 }
@@ -5881,6 +5881,7 @@ class siege
         }
 
         static Y7S2 := siege.BattlePass()
+        static Y7S3 := siege.BattlePass()
 
         /*
          * Has no value. Exists to call the function `siege.BattlePass._init()` which populates the following static fields:
@@ -5905,13 +5906,13 @@ class siege
                                     "Daylight Shift",
                                     siege.BattlePass.Tier.Reward.types.headgear,
                                     siege.BattlePass.Tier.Reward.rarities.rare,
-                                    ""
+                                    siege.attackers.sens
                                 ),
                                 siege.BattlePass.Tier.Reward(
                                     "Daylight Shift",
                                     siege.BattlePass.Tier.Reward.types.uniform,
                                     siege.BattlePass.Tier.Reward.rarities.rare,
-                                    ""
+                                    siege.attackers.sens
                                 )
                             ]
                         )
@@ -6161,7 +6162,7 @@ class siege
                             "Wolfguard Tech",
                             siege.BattlePass.Tier.Reward.types.weapon,
                             siege.BattlePass.Tier.Reward.rarities.epic,
-                            "SPEAR .308"
+                            "Spear .308"
                         )
                     ],
                     [
@@ -7356,6 +7357,1477 @@ class siege
                             siege.BattlePass.Tier.Reward.types.weapon,
                             siege.BattlePass.Tier.Reward.rarities.legendary,
                             "UMP45"
+                        )
+                    ]
+                )
+            )
+
+            siege.BattlePass.Y7S3.addTiers(
+                siege.BattlePass.Tier( ; 1
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Grim Toxin Bundle",
+                            siege.BattlePass.Tier.Reward.types.bundle,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            [
+                                siege.BattlePass.Tier.Reward(
+                                    "Bog Venom",
+                                    siege.BattlePass.Tier.Reward.types.headgear,
+                                    siege.BattlePass.Tier.Reward.rarities.rare,
+                                    siege.attackers.grim
+                                ),
+                                siege.BattlePass.Tier.Reward(
+                                    "Bog Venom",
+                                    siege.BattlePass.Tier.Reward.types.uniform,
+                                    siege.BattlePass.Tier.Reward.rarities.rare,
+                                    siege.attackers.grim
+                                )
+                            ]
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 2
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.kali
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Undersea Sunburst",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.finka
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 3
+                    [
+
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "R6 Credits",
+                            siege.BattlePass.Tier.Reward.types.credits,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            120
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 4
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Orange Mollusk",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 5
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Haven Troubleshooter",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            "M590A1"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 6
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Entry Rays",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.defenders.smoke
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 7
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Monkey Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 8
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Haven Troubleshooter",
+                            siege.BattlePass.Tier.Reward.types.attachment,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            "M590A1"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 9
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Civilized Wilderness",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.kali
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 10
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Battle Point Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterBP,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            3
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 11
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Elegans Aurantiacus",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "Spear .308"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 12
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Carapace Casing",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.grim
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 13
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Fanned Favorite",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 14
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.kali
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 15
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 16
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "R6 Credits",
+                            siege.BattlePass.Tier.Reward.types.credits,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            120
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 17
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Aerated Body Armor",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.defenders.smoke
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 18
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Tech",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "P10 RONI"
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 19
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Tech",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.kali
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 20
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Undersea Sunburst",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.finka
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 21
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Techno-Bee",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 22
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.defenders.aruni
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 23
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Carapace Casing",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.grim
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 24
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 25
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.kali
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 26
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Battle Point Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterBP,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            3
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 27
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Skydiving Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 28
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "High Altitude Specs",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.ace
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 29
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "QCR-Supplied Wrecker",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "SG-CQB"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 30
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "High Altitude Specs",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.ace
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 31
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.defenders.aruni
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 32
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Aerated Body Armor",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.defenders.smoke
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 33
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 34
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Harbored Anchorage",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.grim
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 35
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "QCR-Supplied Crossfire",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "SMG-11"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 36
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Hummingbird Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 37
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Rough Skies",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            "AK-12"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 38
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Aerated Body Armor",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.defenders.smoke
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 39
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.pulse
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 40
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Battle Point Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterBP,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            3
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 41
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Color Delivery",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 42
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 43
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "R6 Credits",
+                            siege.BattlePass.Tier.Reward.types.credits,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            120
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 44
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Secured Canister",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 45
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Cloud Jumper",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.ace
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 46
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Carapace Casing",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.grim
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 47
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Wearable Canvas",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.ela
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 48
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Beetle Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 49
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "High Altitude Specs",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.ace
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 50
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Poisonous Membrane",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            "Seasonal"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 51
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 52
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Wearable Canvas",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.defenders.ela
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 53
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Poisonous Membrane",
+                            siege.BattlePass.Tier.Reward.types.attachment,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 54
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Komodo Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 55
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.pulse
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 56
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Wall-Marker",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "Scorpion Evo 3 A1"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 57
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Snake Bite",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 58
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.defenders.wamai
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 59
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Wearable Canvas",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.ela
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 60
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 61
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Undersea Nebula",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.iq
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 62
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Tech",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            "M1014"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 63
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Tech",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "556XI"
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 64
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Street Artist",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.ela
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 65 TODO
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.defenders.wamai
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 66
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Blue Mollusk",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 67
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Tech",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 68
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Otter Pin",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.uncommon,
+                            "MP5K"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 69
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 70
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "R6 Credits",
+                            siege.BattlePass.Tier.Reward.types.credits,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            120
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 71
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.osa
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 72
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 73
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nightghaven Standard",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.osa
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 74
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Elegans Caeruleum",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "AUG A2"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 75
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 76
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Fisherman Dream",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.thatcher
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 77
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Undersea Nebula",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.iq
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 78
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 79
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Antique Reel",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 80
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Unknown Guest",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.attackers.nokk
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 81
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 82
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Redacted Operation",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.attackers.nokk
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 83
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Compact Intruder",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "D-50"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 84
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 85
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Hunter's Tartan",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.thatcher
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 86
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Enclosed Growth",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.osa
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 87
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 88
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Keyring Drive",
+                            siege.BattlePass.Tier.Reward.types.charm,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 89
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Gwlanen Finish",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            "AR33"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 90
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 91
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Nighthaven Standard",
+                            siege.BattlePass.Tier.Reward.types.portrait,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            siege.attackers.osa
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 92
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Hunter's Tartan",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.thatcher
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 93
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Bravo Pack",
+                            siege.BattlePass.Tier.Reward.types.bravo,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 94
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Hunter's Tartan",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.rare,
+                            siege.attackers.thatcher
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 95
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Natural Flow",
+                            siege.BattlePass.Tier.Reward.types.background,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 96
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Alpha Pack",
+                            siege.BattlePass.Tier.Reward.types.alpha,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Renown Booster",
+                            siege.BattlePass.Tier.Reward.types.boosterRenown,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            1
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 97
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "R6 Credits",
+                            siege.BattlePass.Tier.Reward.types.credits,
+                            siege.BattlePass.Tier.Reward.rarities.none,
+                            ""
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 98
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Cloaked Interloper",
+                            siege.BattlePass.Tier.Reward.types.attachment,
+                            siege.BattlePass.Tier.Reward.rarities.epic,
+                            "FMG-9"
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 99
+                    [
+                        
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Unknown Guest",
+                            siege.BattlePass.Tier.Reward.types.uniform,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.attackers.nokk
+                        )
+                    ]
+                ),
+                siege.BattlePass.Tier( ; 100
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Unknown Guest",
+                            siege.BattlePass.Tier.Reward.types.headgear,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            siege.attackers.nokk
+                        )
+                    ],
+                    [
+                        siege.BattlePass.Tier.Reward(
+                            "Cloaked Interloper",
+                            siege.BattlePass.Tier.Reward.types.weapon,
+                            siege.BattlePass.Tier.Reward.rarities.legendary,
+                            "FMG-9"
                         )
                     ]
                 )

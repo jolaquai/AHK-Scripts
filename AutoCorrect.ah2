@@ -742,19 +742,24 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        simple := true
-
         n := ""
         math := codebase.math
         vec := math.vectorGeometry
         prob := math.probability
         mat := math.matrixComputation
 
+        xor(a, b) => (a & (~b)) | ((~a) & b)
+
         arr := [
-            Random(1, 250)
+             (b := codebase.Bitfield("0000110").Value()),
+            xor(b, codebase.Bitfield("0000010").Value()),
+            xor(b, codebase.Bitfield("0000110").Value()),
+            xor(b, codebase.Bitfield("0001110").Value()),
+            xor(b, codebase.Bitfield("0011110").Value()),
+            xor(b, codebase.Bitfield("0111110").Value()),
         ]
 
-        if (!simple)
+        if (!(arr.Length))
         {
             for class in [siege.defenders()] ; [siege.attackers(), siege.defenders()]
             {
@@ -773,7 +778,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 }
             }
         }
-        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
+        ; codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
 
         if (!(arr.Length))
         {

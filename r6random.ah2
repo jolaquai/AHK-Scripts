@@ -46,7 +46,7 @@ hardcodedOmit := [
 ]
 
 ; Operator Random Pick GUI
-initThisManyOperatorSlots := 3
+initThisManyOperatorSlots := 2
 oprpgui := Gui(, mainguittitle)
 oprpgui.OnEvent("Close", (*) => ExitApp(0))
 
