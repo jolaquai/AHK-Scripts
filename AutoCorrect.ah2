@@ -251,7 +251,11 @@ Hotstring(":*?:<;3", ">;3")
 :*?:=/=::≠
 :*?:math_corr::≙
 :*?:math_est::≙
-:*?:math_caret::^
+:*?:math_caret::
+{
+    A_Clipboard := "^"
+    codebase.Tool("Copied")
+}
 
 :*?:math_diameter::Ø
 :*?:math_average::Ø
@@ -717,8 +721,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Hotkeys
 
 #HotIf ; Global hotkeys
-    SC002::return
-    SC029::SC002
+    ; SC002::return
+    ; SC029::SC002
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
     <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
@@ -742,26 +746,13 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        n := ""
-        math := codebase.math
-        vec := math.vectorGeometry
-        prob := math.probability
-        mat := math.matrixComputation
-
-        xor(a, b) => (a & (~b)) | ((~a) & b)
-
         arr := [
-             (b := codebase.Bitfield("0000110").Value()),
-            xor(b, codebase.Bitfield("0000010").Value()),
-            xor(b, codebase.Bitfield("0000110").Value()),
-            xor(b, codebase.Bitfield("0001110").Value()),
-            xor(b, codebase.Bitfield("0011110").Value()),
-            xor(b, codebase.Bitfield("0111110").Value()),
+            
         ]
 
         if (!(arr.Length))
         {
-            for class in [siege.defenders()] ; [siege.attackers(), siege.defenders()]
+            for class in [siege.attackers(), siege.defenders()]
             {
                 for op in class
                 {
@@ -769,16 +760,16 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                     {
                         if (
                             !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
-                         && w.type & siege.Weapon.types.assaultrifle
+                         && w.dps
                         )
                         {
-                            arr.Push(op.nickname . " - " . w.name)
+                            arr.Push(w.dps . " - " . w.name)
                         }
                     }
                 }
             }
         }
-        ; codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
+        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
 
         if (!(arr.Length))
         {
@@ -794,28 +785,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^CtrlBreak::
     ^Pause::
     {
-        SNIP := "E:\YOUTUBE\ETC DATA\Snip"
-
-        replacepairs := Map(
-            "$", "s"
-        )
-
-        artist := FileRead(SNIP . "\Snip_Artist.txt")
-        track := FileRead(SNIP . "\Snip_Track.txt")
-
-        for find, rep in replacepairs
-        {
-            artist := StrReplace(artist, find, rep)
-            track := StrReplace(track, find, rep)
-        }
-
-        artist := StrSplit(artist, ",", " `t")[1]
-        track := StrSplit(track, [" - "], " `t")[1]
-
-        artist := StrLower(RegExReplace(artist, "[^a-zA-Z]+", "-"))
-        track := StrLower(RegExReplace(track, "[^a-zA-Z]+", "-"))
-
-        Run("https://genius.com/" . artist . "-" . track . "-lyrics")
+        
     }
 
     ^+ö::
@@ -1197,8 +1167,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     +v::siegerapid.set(2)
 
     ~RButton & LButton::
+    mouse_override(*)
     {
-        global
         Loop
         {
             if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.check(1))

@@ -51,6 +51,7 @@ SetKeyDelay(30, 10)
 SetKeyDelay(30, 10, "Play")
 SetMouseDelay(30)
 SetMouseDelay(30, "Play")
+SetWinDelay(150)
 SetScrollLockState(false)
 
 scriptStartupDate := A_Now

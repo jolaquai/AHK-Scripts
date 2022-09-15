@@ -110,6 +110,8 @@ solve()
 
     MsgBox(out)
 }
+calc := solve
+wolfram := solve
 
 ol()
 {

@@ -5,7 +5,7 @@
  * - ...can a Hard Breach Charge _or_ a Breach Charge be chosen with this Operator? `op.gadgets & (siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.breachcharge)`
  *
  * To check for an Operator's weapons' properties, use bitwise-and `&` and bitwise-or `|`. For example, if a `siege.Weapon` (object) is stored in `prim`...
- * - ...can a 2.5x or Russian 2 sight be equipped? `prim.sights & (siege.Weapon.sights.x25 | siege.Weapon.sights.x2)`
+ * - ...can a 2.5x or Russian 2 sight be equipped? `prim.sights & (siege.Weapon.sights.x25max | siege.Weapon.sights.x2max)`
  * - ...is this weapon _not_ a slug shotgun _or_ a light machine gun? `prim.type & ~(siege.Weapon.types.shotgunSlug | siege.Weapon.types.lightmachinegun)`
  */
 notes := ""
@@ -226,8 +226,11 @@ class siege
             sec := ((s := this.secondaries[Random(1, this.secondaries.Length)]) !== "" ? s : "None")
             
             gdg := []
-            for n, v in siege.Weapon.gadgets.list
+            for i in codebase.range(1, siege.Weapon.gadgets.listName.Length)
             {
+                n := siege.Weapon.gadgets.listName[i]
+                v := siege.Weapon.gadgets.listValue[i]
+
                 if (this.gadgets & v)
                 {
                     gdg.Push(n)
@@ -236,8 +239,11 @@ class siege
             gdg := ((s := gdg[Random(1, gdg.Length)]) !== "" ? s : "None")
 
             primbarrel := []
-            for n, v in siege.Weapon.barrels.list
+            for i in codebase.range(1, siege.Weapon.barrels.listName.Length)
             {
+                n := siege.Weapon.barrels.listName[i]
+                v := siege.Weapon.barrels.listValue[i]
+
                 if (prim.barrels & v)
                 {
                     primbarrel.Push(n)
@@ -246,11 +252,20 @@ class siege
             primbarrel := (primbarrel.Length ? primbarrel[Random(1, primbarrel.Length)] : "—")
 
             primsight := []
-            for n, v in siege.Weapon.sights.list
+            sval := Integer(prim.sights)
+            for i in codebase.range(1, siege.Weapon.sights.listName.Length)
             {
-                if (prim.sights & v) ; massively broken
+                n := siege.Weapon.sights.listName[i]
+                v := siege.Weapon.sights.listValue[i]
+
+                if (sval & v)
                 {
+                    sval := sval & ~v
                     primsight.Push(n)
+                }
+                if (sval == 0)
+                {
+                    break
                 }
             }
             primsight := (primsight.Length ? primsight[Random(1, primsight.Length)] : "—")
@@ -263,8 +278,11 @@ class siege
             }
 
             primgrip := []
-            for n, v in siege.Weapon.grips.list
+            for i in codebase.range(1, siege.Weapon.grips.listName.Length)
             {
+                n := siege.Weapon.grips.listName[i]
+                v := siege.Weapon.grips.listValue[i]
+
                 if (prim.grips & v)
                 {
                     primgrip.Push(n)
@@ -273,8 +291,11 @@ class siege
             primgrip := (primgrip.Length ? primgrip[Random(1, primgrip.Length)] : "—")
             
             secbarrel := []
-            for n, v in siege.Weapon.barrels.list
+            for i in codebase.range(1, siege.Weapon.barrels.listName.Length)
             {
+                n := siege.Weapon.barrels.listName[i]
+                v := siege.Weapon.barrels.listValue[i]
+
                 if (sec.barrels & v)
                 {
                     secbarrel.Push(n)
@@ -284,8 +305,11 @@ class siege
 
             tp := ""
             ts := ""
-            for n, v in siege.Weapon.types.list
+            for i in codebase.range(1, siege.Weapon.types.listName.Length)
             {
+                n := siege.Weapon.types.listName[i]
+                v := siege.Weapon.types.listValue[i]
+                
                 if (prim.type & v)
                 {
                     tp := n
@@ -400,21 +424,30 @@ class siege
              */
             static handcannon := codebase.Bitfield("1000000000").Value()
 
-            static list := Map(
-                "Assault Rifle", siege.Weapon.types.assaultrifle,
-                "Handgun", siege.Weapon.types.handgun,
-                "Light Machine Gun", siege.Weapon.types.lightmachinegun,
-                "Machine Pistol", siege.Weapon.types.machinepistol,
-                "Marksman Rifle", siege.Weapon.types.marksmanrifle,
-                "Shield", siege.Weapon.types.shield,
-                "Slug Shotgun", siege.Weapon.types.shotgunSlug,
-                "Shotgun", siege.Weapon.types.shotgunShot,
-                "Submachine Gun", siege.Weapon.types.submachinegun,
-                "Hand Cannon", siege.Weapon.types.handcannon
-            )
-            __Enum(p*) => siege.Weapon.types.list.__Enum(p*)
-            __New(*) => siege.Weapon.types.list.__Enum(1)
-            __Call(*) => siege.Weapon.types.list.__Enum(1)
+            static listName := [
+                "Assault Rifle",
+                "Handgun",
+                "Light Machine Gun",
+                "Machine Pistol",
+                "Marksman Rifle",
+                "Shield",
+                "Slug Shotgun",
+                "Shotgun",
+                "Submachine Gun",
+                "Hand Cannon"
+            ]
+            static listValue := [
+                siege.Weapon.types.assaultrifle,
+                siege.Weapon.types.handgun,
+                siege.Weapon.types.lightmachinegun,
+                siege.Weapon.types.machinepistol,
+                siege.Weapon.types.marksmanrifle,
+                siege.Weapon.types.shield,
+                siege.Weapon.types.shotgunSlug,
+                siege.Weapon.types.shotgunShot,
+                siege.Weapon.types.submachinegun,
+                siege.Weapon.types.handcannon
+            ]
         }
 
         class firingmodes
@@ -428,23 +461,33 @@ class siege
              */
             static fullauto := codebase.Bitfield("10").Value()
 
-            static list := Map(
-                "Single Shot", siege.Weapon.firingmodes.singleshot,
-                "Full Auto", siege.Weapon.firingmodes.fullauto
-            )
-            __Enum(p*) => siege.Weapon.firingmodes.list.__Enum(p*)
-            __New(*) => siege.Weapon.firingmodes.list.__Enum(1)
-            __Call(*) => siege.Weapon.firingmodes.list.__Enum(1)
+            static listName := [
+                "Single Shot",
+                "Full Auto"
+            ]
+            static listValue := [
+                siege.Weapon.firingmodes.singleshot,
+                siege.Weapon.firingmodes.fullauto
+            ]
         }
 
         /**
-         * As of Y7S1, _all_ weapons (excepting most secondaries and, for example, Glaz's "OTs-03" DMR, which does not have access to Reflex C) have access to _all_ non-magnifying scopes (Red Dot, Holo, Reflex), or more precisely, _all_ of their variants (no matter if standard, Russian, alternate etc.). Because of this, I've decided to combine them into the option `nonmag`. Checking for magnifying scopes still works as before.
+         * As of Y7S1, _all_ weapons (excepting most secondaries and, for example, Glaz's "OTs-03" DMR, which does not have access to Reflex C) have access to _all_ non-magnifying scopes (Red Dot, Holo, Reflex), or more precisely, _all_ of their variants (no matter if standard, Russian, alternate etc.). Because of this, I've decided to combine them into the option `nonmagmax`. Checking for magnifying scopes still works as before.
          *
          * However, as mentioned above, exceptions such as Glaz's "OTs-03" DMR, which cannot be equipped with Reflex C, are not (yet?) handled differently.
          *
-         * Additionally, since there are two 2.5x scope variants, the two options `x25` and `rux25` have also been combined into the option `x25`.
+         * Additionally, since there are two 2.5x scope variants, the two options `x25max` and `rux25` have also been combined into the option `x25max`.
          *
-         * As of Y7S3, all weapons that have access to scopes of a specific magnification level now automatically have access to all magnifications levels _up to_ that level. This does not apply to Kali's "CSRX 300". Because of this, the `sights` Bitfields have been redefined to act as maximum indicators (if bitwise-and comparison of a `Weapon` object's `sights` flag with `siege.Weapon.sights.x25` yields a truthy value, bitwise-and comparison with all lower sight flags also yields a truthy value).
+         * As of Y7S3, all weapons that have access to scopes of a specific magnification level now automatically have access to all magnifications levels _up to_ that level. This does not apply to Kali's "CSRX 300". Because of this, most of the `sights` flags have been redefined to act as maximums (if bitwise-and comparison of a `Weapon` object's `sights` flag with `siege.Weapon.sights.x25` yields a truthy value, bitwise-and comparison with all lower sight flags also yields a truthy value).
+         *
+         * I also found a way to correct my logic with these flags. For example, the randomizer now no longer selects incorrect (as in, non-existant) sight options for any guns due to incorrect bitwise-and comparisons, which incorrectly assumed
+         * - the earlier default behavior of not automatically including all lower magnification options when a `Weapon` had the `siege.Weapon.sights.x2max` flag set
+         * - the first matching sight option (i.e. almost always 3x, because that flag includes _and therefore matches all others down to `siege.Weapon.sights.nonmagmax` with bitwise-and comparisons_) was the highest, even if that bit was not actually set to `1`.
+         *
+         * There is, however, some side effects to the new sight logic, how it's implemented and most importantly to the way comparisons must now be done:
+         * - Instead of comparing `siege.Weapon.sights` props with the `max` flags (such as `siege.Weapon.sights.x15max`), _continue_ to do bitwise-and comparisons with the previous flags (such as `siege.Weapon.sights.x15`). This is simply intended to bring back the quick-and-easy check "do dis gun has 2.5x" that would not have been easily possible using the new sight system.
+         * - The `list` props of the classes `siege.Weapon.types`, `siege.Weapon.firingmodes`, `siege.Weapon.sights`, `siege.Weapon.barrels`, `siege.Weapon.grips`, and `siege.Weapon.gadgets` had to be split into two Arrays instead of a Map relating a name to a value. The Arrays were created directly from the Map, meaning they are guaranteed to be the same length and they are type-safe (the `listName` Arrays only contain strings, the `listValue` Arrays only contain `codebase.Bitfield` values, i.e. integers). For manual checks or other interaction with a `Weapon` object, instead of a `for`-loop introduction like `for n, v in siege.Weapon.sights.list`, you'll now have to do something similar to what is done in `siege.Operator.randomizeLoadout`: use a`for`-loop like
+         `for i in codebase.range(1, siege.Weapon.gadgets.listName.Length)` and access the lists within the loop body using `i`.
          */
         class sights
         {
@@ -455,42 +498,53 @@ class siege
             /**
              * Indicates that all non-magnifying scope variants can be or one of them is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static nonmag := codebase.Bitfield("0000010").Value()
+            static nonmagmax := codebase.Bitfield("0000010").Value()
             static nonmags := ["Red Dot A", "Red Dot B", "Red Dot C", "Holo A", "Holo B", "Holo C", "Holo D", "Reflex B", "Reflex A", "Reflex C"]
+            static nonmag := codebase.Bitfield("0000010").Value()
             /**
              * Indicates that the 1.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x15 := codebase.Bitfield("0000110").Value()
+            static x15max := codebase.Bitfield("0000110").Value()
+            static x15 := codebase.Bitfield("0000100").Value()
             /**
              * Indicates that the 2x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x2 := codebase.Bitfield("0001110").Value()
+            static x2max := codebase.Bitfield("0001110").Value()
+            static x2 := codebase.Bitfield("0001000").Value()
             /**
              * Indicates that the 2.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x25 := codebase.Bitfield("0011110").Value()
+            static x25max := codebase.Bitfield("0011110").Value()
             static x25s := ["2.5x A", "2.5x B"]
+            static x25 := codebase.Bitfield("0010000").Value()
             /**
              * Indicates that the 3x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x3 := codebase.Bitfield("0111110").Value()
+            static x3max := codebase.Bitfield("0111110").Value()
+            static x3 := codebase.Bitfield("0100000").Value()
             /**
              * Indicates that the 6x and 12x sights are equipped on the weapon (this currently uniquely identifies Kali's "CSRX 300"). Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
             static x612 := codebase.Bitfield("1000000").Value()
 
-            static list := Map(
-                "Other", siege.Weapon.sights.other,
-                "Non-magnifying", siege.Weapon.sights.nonmag,
-                "1.5x", siege.Weapon.sights.x15,
-                "2x", siege.Weapon.sights.x2,
-                "2.5x", siege.Weapon.sights.x25,
-                "3x", siege.Weapon.sights.x3,
-                "6x/12x", siege.Weapon.sights.x612
-            )
-            __Enum(p*) => siege.Weapon.sights.list.__Enum(p*)
-            __New(*) => siege.Weapon.sights.list.__Enum(1)
-            __Call(*) => siege.Weapon.sights.list.__Enum(1)
+            static listName := [
+                "Other",
+                "Non-magnifying",
+                "1.5x",
+                "2x",
+                "2.5x",
+                "3x",
+                "6x/12x"
+            ]
+            static listValue := [
+                siege.Weapon.sights.other,
+                siege.Weapon.sights.nonmagmax,
+                siege.Weapon.sights.x15max,
+                siege.Weapon.sights.x2max,
+                siege.Weapon.sights.x25max,
+                siege.Weapon.sights.x3max,
+                siege.Weapon.sights.x612
+            ]
         }
 
         class barrels
@@ -516,16 +570,20 @@ class siege
              */
             static extendedbarrel := codebase.Bitfield("10000").Value()
 
-            static list := Map(
-                "Suppressor", siege.Weapon.barrels.suppressor,
-                "Flash Hider", siege.Weapon.barrels.flashhider,
-                "Compensator", siege.Weapon.barrels.compensator,
-                "Muzzle Brake", siege.Weapon.barrels.muzzlebrake,
-                "Extended Barrel", siege.Weapon.barrels.extendedbarrel
-            )
-            __Enum(p*) => siege.Weapon.barrels.list.__Enum(p*)
-            __New(*) => siege.Weapon.barrels.list.__Enum(1)
-            __Call(*) => siege.Weapon.barrels.list.__Enum(1)
+            static listName := [
+                "Suppressor",
+                "Flash Hider",
+                "Compensator",
+                "Muzzle Brake",
+                "Extended Barrel"
+            ]
+            static listValue := [
+                siege.Weapon.barrels.suppressor,
+                siege.Weapon.barrels.flashhider,
+                siege.Weapon.barrels.compensator,
+                siege.Weapon.barrels.muzzlebrake,
+                siege.Weapon.barrels.extendedbarrel
+            ]
         }
 
         class grips
@@ -539,13 +597,14 @@ class siege
               */
             static angledgrip := codebase.Bitfield("10").Value()
 
-            static list := Map(
-                "Vertical Grip", siege.Weapon.grips.verticalgrip,
-                "Angled Grip", siege.Weapon.grips.angledgrip
-            )
-            __Enum(p*) => siege.Weapon.grips.list.__Enum(p*)
-            __New(*) => siege.Weapon.grips.list.__Enum(1)
-            __Call(*) => siege.Weapon.grips.list.__Enum(1)
+            static listName := [
+                "Vertical Grip",
+                "Angled Grip"
+            ]
+            static listValue := [
+                siege.Weapon.grips.verticalgrip,
+                siege.Weapon.grips.angledgrip
+            ]
         }
 
         class gadgets
@@ -604,24 +663,36 @@ class siege
              */
             static empgrenade := codebase.Bitfield("1000000000000").Value()
 
-            static list := Map(
-                "Frag Grenade", siege.Weapon.gadgets.fraggrenade,
-                "Breach Charge", siege.Weapon.gadgets.breachcharge,
-                "Claymore", siege.Weapon.gadgets.claymore,
-                "Hard Breach Charge", siege.Weapon.gadgets.hardbreachcharge,
-                "Smoke Grenade", siege.Weapon.gadgets.smokegrenade,
-                "Stun Grenade", siege.Weapon.gadgets.stungrenade,
-                "Barbed Wire", siege.Weapon.gadgets.barbedwire,
-                "Deployable Shield", siege.Weapon.gadgets.deployableshield,
-                "Nitro Cell", siege.Weapon.gadgets.nitrocell,
-                "Bulletproof Camera", siege.Weapon.gadgets.bulletproofcamera,
-                "Proximity Alarm", siege.Weapon.gadgets.proximityalarm,
-                "Impact Grenade", siege.Weapon.gadgets.impactgrenade,
-                "EMP Impact Grenade", siege.Weapon.gadgets.empgrenade
-            )
-            __New(*) => this.list.__Enum(1)
-            __Enum(p*) => this.list.__Enum(p*)
-            __Call(*) => this.list.__Enum(1)
+            static listName := [
+                "Frag Grenade",
+                "Breach Charge",
+                "Claymore",
+                "Hard Breach Charge",
+                "Smoke Grenade",
+                "Stun Grenade",
+                "Barbed Wire",
+                "Deployable Shield",
+                "Nitro Cell",
+                "Bulletproof Camera",
+                "Proximity Alarm",
+                "Impact Grenade",
+                "EMP Impact Grenade"
+            ]
+            static listValue := [
+                 siege.Weapon.gadgets.fraggrenade,
+                 siege.Weapon.gadgets.breachcharge,
+                 siege.Weapon.gadgets.claymore,
+                 siege.Weapon.gadgets.hardbreachcharge,
+                 siege.Weapon.gadgets.smokegrenade,
+                 siege.Weapon.gadgets.stungrenade,
+                 siege.Weapon.gadgets.barbedwire,
+                 siege.Weapon.gadgets.deployableshield,
+                 siege.Weapon.gadgets.nitrocell,
+                 siege.Weapon.gadgets.bulletproofcamera,
+                 siege.Weapon.gadgets.proximityalarm,
+                 siege.Weapon.gadgets.impactgrenade,
+                 siege.Weapon.gadgets.empgrenade
+            ]
         }
 
         /**
@@ -782,7 +853,7 @@ class siege
                     48,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -796,7 +867,7 @@ class siege
                     47,
                     670,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -841,7 +912,7 @@ class siege
                     41,
                     749,
                     25,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -855,7 +926,7 @@ class siege
                     47,
                     670,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -869,7 +940,7 @@ class siege
                     48,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -914,7 +985,7 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -928,7 +999,7 @@ class siege
                     39,
                     860,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -987,7 +1058,7 @@ class siege
                     34,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -1001,7 +1072,7 @@ class siege
                     47,
                     690,
                     30,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1060,7 +1131,7 @@ class siege
                     37,
                     980,
                     25,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -1074,7 +1145,7 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1088,7 +1159,7 @@ class siege
                     53,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -1206,7 +1277,7 @@ class siege
                     71,
                     360,
                     10,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -1250,7 +1321,7 @@ class siege
                     33,
                     1100,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -1293,7 +1364,7 @@ class siege
                     46,
                     680,
                     100,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1307,7 +1378,7 @@ class siege
                     45,
                     850,
                     30,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1411,7 +1482,7 @@ class siege
                     42,
                     720,
                     30,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -1425,7 +1496,7 @@ class siege
                     48,
                     690,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1439,7 +1510,7 @@ class siege
                     37,
                     850,
                     50,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1484,7 +1555,7 @@ class siege
                     40,
                     837,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -1498,7 +1569,7 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true,
@@ -1557,7 +1628,7 @@ class siege
                     49,
                     585,
                     20,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1571,7 +1642,7 @@ class siege
                     61,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1616,7 +1687,7 @@ class siege
                     48,
                     650,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1630,7 +1701,7 @@ class siege
                     48,
                     650,
                     100,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1689,7 +1760,7 @@ class siege
                     40,
                     850,
                     20,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1703,7 +1774,7 @@ class siege
                     48,
                     75,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor,
                     0,
                     true,
@@ -1733,7 +1804,7 @@ class siege
                     33,
                     1100,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -1762,7 +1833,7 @@ class siege
                     46,
                     800,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1776,7 +1847,7 @@ class siege
                     34,
                     800,
                     50,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1790,7 +1861,7 @@ class siege
                     50,
                     85,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -1820,7 +1891,7 @@ class siege
                     70,
                     85,
                     5,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -1849,7 +1920,7 @@ class siege
                     46,
                     650,
                     80,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1863,7 +1934,7 @@ class siege
                     35,
                     200,
                     6,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -1908,7 +1979,7 @@ class siege
                     41,
                     720,
                     150,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1922,7 +1993,7 @@ class siege
                     45,
                     730,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1967,7 +2038,7 @@ class siege
                     60,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1981,7 +2052,7 @@ class siege
                     125,
                     500,
                     2,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -1997,7 +2068,7 @@ class siege
                     28,
                     1270,
                     32,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2054,7 +2125,7 @@ class siege
                     44,
                     700,
                     50,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2068,7 +2139,7 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2082,7 +2153,7 @@ class siege
                     53,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -2155,7 +2226,7 @@ class siege
                     42,
                     700,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2169,7 +2240,7 @@ class siege
                     46,
                     680,
                     100,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2183,7 +2254,7 @@ class siege
                     50,
                     330,
                     10,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2256,7 +2327,7 @@ class siege
                     62,
                     450,
                     10,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2270,7 +2341,7 @@ class siege
                     44,
                     750,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2315,7 +2386,7 @@ class siege
                     44,
                     650,
                     40,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     0,
                     true,
@@ -2329,7 +2400,7 @@ class siege
                     47,
                     700,
                     20,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2388,7 +2459,7 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2402,7 +2473,7 @@ class siege
                     48,
                     650,
                     60,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2418,7 +2489,7 @@ class siege
                     35,
                     85,
                     3,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -2475,7 +2546,7 @@ class siege
                     34,
                     800,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -2489,7 +2560,7 @@ class siege
                     35,
                     200,
                     6,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -2548,7 +2619,7 @@ class siege
                     37,
                     850,
                     50,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2562,7 +2633,7 @@ class siege
                     48,
                     75,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor,
                     0,
                     true,
@@ -2578,7 +2649,7 @@ class siege
                     35,
                     1270,
                     16,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2606,7 +2677,7 @@ class siege
                     70,
                     85,
                     5,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -2651,7 +2722,7 @@ class siege
                     33,
                     980,
                     20,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -2708,7 +2779,7 @@ class siege
                     47,
                     700,
                     20,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2722,7 +2793,7 @@ class siege
                     38,
                     780,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2767,7 +2838,7 @@ class siege
                     45,
                     850,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2781,7 +2852,7 @@ class siege
                     34,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -2826,7 +2897,7 @@ class siege
                     45,
                     850,
                     25,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2840,7 +2911,7 @@ class siege
                     32,
                     900,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -2899,7 +2970,7 @@ class siege
                     41,
                     749,
                     25,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2913,7 +2984,7 @@ class siege
                     61,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2958,7 +3029,7 @@ class siege
                     47,
                     690,
                     30,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2972,7 +3043,7 @@ class siege
                     34,
                     800,
                     50,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3017,7 +3088,7 @@ class siege
                     35,
                     740,
                     50,
-                    siege.Weapon.sights.x25,
+                    siege.Weapon.sights.x25max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3031,7 +3102,7 @@ class siege
                     69,
                     450,
                     20,
-                    siege.Weapon.sights.x3,
+                    siege.Weapon.sights.x3max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -3090,7 +3161,7 @@ class siege
                     48,
                     690,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3104,7 +3175,7 @@ class siege
                     53,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -3191,7 +3262,7 @@ class siege
                     34,
                     800,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3205,7 +3276,7 @@ class siege
                     48,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3235,7 +3306,7 @@ class siege
                     35,
                     1270,
                     16,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3264,7 +3335,7 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3278,7 +3349,7 @@ class siege
                     48,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3308,7 +3379,7 @@ class siege
                     35,
                     1270,
                     16,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3337,7 +3408,7 @@ class siege
                     38,
                     600,
                     25,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3351,7 +3422,7 @@ class siege
                     34,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3381,7 +3452,7 @@ class siege
                     35,
                     85,
                     3,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3410,7 +3481,7 @@ class siege
                     34,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3424,7 +3495,7 @@ class siege
                     38,
                     600,
                     25,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3483,7 +3554,7 @@ class siege
                     53,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -3497,7 +3568,7 @@ class siege
                     27,
                     800,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3511,7 +3582,7 @@ class siege
                     22,
                     970,
                     50,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3570,7 +3641,7 @@ class siege
                     22,
                     970,
                     50,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3584,7 +3655,7 @@ class siege
                     27,
                     800,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3598,7 +3669,7 @@ class siege
                     53,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -3657,7 +3728,7 @@ class siege
                     34,
                     750,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3671,7 +3742,7 @@ class siege
                     50,
                     330,
                     10,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3730,7 +3801,7 @@ class siege
                     49,
                     550,
                     70,
-                    siege.Weapon.sights.other | siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.other | siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     false, 
@@ -3744,7 +3815,7 @@ class siege
                     34,
                     750,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3788,7 +3859,7 @@ class siege
                     33,
                     1100,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3817,7 +3888,7 @@ class siege
                     60,
                     100,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3831,7 +3902,7 @@ class siege
                     38,
                     740,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3876,7 +3947,7 @@ class siege
                     32,
                     900,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -3890,7 +3961,7 @@ class siege
                     60,
                     100,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3935,7 +4006,7 @@ class siege
                     35,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -3949,7 +4020,7 @@ class siege
                     45,
                     575,
                     34,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -3979,7 +4050,7 @@ class siege
                     70,
                     85,
                     5,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4008,7 +4079,7 @@ class siege
                     26,
                     830,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4022,7 +4093,7 @@ class siege
                     35,
                     200,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4067,7 +4138,7 @@ class siege
                     40,
                     550,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -4081,7 +4152,7 @@ class siege
                     30,
                     290,
                     6,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4126,7 +4197,7 @@ class siege
                     48,
                     75,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor,
                     0,
                     true,
@@ -4140,7 +4211,7 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4170,7 +4241,7 @@ class siege
                     33,
                     1100,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -4199,7 +4270,7 @@ class siege
                     23,
                     1200,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4213,7 +4284,7 @@ class siege
                     50,
                     85,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4243,7 +4314,7 @@ class siege
                     70,
                     85,
                     5,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4272,7 +4343,7 @@ class siege
                     35,
                     200,
                     6,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4286,7 +4357,7 @@ class siege
                     28,
                     900,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4331,7 +4402,7 @@ class siege
                     23,
                     1080,
                     40,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
                     true,
@@ -4345,7 +4416,7 @@ class siege
                     25,
                     400,
                     10,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4390,7 +4461,7 @@ class siege
                     36,
                     720,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
                     true,
@@ -4404,7 +4475,7 @@ class siege
                     125,
                     500,
                     2,
-                    siege.Weapon.sights.nonmag + siege.Weapon.sights.x25,
+                    siege.Weapon.sights.nonmagmax + siege.Weapon.sights.x25max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4434,7 +4505,7 @@ class siege
                     28,
                     1270,
                     32,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4463,7 +4534,7 @@ class siege
                     35,
                     900,
                     80,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -4477,7 +4548,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4536,7 +4607,7 @@ class siege
                     26,
                     950,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -4550,7 +4621,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4625,7 +4696,7 @@ class siege
                     35,
                     85,
                     3,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4639,7 +4710,7 @@ class siege
                     33,
                     980,
                     20,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -4682,7 +4753,7 @@ class siege
                     36,
                     700,
                     31,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
                     true,
@@ -4696,7 +4767,7 @@ class siege
                     63,
                     450,
                     10,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4755,7 +4826,7 @@ class siege
                     36,
                     780,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.weapon.grips.verticalgrip | siege.weapon.grips.angledgrip,
                     true,
@@ -4769,7 +4840,7 @@ class siege
                     26,
                     980,
                     15,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4814,7 +4885,7 @@ class siege
                     48,
                     85,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -4828,7 +4899,7 @@ class siege
                     26,
                     830,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4858,7 +4929,7 @@ class siege
                     28,
                     1270,
                     32,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4887,7 +4958,7 @@ class siege
                     23,
                     1200,
                     25,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4901,7 +4972,7 @@ class siege
                     63,
                     450,
                     10,
-                    siege.Weapon.sights.x2,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4946,7 +5017,7 @@ class siege
                     42,
                     720,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator,
                     0,
                     true,
@@ -4960,7 +5031,7 @@ class siege
                     30,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -5019,7 +5090,7 @@ class siege
                     28,
                     900,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5033,7 +5104,7 @@ class siege
                     35,
                     200,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -5092,7 +5163,7 @@ class siege
                     27,
                     800,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5106,7 +5177,7 @@ class siege
                     35,
                     200,
                     8,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -5151,7 +5222,7 @@ class siege
                     26,
                     980,
                     15,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5165,7 +5236,7 @@ class siege
                     60,
                     450,
                     20,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5210,7 +5281,7 @@ class siege
                     42,
                     700,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5224,7 +5295,7 @@ class siege
                     30,
                     290,
                     6,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -5240,7 +5311,7 @@ class siege
                     33,
                     1100,
                     25,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.extendedbarrel,
                     0,
                     true,
@@ -5283,7 +5354,7 @@ class siege
                     44,
                     700,
                     22,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5297,7 +5368,7 @@ class siege
                     60,
                     100,
                     7,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     0,
                     0,
                     true,
@@ -5356,7 +5427,7 @@ class siege
                     34,
                     750,
                     30,
-                    siege.Weapon.sights.nonmag,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -5370,7 +5441,7 @@ class siege
                     69,
                     300,
                     30,
-                    siege.Weapon.sights.x15,
+                    siege.Weapon.sights.x15max,
                     0,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,

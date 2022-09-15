@@ -112,9 +112,9 @@ sendAfk(exe := "")
     }
     else if (exe == "RobloxPlayerBeta.exe")
     {
-        Send("{e down}")
-        Sleep(2000)
-        Send("{e up}")
+        Send("{w down}")
+        Sleep(250)
+        Send("{w up}")
     }
     else if (exe == "RainbowSix.exe")
     {
@@ -1101,7 +1101,7 @@ editBtn.OnEvent("Click", (*) => Edit())
 editBtn := afkgui.Add("Button", "w" . elemWidth, "Reload")
 editBtn.OnEvent("Click", (*) => Reload())
 
-afkgui.Show("X5 Y5")
+; afkgui.Show("X5 Y5")
 WinMinimize(afkgui.Hwnd)
 
 codebase.Tool("Reloaded Loops.ah2", true, , , 50)
