@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.ini": "ini",
+			"string": "cpp",
+			"cmath": "cpp"
+        },
+        "lua.debug.variables.showIntegerAsHex": true,
+        "AutoHotkey2.InterpreterPath": "e:\\PROGRAMMING\\AHK Scripts\\AutoHotkey\\AutoHotkey64.exe"
+	},
+}
