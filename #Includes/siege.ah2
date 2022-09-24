@@ -380,49 +380,49 @@ class siege
             /**
              * Identifies the Assault Rifle weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static assaultrifle := codebase.Bitfield("0000000001").Value()
+            static assaultrifle := codebase.Binary("0000000001").Value()
             /**
              * Identifies the Handgun weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static handgun := codebase.Bitfield("0000000010").Value()
+            static handgun := codebase.Binary("0000000010").Value()
             /**
              * Identifies the Light Machine Gun weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static lightmachinegun := codebase.Bitfield("0000000100").Value()
+            static lightmachinegun := codebase.Binary("0000000100").Value()
             /**
              * Identifies the Machine Pistol weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static machinepistol := codebase.Bitfield("0000001000").Value()
+            static machinepistol := codebase.Binary("0000001000").Value()
             /**
              * Identifies the Marksman Rifle weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static marksmanrifle := codebase.Bitfield("0000010000").Value()
+            static marksmanrifle := codebase.Binary("0000010000").Value()
             /**
              * Identifies the Shield weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static shield := codebase.Bitfield("0000100000").Value()
+            static shield := codebase.Binary("0000100000").Value()
             /**
              * Identifies the Shotgun weapon type generally. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              *
              * @note This flag is not used to identify any shotgun in this library. It is merely supposed to be a user-friendly shortcut to allow for easier filtering of weapons, i.e. `siege.Weapon.types.shotgun` instead of `siege.Weapon.types.shotgunSlug | siege.Weapon.types.shotgunShot`, as they are handled the same in-game (e.g. the specific type of shotgun doesn't matter for shotgun kill challenges).
              */
-            static shotgun := codebase.Bitfield("0011000000").Value()
+            static shotgun := codebase.Binary("0011000000").Value()
             /**
              * Identifies the Shotgun (slug ammo) weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static shotgunSlug := codebase.Bitfield("0001000000").Value()
+            static shotgunSlug := codebase.Binary("0001000000").Value()
             /**
              * Identifies the Shotgun (shot / pellet) weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static shotgunShot := codebase.Bitfield("0010000000").Value()
+            static shotgunShot := codebase.Binary("0010000000").Value()
             /**
              * Identifies the Submachine Gun weapon type. Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static submachinegun := codebase.Bitfield("0100000000").Value()
+            static submachinegun := codebase.Binary("0100000000").Value()
             /**
              * Identifies the Hand Cannon weapon type (which currently uniquely identifies the "GONNE-6"). Use bitwise-and `&` to check whether a weapon's `type` prop matches this flag.
              */
-            static handcannon := codebase.Bitfield("1000000000").Value()
+            static handcannon := codebase.Binary("1000000000").Value()
 
             static listName := [
                 "Assault Rifle",
@@ -455,11 +455,11 @@ class siege
             /**
              * Indicates that the weapon fires single-shot only. Use bitwise-and `&` to check whether a weapon's `firingmode` prop matches this flag.
              */
-            static singleshot := codebase.Bitfield("01").Value()
+            static singleshot := codebase.Binary("01").Value()
             /**
              * Indicates that the weapon fires full auto only. Use bitwise-and `&` to check whether a weapon's `firingmode` prop matches this flag.
              */
-            static fullauto := codebase.Bitfield("10").Value()
+            static fullauto := codebase.Binary("10").Value()
 
             static listName := [
                 "Single Shot",
@@ -486,7 +486,7 @@ class siege
          *
          * There is, however, some side effects to the new sight logic, how it's implemented and most importantly to the way comparisons must now be done:
          * - Instead of comparing `siege.Weapon.sights` props with the `max` flags (such as `siege.Weapon.sights.x15max`), _continue_ to do bitwise-and comparisons with the previous flags (such as `siege.Weapon.sights.x15`). This is simply intended to bring back the quick-and-easy check "do dis gun has 2.5x" that would not have been easily possible using the new sight system.
-         * - The `list` props of the classes `siege.Weapon.types`, `siege.Weapon.firingmodes`, `siege.Weapon.sights`, `siege.Weapon.barrels`, `siege.Weapon.grips`, and `siege.Weapon.gadgets` had to be split into two Arrays instead of a Map relating a name to a value. The Arrays were created directly from the Map, meaning they are guaranteed to be the same length and they are type-safe (the `listName` Arrays only contain strings, the `listValue` Arrays only contain `codebase.Bitfield` values, i.e. integers). For manual checks or other interaction with a `Weapon` object, instead of a `for`-loop introduction like `for n, v in siege.Weapon.sights.list`, you'll now have to do something similar to what is done in `siege.Operator.randomizeLoadout`: use a`for`-loop like
+         * - The `list` props of the classes `siege.Weapon.types`, `siege.Weapon.firingmodes`, `siege.Weapon.sights`, `siege.Weapon.barrels`, `siege.Weapon.grips`, and `siege.Weapon.gadgets` had to be split into two Arrays instead of a Map relating a name to a value. The Arrays were created directly from the Map, meaning they are guaranteed to be the same length and they are type-safe (the `listName` Arrays only contain strings, the `listValue` Arrays only contain `codebase.Binary` values, i.e. integers). For manual checks or other interaction with a `Weapon` object, instead of a `for`-loop introduction like `for n, v in siege.Weapon.sights.list`, you'll now have to do something similar to what is done in `siege.Operator.randomizeLoadout`: use a`for`-loop like
          `for i in codebase.range(1, siege.Weapon.gadgets.listName.Length)` and access the lists within the loop body using `i`.
          */
         class sights
@@ -494,38 +494,38 @@ class siege
             /**
              * Indicates that some other sight properties are going on with the weapon (e.g. Red Dot only on "P10-C", custom Reflex only on "DP27"). Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static other := codebase.Bitfield("0000001").Value()
+            static other := codebase.Binary("0000001").Value()
             /**
              * Indicates that all non-magnifying scope variants can be or one of them is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static nonmagmax := codebase.Bitfield("0000010").Value()
+            static nonmagmax := codebase.Binary("0000010").Value()
             static nonmags := ["Red Dot A", "Red Dot B", "Red Dot C", "Holo A", "Holo B", "Holo C", "Holo D", "Reflex B", "Reflex A", "Reflex C"]
-            static nonmag := codebase.Bitfield("0000010").Value()
+            static nonmag := codebase.Binary("0000010").Value()
             /**
              * Indicates that the 1.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x15max := codebase.Bitfield("0000110").Value()
-            static x15 := codebase.Bitfield("0000100").Value()
+            static x15max := codebase.Binary("0000110").Value()
+            static x15 := codebase.Binary("0000100").Value()
             /**
              * Indicates that the 2x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x2max := codebase.Bitfield("0001110").Value()
-            static x2 := codebase.Bitfield("0001000").Value()
+            static x2max := codebase.Binary("0001110").Value()
+            static x2 := codebase.Binary("0001000").Value()
             /**
              * Indicates that the 2.5x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x25max := codebase.Bitfield("0011110").Value()
+            static x25max := codebase.Binary("0011110").Value()
             static x25s := ["2.5x A", "2.5x B"]
-            static x25 := codebase.Bitfield("0010000").Value()
+            static x25 := codebase.Binary("0010000").Value()
             /**
              * Indicates that the 3x sight can be or is forcefully equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x3max := codebase.Bitfield("0111110").Value()
-            static x3 := codebase.Bitfield("0100000").Value()
+            static x3max := codebase.Binary("0111110").Value()
+            static x3 := codebase.Binary("0100000").Value()
             /**
              * Indicates that the 6x and 12x sights are equipped on the weapon (this currently uniquely identifies Kali's "CSRX 300"). Use bitwise-and `&` to check whether a weapon's `sights` prop matches this flag.
              */
-            static x612 := codebase.Bitfield("1000000").Value()
+            static x612 := codebase.Binary("1000000").Value()
 
             static listName := [
                 "Other",
@@ -552,23 +552,23 @@ class siege
             /**
              * Indicates that a Suppressor can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `barrels` prop matches this flag.
              */
-            static suppressor := codebase.Bitfield("00001").Value()
+            static suppressor := codebase.Binary("00001").Value()
             /**
              * Indicates that a Flash Hider can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `barrels` prop matches this flag.
              */
-            static flashhider := codebase.Bitfield("00010").Value()
+            static flashhider := codebase.Binary("00010").Value()
             /**
              * Indicates that a Compensator can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `barrels` prop matches this flag.
              */
-            static compensator := codebase.Bitfield("00100").Value()
+            static compensator := codebase.Binary("00100").Value()
             /**
              * Indicates that a Muzzle Brake can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `barrels` prop matches this flag.
              */
-            static muzzlebrake := codebase.Bitfield("01000").Value()
+            static muzzlebrake := codebase.Binary("01000").Value()
             /**
              * Indicates that an Extended Barrel can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `barrels` prop matches this flag.
              */
-            static extendedbarrel := codebase.Bitfield("10000").Value()
+            static extendedbarrel := codebase.Binary("10000").Value()
 
             static listName := [
                 "Suppressor",
@@ -591,11 +591,11 @@ class siege
             /**
              * Indicates that a Vertical Grip can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `grips` prop matches this flag.
              */
-            static verticalgrip := codebase.Bitfield("01").Value()
+            static verticalgrip := codebase.Binary("01").Value()
              /**
               * Indicates that an Extended Barrel can be equipped on the weapon. Use bitwise-and `&` to check whether a weapon's `grips` prop matches this flag.
               */
-            static angledgrip := codebase.Bitfield("10").Value()
+            static angledgrip := codebase.Binary("10").Value()
 
             static listName := [
                 "Vertical Grip",
@@ -612,56 +612,56 @@ class siege
             /**
              * Indicates that a Frag Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static fraggrenade := codebase.Bitfield("0000000000001").Value()
+            static fraggrenade := codebase.Binary("0000000000001").Value()
             /**
              * Indicates that a Breach Charge can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static breachcharge := codebase.Bitfield("0000000000010").Value()
+            static breachcharge := codebase.Binary("0000000000010").Value()
             /**
              * Indicates that a Claymore can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static claymore := codebase.Bitfield("0000000000100").Value()
+            static claymore := codebase.Binary("0000000000100").Value()
             /**
              * Indicates that a Hard Breach Charge can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static hardbreachcharge := codebase.Bitfield("0000000001000").Value()
+            static hardbreachcharge := codebase.Binary("0000000001000").Value()
             /**
              * Indicates that a Smoke Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static smokegrenade := codebase.Bitfield("0000000010000").Value()
+            static smokegrenade := codebase.Binary("0000000010000").Value()
             /**
              * Indicates that a Stun Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static stungrenade := codebase.Bitfield("0000000100000").Value()
+            static stungrenade := codebase.Binary("0000000100000").Value()
             
             /**
              * Indicates that Barbed Wire can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static barbedwire := codebase.Bitfield("0000001000000").Value()
+            static barbedwire := codebase.Binary("0000001000000").Value()
             /**
              * Indicates that a Deployable Shield can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static deployableshield := codebase.Bitfield("0000010000000").Value()
+            static deployableshield := codebase.Binary("0000010000000").Value()
             /**
              * Indicates that a Nitro Cell can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static nitrocell := codebase.Bitfield("0000100000000").Value()
+            static nitrocell := codebase.Binary("0000100000000").Value()
             /**
              * Indicates that a Bulletproof Camera can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static bulletproofcamera := codebase.Bitfield("0001000000000").Value()
+            static bulletproofcamera := codebase.Binary("0001000000000").Value()
             /**
              * Indicates that a Proximity Alarm can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static proximityalarm := codebase.Bitfield("0010000000000").Value()
+            static proximityalarm := codebase.Binary("0010000000000").Value()
             /**
              * Indicates that an Impact Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static impactgrenade := codebase.Bitfield("0100000000000").Value()
+            static impactgrenade := codebase.Binary("0100000000000").Value()
             /**
              * Indicates that an EMP Impact Grenade can be chosen with this Operator. Use bitwise-and `&` to check whether an Operator's `gadgets` prop matches this flag.
              */
-            static empgrenade := codebase.Bitfield("1000000000000").Value()
+            static empgrenade := codebase.Binary("1000000000000").Value()
 
             static listName := [
                 "Frag Grenade",
@@ -700,12 +700,12 @@ class siege
          */
         name := ""
         /**
-         * The value of a `codebase.Bitfield` object to indicate which type of weapon it is.
+         * The value of a `codebase.Binary` object to indicate which type of weapon it is.
          * @note Inconsistencies like with Maverick's "AR-15.50" (which, in reality, is a so-called "Home Defense Rifle", not an "Assault Rifle" or "Marksman Rifle", despite what the game calls it) should not be and are not corrected.
          */
         type := ""
         /**
-         * The value of a `codebase.Bitfield` object to indicate the firing mode the weapon possesses.
+         * The value of a `codebase.Binary` object to indicate the firing mode the weapon possesses.
          *
          * - This is `0` for Shields.
          */
@@ -734,7 +734,7 @@ class siege
          */
         capacity := ""
         /**
-         * The values of one or more `codebase.Bitfield` objects summed up to indicate which sights can be equipped on the weapon.
+         * The values of one or more `codebase.Binary` objects summed up to indicate which sights can be equipped on the weapon.
          *
          * - This is `0` for Shields.
          * - This is `0` for the "GONNE-6".
@@ -742,14 +742,14 @@ class siege
          */
         sights := ""
         /**
-         * The values of one or more `codebase.Bitfield` objects summed up to indicate which barrels / barrel extensions can be equipped on the weapon.
+         * The values of one or more `codebase.Binary` objects summed up to indicate which barrels / barrel extensions can be equipped on the weapon.
          *
          * - This is `0` for Shields.
          * - This is `0` for the "GONNE-6".
          */
         barrels := ""
         /**
-         * The values of one or more `codebase.Bitfield` objects summed up to indicate which grips can be equipped on the weapon.
+         * The values of one or more `codebase.Binary` objects summed up to indicate which grips can be equipped on the weapon.
          *
          * - This is `0` for Shields.
          * - This is `0` for the "GONNE-6".
@@ -805,14 +805,14 @@ class siege
         /**
          * Instantiate a new `Weapon` object.
          * @param name The name of the weapon in-game.
-         * @param type The value of a `codebase.Bitfield` object to indicate which type of weapon it is.
-         * @param firingmode The value of a `codebase.Bitfield` object to indicate the firing mode the weapon possesses.
+         * @param type The value of a `codebase.Binary` object to indicate which type of weapon it is.
+         * @param firingmode The value of a `codebase.Binary` object to indicate the firing mode the weapon possesses.
          * @param damage The damage of the weapon.
          * @param rpm How many rounds per minute the weapon fires.
          * @param capacity How many rounds the weapon can fire before having to reload. This should _not_ include the extra round in the chamber after cocking the gun.
-         * @param sights The values of one or more `codebase.Bitfield` objects summed up to indicate which sights can be equipped on the weapon.
-         * @param barrels The values of one or more `codebase.Bitfield` objects summed up to indicate which barrels / barrel extensions can be equipped on the weapon.
-         * @param grips The values of one or more `codebase.Bitfield` objects summed up to indicate which grips can be equipped on the weapon.
+         * @param sights The values of one or more `codebase.Binary` objects summed up to indicate which sights can be equipped on the weapon.
+         * @param barrels The values of one or more `codebase.Binary` objects summed up to indicate which barrels / barrel extensions can be equipped on the weapon.
+         * @param grips The values of one or more `codebase.Binary` objects summed up to indicate which grips can be equipped on the weapon.
          * @param underbarrel Whether the weapon has an underbarrel slot (i.e. a laser can be equipped).
          * @param reloadTactical How long it takes to reload the gun when there is a round chambered, i.e. the bolt does not have to be pulled before the gun is ready to fire. For shotguns that are not magazine-fed, this assumes one shell remaining in the breech.
          * @param reloadEmpty How long it takes to reload the gun when no round is chambered, i.e. the bolt has to be pulled before the gun is ready to fire.
@@ -833,16 +833,21 @@ class siege
             this.suppresseddamage := Round(this.barrels & siege.Weapon.barrels.suppressor ? this.damage * siege.Weapon.suppressedDamageMultiplier : 0)
             this.reloadTactical := reloadTactical
             this.reloadEmpty := reloadEmpty
-            try this.dps := Round((this.damage * this.capacity) / ((this.reloadTactical / 1000) + (this.capacity / (this.rpm / 60))))
-            catch
+            if (this.type & ~(siege.Weapon.types.shield))
             {
-                this.dps := 0
+                try this.dps := Round((this.damage * this.capacity) / ((this.reloadTactical / 1000) + (this.capacity / (this.rpm / 60))))
+                catch
+                {
+                    this.dps := 0
+                }
             }
         }
     }
 
     class attackers
     {
+        static name := "Attackers"
+
         static sledge := siege.Operator(
             "Sledge",
             [
@@ -3252,6 +3257,8 @@ class siege
 
     class defenders
     {
+        static name := "Defenders"
+
         static smoke := siege.Operator(
             "Smoke",
             [
@@ -5633,6 +5640,7 @@ class siege
         static techAttackDef() => "Destroy, disable or render " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Attacker gadgets useless using Mute's GC90 Signal Disruptors, Bandit's CED-1 Shock Wires or Kaid's Rtila Electroclaws or by hacking Attacker drones using Mozzie's Pest."
         static trapper() => "Eliminate or incapacitate " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Kapkan's Entry Denial Devices, Frost's Welcome Mats, Goyo's Volcán Canisters, Thorn's Razorbloom Shells or during and after they are tracked by Alibi's Primas. Eliminations count as 2 towards this."
         static unauthorizedAccess() => "Hack into Defender cameras as Dokkaebi or hack an Attacker drone as Mozzie " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " times."
+        static wallbangs()=> ""
 
         static weeklyChallengeSet() => codebase.stringOperations.strJoin("`n", false,
             siege.challenges.wepTypeElims(),
@@ -5749,27 +5757,27 @@ class siege
                     /**
                     * Identifies a reward that has no associated rarity. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static none := codebase.Bitfield("000001").Value()
+                    static none := codebase.Binary("000001").Value()
                     /**
                     * Identifies a common reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static common := codebase.Bitfield("000010").Value()
+                    static common := codebase.Binary("000010").Value()
                     /**
                     * Identifies an uncommon reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static uncommon := codebase.Bitfield("000100").Value()
+                    static uncommon := codebase.Binary("000100").Value()
                     /**
                     * Identifies a rare reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static rare := codebase.Bitfield("001000").Value()
+                    static rare := codebase.Binary("001000").Value()
                     /**
                     * Identifies an epic reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static epic := codebase.Bitfield("010000").Value()
+                    static epic := codebase.Binary("010000").Value()
                     /**
                     * Identifies a legendary reward. Use bitwise-and `&` to check whether a reward's `rarity` prop matches this flag.
                     */
-                    static legendary := codebase.Bitfield("100000").Value()
+                    static legendary := codebase.Binary("100000").Value()
 
                     static list := Map(
                         "None", siege.BattlePass.Tier.Reward.rarities.none,
@@ -5786,55 +5794,55 @@ class siege
                     /**
                     * Identifies the Bundle reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static bundle := codebase.Bitfield("0000000000001").Value()
+                    static bundle := codebase.Binary("0000000000001").Value()
                     /**
                     * Identifies the Headgear reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static headgear := codebase.Bitfield("0000000000010").Value()
+                    static headgear := codebase.Binary("0000000000010").Value()
                     /**
                     * Identifies the Uniform reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static uniform := codebase.Bitfield("0000000000100").Value()
+                    static uniform := codebase.Binary("0000000000100").Value()
                     /**
                     * Identifies the R6 Credits reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static credits := codebase.Bitfield("0000000001000").Value()
+                    static credits := codebase.Binary("0000000001000").Value()
                     /**
                     * Identifies the Charm reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static charm := codebase.Bitfield("0000000010000").Value()
+                    static charm := codebase.Binary("0000000010000").Value()
                     /**
                     * Identifies the Weapon Skin reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static weapon := codebase.Bitfield("0000000100000").Value()
+                    static weapon := codebase.Binary("0000000100000").Value()
                     /**
                     * Identifies the Attachment Skin reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static attachment := codebase.Bitfield("0000001000000").Value()
+                    static attachment := codebase.Binary("0000001000000").Value()
                     /**
                     * Identifies the Card Background reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static background := codebase.Bitfield("0000010000000").Value()
+                    static background := codebase.Binary("0000010000000").Value()
                     /**
                     * Identifies the Operator Portrait reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static portrait := codebase.Bitfield("0000100000000").Value()
+                    static portrait := codebase.Binary("0000100000000").Value()
                     /**
                     * Identifies the Alpha Pack reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static alpha := codebase.Bitfield("0001000000000").Value()
+                    static alpha := codebase.Binary("0001000000000").Value()
                     /**
                     * Identifies the Bravo Pack reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static bravo := codebase.Bitfield("0010000000000").Value()
+                    static bravo := codebase.Binary("0010000000000").Value()
                     /**
                     * Identifies the Renown Booster reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static boosterRenown := codebase.Bitfield("0100000000000").Value()
+                    static boosterRenown := codebase.Binary("0100000000000").Value()
                     /**
                     * Identifies the Battle Point Booster reward type. Use bitwise-and `&` to check whether a reward's `type` prop matches this flag.
                     */
-                    static boosterBP := codebase.Bitfield("1000000000000").Value()
+                    static boosterBP := codebase.Binary("1000000000000").Value()
 
                     static list := Map(
                         "Bundle", siege.BattlePass.Tier.Reward.types.bundle,
@@ -5858,11 +5866,11 @@ class siege
                  */
                 name := ""
                 /**
-                 * The value of a `codebase.Bitfield` object to indicate which type of reward it is.
+                 * The value of a `codebase.Binary` object to indicate which type of reward it is.
                  */
                 type := ""
                 /**
-                 * The value of a `codebase.Bitfield` object to indicate which rarity the reward has.
+                 * The value of a `codebase.Binary` object to indicate which rarity the reward has.
                  */
                 rarity := ""
                 /**
@@ -5886,8 +5894,8 @@ class siege
                 /**
                  * Instantiates a new `siege.BattlePass.Tier.Reward` object.
                  * @param name The name of the reward item.
-                 * @param typ The value of a `codebase.Bitfield` object to indicate which type of reward it is.
-                 * @param rarity The value of a `codebase.Bitfield` object to indicate which rarity the reward item has.
+                 * @param typ The value of a `codebase.Binary` object to indicate which type of reward it is.
+                 * @param rarity The value of a `codebase.Binary` object to indicate which rarity the reward item has.
                  * @param extra Any value to provide extra information about the reward. The meaning of this value depends on `this.type`.
                  * @returns A `siege.BattlePass.Tier.Reward` object.
                  */
@@ -8918,18 +8926,18 @@ class siege
 
         static flags := {
             rarity: {
-                common: codebase.Bitfield("00001").Value(),
-                uncommon: codebase.Bitfield("00010").Value(),
-                rare: codebase.Bitfield("00100").Value(),
-                epic: codebase.Bitfield("01000").Value(),
-                legendary: codebase.Bitfield("10000").Value()
+                common: codebase.Binary("00001").Value(),
+                uncommon: codebase.Binary("00010").Value(),
+                rare: codebase.Binary("00100").Value(),
+                epic: codebase.Binary("01000").Value(),
+                legendary: codebase.Binary("10000").Value()
             },
             kind: {
-                charm: codebase.Bitfield("00001").Value(),
-                weapon: codebase.Bitfield("00010").Value(),
-                headgear: codebase.Bitfield("00100").Value(),
-                uniform: codebase.Bitfield("01000").Value(),
-                unset: codebase.Bitfield("10000").Value()
+                charm: codebase.Binary("00001").Value(),
+                weapon: codebase.Binary("00010").Value(),
+                headgear: codebase.Binary("00100").Value(),
+                uniform: codebase.Binary("01000").Value(),
+                unset: codebase.Binary("10000").Value()
             }
         }
 

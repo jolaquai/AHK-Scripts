@@ -138,6 +138,7 @@ f13rapid := Rapidvar("f13")
 mwrapid := Rapidvar("mw")
 huntrapid := Rapidvar("hunt", 2)
 swrapid := Rapidvar("sw")
+eftrapid := Rapidvar("eft")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -725,8 +726,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ; SC029::SC002
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
-    <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
-    <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
+    ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
+    ; <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
 
 #HotIf ; Context-insensitive hotkeys
     <+>^ü::
@@ -746,12 +747,16 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
+        copymod := false
         arr := [
-            
+            c := codebase.DateTime(),
+            c.AddMonths(-7)
         ]
 
+        ; Siege query
         if (!(arr.Length))
         {
+            copymod := true
             for class in [siege.attackers(), siege.defenders()]
             {
                 for op in class
@@ -759,17 +764,17 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                     for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
                     {
                         if (
-                            !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length)
-                         && w.dps
+                            (false || !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length))
+                         && InStr(w.name, "roni")
                         )
                         {
-                            arr.Push(w.dps . " - " . w.name)
+                            arr.Push(Format("{1} - {2}", w.name, w.dps))
                         }
                     }
                 }
             }
+            codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
         }
-        codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
 
         if (!(arr.Length))
         {
@@ -777,7 +782,23 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             return
         }
 
-        MsgBox(A_Clipboard := Trim(codebase.elemsOut(arr), '`n `t`r'))
+        if (copymod)
+        {
+            str := ""
+            for line in StrSplit(Trim(codebase.elemsOut(arr), '`n `t`r'), '`n')
+            {
+                if (A_Index == 1)
+                {
+                    continue
+                }
+                str .= Trim(line, '`n `t`r') . '`n'
+            }
+            MsgBox(A_Clipboard := str)
+        }
+        else
+        {
+            MsgBox(A_Clipboard := Trim(codebase.elemsOut(arr), '`n `t`r'))
+        }
     }
 
     CtrlBreak::
@@ -1611,20 +1632,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
-    ~*Space::
-    {
-        Loop
-        {
-            if (!(GetKeyState("Space", "P") && csrapid.check()))
-            {
-                break
-            }
-
-            Send("{Space}")
-            ; Sleep(10)
-        }
-    }
-
     +b::csrapid.inc()
 
 #HotIf WinActive("ahk_exe eof.exe")
@@ -2142,4 +2149,20 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
-#HotIf WinActive("ahk_exe Phasmophobia.exe")
+#HotIf WinActive("ahk_exe EscapeFromTarkov.exe")
+    +b::eftrapid.inc()
+
+    ~LButton::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("LButton", "P") && eftrapid.check()))
+            {
+                break
+            }
+            
+            Send("{LButton}")
+            Sleep(10)
+        }
+    }

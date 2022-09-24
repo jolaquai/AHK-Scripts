@@ -1,27 +1,23 @@
 ﻿#Include ".\#Includes\ahk-codebase.ah2"
 
 wolfram_appid := "P364EJ-HP72P7YLVP"
+for arg in A_Args
+{
+    MsgBox(arg)
+}
 
 /**
  * Inserts passed command line arguments `A_Args[2]` and `A_Args[3]` into a template string and opens the resulting URL in the default browser.
  * @param A_Args[2] The gesetz_abk to look up in.
  * @param A_Args[3] The number of the Gesetz to look up.
  */
-gesetz()
-{
-    uri := 'https://www.gesetze-im-internet.de/' . A_Args[2] . '/__' . A_Args[3] . '.html'
-    Run(uri)
-}
+gesetz() => Run('https://www.gesetze-im-internet.de/' . A_Args[2] . '/__' . A_Args[3] . '.html')
 
 /**
  * Inserts passed command line argument `A_Args[2]` into a template string and opens the resulting URL in the default browser.
  * @param A_Args[2] The ISBN to search for. May be passed with or without the usual dashes.
  */
-isbn()
-{
-    uri := 'https://isbnsearch.org/isbn/' . StrReplace(A_Args[2], "-", "")
-    Run(uri)
-}
+isbn() => Run('https://isbnsearch.org/isbn/' . StrReplace(A_Args[2], "-", ""))
 
 /**
  * Inserts passed command line arguments `A_Args[2]` and `A_Args[3]` into a template string and makes a request to https://dictionaryapi.dev/ to retrieve the word's dictionary entry.
@@ -67,16 +63,16 @@ dict()
 /**
  * Inserts passed command line arguments `A_Args[2]` and `A_Args[3]` into a template string and makes a request to http://api.wolframalpha.com/ to retrieve the solution of the query.
  * @param A_Args[2] The query to look up the solution for. Wrap this in quotation marks if it contains spaces.
- * @param A_Args[3] Whether to show all `<plaintext>` tag contents (`true`) or display only the first one. If omitted or a value other than `true`, `false` is assumed.
+ * @param A_Args[3] Whether to show all `<plaintext>` tag contents (`true`) or display only the first one. Defaults to `true` if omitted. If any value other than `true` (the literal word `"true"`) is passed, `false` is assumed.
  */
 solve()
 {
-    showExtraInfo := false
+    showExtraInfo := true
     if (A_Args.Has(3))
     {
-        if (A_Args[3] == "true")
+        if (A_Args[3] !== "true")
         {
-            showExtraInfo := true
+            showExtraInfo := false
         }
     }
 
@@ -113,12 +109,13 @@ solve()
 calc := solve
 wolfram := solve
 
-ol()
-{
-    uri := 'https://onelook.com/thesaurus/?s=' . StrReplace(StrReplace(A_Args[2], "-", ""), " ", "+")
-    Run(uri)
-}
+ol() => Run('https://onelook.com/thesaurus/?s=' . StrReplace(StrReplace(A_Args[2], "-", ""), " ", "+"))
 
+if (!(A_Args.Length))
+{
+    MsgBox("Received no input arguments. This is a CLI.")
+    ExitApp()
+}
 try %A_Args[1]%()
 catch
 {

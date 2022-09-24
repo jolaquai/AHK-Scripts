@@ -12,7 +12,7 @@
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
  * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before 
  *
- * The functions and some classes are annotated using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
+ * The functions and some classes are sometimes only annotated, usually fully documented though, using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
  * - `code --install-extension thqby.vscode-autohotkey2-lsp`
  *
@@ -59,11 +59,11 @@ scriptStartupTick := A_TickCount
 /**
  * Whether a debugger has been attached to the script since script launch or reload (the latter of which is nearly impossible).
  *
- * Allows full control over what a script does and does not do if a debugger is attached. For example, timers may interrupt debugging sessions if their periods expire while the script is paused.
+ * Allows full control over what a script does and does not do if a debugger is attached. For example, timers may interrupt debugging sessions if their periods expire while the script is in break mode.
  * @note This is not 100% reliable:
- * - Does not update in real-time.
+ * - Does not update in real-time (that is also impossible using the method used to determine this, which is the only one there even is, to my knowledge at least).
  * - Does not reflect the actual status if a debugger has attached to a running script.
- * - If the script calls `Reload` or is reloaded through `PostMessage`, a debug session, if any, is terminated. After a reload in this manner, this variable will most likely be `false`.
+ * - If the script calls `Reload` or is reloaded through `PostMessage`, a debug session, if any, is terminated. After a reload in this manner, this variable will most likely be `false` unless the reload/restart was caused by the debugger itself.
  *
  * Because of this, it is discouraged to attach a debugger to a script that is running.
  */
@@ -171,7 +171,7 @@ class codebase
 
     /**
      * Changes the processor affinity of one or more processes.
-     * @param affinity The affinity to set for the processes. Identified by a string that is directly used to instantiate a `codebase.Bitfield` object.
+     * @param affinity The affinity to set for the processes. Identified by a string that is directly used to instantiate a `codebase.Binary` object.
      * @param proc One or more names of processes to target. All processes with this name will be affected. Not case-sensitive.
      * @note If the amount of bits used to construct the `affinity` parameter is less than the `NUMBER_OF_PROCESSORS` environment variable, if `n` is the number of missing bits, the first `n` processors are deselected, after which the passed pattern takes effect.
      * @note For ease of use, passing `0` for `affinity` will select all processors.
@@ -187,7 +187,7 @@ class codebase
         }
         else
         {
-            affinity := codebase.Bitfield(codebase.stringOperations.strReverse(String(affinity))).Value()
+            affinity := codebase.Binary(codebase.stringOperations.strReverse(String(affinity))).Value()
         }
 
         returns := []
@@ -431,7 +431,7 @@ class codebase
 
     /**
      * Formats a millisecond value while automatically accounting for the size of the number.
-     * @param t The millisecond value to format.
+     * @param t The millisecond value to format. If this is not an Integer, it is coerced to an Integer, dropping any fractional part of the number.
      * @param includeRaw Whether to include the original value in the return value, separated by a newline from the formatted version. Defaults to `false` if omitted.
      * @param precision How many digits to include beyond seconds by rounding the excess milliseconds. Defaults to `1` if omitted.
      * - If this remaining value is less than `10`, this has no effect.
@@ -448,6 +448,7 @@ class codebase
             throw ValueError("Invalid value for ``precision``. Received ``" . precision . "``, expected ``0``, ``1``, ``2`` or ``3``.")
         }
 
+        t := Integer(t)
         precision := 10 ** (3 - precision)
 
         if (t >= 1000 * 60 * 60)
@@ -602,6 +603,165 @@ class codebase
                 codebase.constants.uppercaseDsc.Push(Chr(65 + 90 - o))
             }
         }
+    }
+
+    /**
+     * A class to allow working with dates, times and AHKv2 date-time strings.
+     */
+    class DateTime
+    {
+        static Now => A_Now
+
+        _value := ""
+
+        /**
+         * Instantiates a new `DateTime` object.
+         * @param dateparts The parts of the date and time which will be used to construct the `DateTime` object. How these values are interpreted depends on how many are passed. Values not passed are taken from the current time.
+         * - ` `: The current time is used.
+         * - `int`: year
+         * - `string`: fully-qualified AHKv2 date-time string
+         * - `int, int`: year, month
+         * - `int, int, int`: year, month, day
+         * - `int, int, int, int`: year, month, day, hour (24h mode)
+         * - `int, int, int, int, int`: year, month, day, hour (24h mode), minute
+         * - `int, int, int, int, int, int`: year, month, day, hour (24h mode), minute, second
+         * @returns A `DateTime` object.
+         */
+        __New(dateparts*)
+        {
+            now := A_Now
+
+            if (dateparts.Length == 0)
+            {
+                this._value := A_Now
+            }
+            else if (dateparts.Length == 1)
+            {
+                if (dateparts[1] is String)
+                {
+                    this._value := dateparts[1]
+                }
+                else if (dateparts[1] is Integer)
+                {
+                    this._value := dateparts[1] . SubStr(A_Now, 5, 2)
+                }
+            }
+            else if (dateparts.Length == 2)
+            {
+                this._value := dateparts[1] . dateparts[2] . SubStr(A_Now, 7, 2)
+            }
+            else if (dateparts.Length == 3)
+            {
+                this._value := dateparts[1] . dateparts[2] . dateparts[3] . SubStr(A_Now, 9, 2)
+            }
+            else if (dateparts.Length == 4)
+            {
+                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . SubStr(A_Now, 11, 2)
+            }
+            else if (dateparts.Length == 5)
+            {
+                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . dateparts[5] . SubStr(A_Now, 13, 2)
+            }
+            else if (dateparts.Length == 6)
+            {
+                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . dateparts[5] . dateparts[6]
+            }
+        }
+
+        ToString() => this._value
+
+        year => Integer(SubStr(this._value, 1, 4))
+        month => Integer(SubStr(this._value, 5, 2))
+        day => Integer(SubStr(this._value, 7, 2))
+        hour => Integer(SubStr(this._value, 9, 2))
+        minute => Integer(SubStr(this._value, 11, 2))
+        second => Integer(SubStr(this._value, 13, 2))
+
+        /**
+         * Adds years to this `DateTime`.
+         * @param y The amount of years to add. May be negative and non-integer.
+         */
+        AddYears(y)
+        {
+            this._value := DateAdd(this._value, y * 365, "D")
+        }
+
+        /**
+         * Adds months to this `DateTime`.
+         * @param m The amount of months to add. May be negative and non-integer.
+         * @note Appropriate calculations are done to ensure `1 month == 1 month`, no matter which `DateTime` the addition starts with and how many months are added (i.e. `(2022-01-26).AddMonths(4) == (2022-05-26)`).
+         */
+        AddMonths(m)
+        {
+            if (m > 0)
+            {
+                while (m > 1)
+                {
+                    m--
+                    this._value := DateAdd(this._value, codebase.DateTime.daysInMonth(this.month, this.year), "D")
+                }
+                if (m !== 0)
+                {
+                    dwanted := codebase.DateTime.daysInMonth(this.month, this.year)
+                    this._value := DateAdd(this._value, codebase.DateTime.daysInMonth(this.month, this.year) * m, "D")
+                }
+            }
+            else
+            {
+                while (m < 1)
+                {
+                    m++
+                    this._value := DateAdd(this._value, -codebase.DateTime.daysInMonth(this.month - 1, this.year), "D")
+                }
+                if (m !== 0)
+                {
+                    this._value := DateAdd(this._value, codebase.DateTime.daysInMonth(this.month - 1, this.year) * m, "D")
+                }
+            }
+            ; TODO: fix
+        }
+
+        AddDays(d)
+        {
+            this._value := DateAdd(this._value, d, "D")
+        }
+
+        static daysInMonth(month, year?)
+        {
+            if (month < 0 || month > 12)
+            {
+                throw ValueError("Invalid value for ``month``. Received ``" . month . "``, expected a value between ``1`` and ``12`` inclusive.")
+            }
+            if (month == 2 && !IsSet(year))
+            {
+                throw Error("The days in a particular February cannot be determined without knowing which ``year`` it is.")
+            }
+
+            if (month == 2)
+            {
+                if (codebase.DateTime.isLeapYear(year))
+                {
+                    return 29
+                }
+                return 28
+            }
+
+            if (!Mod(month, 2))
+            {
+                return (month <= 7 ? 30 : 31)
+            }
+            else
+            {
+                return (month <= 7 ? 31 : 30)
+            }
+        }
+
+        static isLeapYear(year) => !Mod(year, 4) && (!!Mod(year, 100) || !Mod(year, 400))
+    }
+
+    class Path
+    {
+        ; TODO
     }
 
     /**
@@ -887,7 +1047,7 @@ class codebase
          * Checks if this `StandardIO` object's handles for `stdin`, `stdout` and `stderr` are valid.
          * @returns `true` if all handles are valid, `false` otherwise.
          */
-        areHandlesValid() => Type(this.stdin) == "File" && Type(this.stdout) == "File" && Type(this.stderr) == "File"
+        areHandlesValid() => this.stdin is File && this.stdout is File && this.stderr is File
 
         /**
          * Attempts flushing and forcibly invalidating this `StandardIO` object's handles for `stdin`, `stdout` and `stderr`.
@@ -1070,21 +1230,21 @@ class codebase
     }
 
     /**
-     * A class for working with numbers as bitfields, for which AHKv2 has no native support.
+     * A class for working with numbers as Binarys, for which AHKv2 has no native support.
      */
-    class Bitfield
+    class Binary
     {
         /**
-         * Instantiates a new `codebase.Bitfield` object.
+         * Instantiates a new `codebase.Binary` object.
          * @param bits
-         * - Value mode: Any number of values for the `codebase.Bitfield` to hold. All passed values are translated into simple boolean values, i.e. contents of strings or numerical values are lost.
+         * - Value mode: Any number of values for the `codebase.Binary` to hold. All passed values are translated into simple boolean values, i.e. contents of strings or numerical values are lost.
          * - String mode: A string of any length with single digits to identify the bits the object should hold, e.g. "00010100".
-         * @returns A `codebase.Bitfield` object.
+         * @returns A `codebase.Binary` object.
          */
         __New(bits*)
         {
             this.bits := []
-            for searchx in (bits.Length == 1 ? (Type(bits[1]) == "String" ? StrSplit(bits[1]) : bits) : bits)
+            for searchx in (bits.Length == 1 ? (bits[1] is String ? StrSplit(bits[1]) : bits) : bits)
             {
                 this.bits.Push(!!searchx)
             }
@@ -1095,13 +1255,13 @@ class codebase
         /**
          * Returns the object's stored bits as a numerical value.
          * @throws `ValueError` if `this.bits.Length` is `≥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
-         * @returns The `codebase.Bitfield` object's stored bits converted to a numerical value.
+         * @returns The `codebase.Binary` object's stored bits converted to a numerical value.
          */
         Value()
         {
             if (this.bits.Length >= 64)
             {
-                throw ValueError("Cannot convert a ``codebase.Bitfield`` with 64 or more bits to a ``long``.")
+                throw ValueError("Cannot convert a ``codebase.Binary`` with 64 or more bits to a ``long``.")
             }
 
             return codebase.math.sum(1, this.bits.Length, (x) => this.bits[x] * (2 ** (this.bits.Length - x)))
@@ -1109,13 +1269,13 @@ class codebase
     }
 
     /**
-     * A class for working with numbers, or more precisely with numbers as bitfields.
-     * @note AHKv2 has no native support for bitfields, so this class is a workaround.
+     * A class for working with numbers, or more precisely with numbers as Binarys.
+     * @note AHKv2 has no native support for Binarys, so this class is a workaround.
      */
     class bitwiseOperations
     {
         /**
-         * Calculates the bitwise-AND of a series of bitfields (numbers).
+         * Calculates the bitwise-AND of a series of Binarys (numbers).
          * @param vals The numbers to AND.
          * @note The AND of more than 2 numbers is calculated by stepping through `vals` and ANDing 2 at a time, then ANDing this intermediate value with the next, etc. until there is only one final value left. This is the AND of all numbers passed.
          * @returns The AND of the numbers in `vals`.
@@ -1136,7 +1296,7 @@ class codebase
         }
 
         /**
-         * Calculates the bitwise-OR of a series of bitfields (numbers).
+         * Calculates the bitwise-OR of a series of Binarys (numbers).
          * @param vals The numbers to OR.
          * @note The OR of more than 2 numbers is calculated by stepping through `vals` and ORing 2 at a time, then ORing this intermediate value with the next, etc. until there is only one final value left. This is the OR of all numbers passed.
          * @returns The OR of the numbers in `vals`.
@@ -1155,46 +1315,6 @@ class codebase
             }
             return ret
         }
-
-        /**
-         * Calculates the bitwise-XOR of a series of bitfields (numbers).
-         * @param vals The numbers to XOR.
-         * @returns The XOR of the numbers in `vals`.
-         *
-        static xor(vals*)
-        {
-            newvals := []
-            for val in vals
-            {
-                newvals.Push(codebase.Bitfield(codebase.convert.DecToBin(val)))
-            }
-
-            longest := { bits: [] }
-            for bf in newvals
-            {
-                if (bf.bits.Length > longest.bits.Length)
-                {
-                    longest := bf
-                }
-            }
-
-            str := ""
-            for i in codebase.range(1, longest.bits.Length)
-            {
-                count1 := 0
-                for bf in newvals
-                {
-                    if (bf.bits.Has(i) ? bf.bits[i] : 0)
-                    {
-                        count1++
-                    }
-                }
-                str .= String(count1 == 1 ? 1 : 0)
-            }
-            
-            return codebase.Bitfield(str).Value()
-        }
-        */
     }
 
     /**
@@ -1202,6 +1322,14 @@ class codebase
      */
     class stringOperations
     {
+        /**
+         * Determines which in a series of strings is the longest.
+         * @param strings The strings to iterate over.
+         * @note If multiple strings have the same length, the first is returned.
+         * @returns The longest string in `strings`.
+         */
+        static strLongest(strings*) => strings[codebase.collectionOperations.arrayOperations.arrayContains((lengths := codebase.collectionOperations.arrayOperations.evaluate((str) => StrLen(str), strings)), Max(lengths*))[1]]
+
         /**
          * Constructs a string consisting of spaces to separate one "column" of text from another.
          * @param str The current string to use when calculating the amount of padding spaces.
@@ -1222,7 +1350,7 @@ class codebase
             {
 
             }
-            else if (Type(extra) == "Array")
+            else if (extra is Array)
             {
                 extra := Max(codebase.collectionOperations.arrayOperations.evaluate(StrLen, extra)*)
             }
@@ -1385,7 +1513,7 @@ class codebase
             while (RegExMatch(str, "\{([A-z0-9 ]+)\}", &match, startingpos) !== 0)
             {
                 replace := ""
-                if (Type(objOrMap) == "Object")
+                if (objOrMap is Object)
                 {
                     if (objOrMap.HasOwnProp(match[1]))
                     {
@@ -1398,7 +1526,7 @@ class codebase
                         startingpos := match.Pos + match.Len
                     }
                 }
-                else if (Type(objOrMap) == "Map")
+                else if (objOrMap is Map)
                 {
                     if (objOrMap.Has(match[1]))
                     {
@@ -2499,7 +2627,7 @@ class codebase
                 b := 0
                 for _z in z
                 {
-                    if (Type(_z) == "codebase.math.complex.Number")
+                    if (_z is codebase.math.complex.Number)
                     {
                         a := _z.real
                         b := _z.imaginary
@@ -3923,13 +4051,13 @@ class codebase
                  */
                 __New(arrsOrVectors*)
                 {
-                    if (!(codebase.collectionOperations.andFunc((p) => Type(p) == "Array", arrsOrVectors*) || codebase.collectionOperations.andFunc((p) => Type(p) == "codebase.math.vectorGeometry.Vector", arrsOrVectors*)))
+                    if (!(codebase.collectionOperations.andFunc((p) => p is Array, arrsOrVectors*) || codebase.collectionOperations.andFunc((p) => p is codebase.math.vectorGeometry.Vector, arrsOrVectors*)))
                     {
                         throw TypeError("Invalid type for elements in ``arrsOrVectors``. Expected only ``Array`` or ``codebase.math.vectorGeometry.Vector``.")
                     }
 
                     xdim := 0
-                    if (Type(arrsOrVectors[1]) == "Array")
+                    if (arrsOrVectors[1] is Array)
                     {
                         for arr in arrsOrVectors
                         {
@@ -3954,7 +4082,7 @@ class codebase
                     
                     this.dim.DefineProp("ToString", { Call: (*) => this.dim.x . "x" . this.dim.y . "`n" })
 
-                    if (Type(arrsOrVectors[1]) == "Array")
+                    if (arrsOrVectors[1] is Array)
                     {
                         for row in arrsOrVectors
                         {
@@ -4314,7 +4442,7 @@ class codebase
                     Loop m.dim.x
                     {
                         xi := A_Index
-                        new.DefineProp(yi . xi, { Value: Number(m.GetOwnPropDesc(yi . xi).Value) * s })
+                        new.DefineProp(yi . xi, { Value: Float(m.GetOwnPropDesc(yi . xi).Value) * s })
                     }
                 }
                 return new
@@ -4379,7 +4507,7 @@ class codebase
                 }
 
                 ; Convert input matrix m to an Array of Arrays
-                if (Type(m) == "codebase.math.matrixComputation.Matrix")
+                if (m is codebase.math.matrixComputation.Matrix)
                 {
                     m := m.getRows()
                 }
@@ -5940,20 +6068,42 @@ class codebase
      */
     class requests
     {
-        static urlEscape()
-        {
-            
-        }
+        /**
+         * Escapes all problematic characters for use in an URL.
+         * @param str The string to escape.
+         * @returns The escaped string.
+         */
+        static urlEscape(str) => codebase.stringOperations.strReplace(str, Map(':', '%3A',
+                                                                               '/', '%2F',
+                                                                               '?', '%3F',
+                                                                               '#', '%23',
+                                                                               '[', '%5B',
+                                                                               ']', '%5D',
+                                                                               '@', '%40',
+                                                                               '!', '%21',
+                                                                               '$', '%24',
+                                                                               '&', '%26',
+                                                                               "'", '%27',
+                                                                               '(', '%28',
+                                                                               ')', '%29',
+                                                                               '*', '%2A',
+                                                                               '+', '%2B',
+                                                                               ',', '%2C',
+                                                                               ';', '%3B',
+                                                                               '=', '%3D',
+                                                                               '%', '%25',
+                                                                               ' ', '%20'
+            ))
 
         /**
          * Send a HTTP request and return its response data as well as a parsed version of the JSON response.
          * @param url The URL to send the request to.
-         * @param method The HTTP method to use when sending the request ("GET", "POST", "PATCH", etc.)
+         * @param method The HTTP method to use when sending the request ("GET", "POST", "PATCH", etc.). Some may require the request to contain body data.
          * @param headers A Map object with the headers to set before sending the request.
-         * @param data The body data to send with the request. Must be a string, anything interpretable as a string or a `Buffer` object.
+         * @param data The body data to send with the request. Must be a string or anything interpretable as a string.
          * @throws `TypeError` if a value for `header` is passed but not a Map object.
          * @note When passing body `data` _read from a file_, read the file using `FileRead` with the `RAW` option.
-         * @returns A Map object constructed from the contents of the reponse produced by the request.
+         * @returns A Map object constructed from the contents of the reponse produced by the request. Check the implementation to see which keys you may use.
          */
         static makeRequest(url, method, headers?, data?)
         {
@@ -5981,30 +6131,16 @@ class codebase
 
             if (IsSet(data))
             {
-                if (Type(data) == "Buffer")
+                if (!(headers.Has("Content-Length")))
                 {
-                    if (!(headers.Has("Content-Length")))
-                    {
-                        whr.SetRequestHeader("Content-Length", data.Size)
-                    }
-                    if (!(headers.Has("Content-Type")))
-                    {
-                        throw ValueError("Invalid value for ``headers``. Received body ``data`` but no ``Content-Type`` header was set.")
-                    }
+                    whr.SetRequestHeader("Content-Length", StrLen(data))
                 }
-                else
+                if (!(headers.Has("Content-Type")))
                 {
-                    if (!(headers.Has("Content-Length")))
-                    {
-                        whr.SetRequestHeader("Content-Length", StrLen(data))
-                    }
-                    if (!(headers.Has("Content-Type")))
-                    {
-                        throw ValueError("Invalid value for ``headers``. Received body ``data`` but no ``Content-Type`` header was set.")
-                    }
+                    throw ValueError("Invalid value for ``headers``. Received body ``data`` but no ``Content-Type`` header was set.")
                 }
 
-                whr.Send(Type(data) == "Buffer" ? StrGet(data) : data)
+                whr.Send(data)
             }
             else
             {

@@ -299,6 +299,7 @@ fastMonitor()
             {
                 try
                 {
+                    oldactive := WinActive("A")
                     WinActivate(roblox)
                     WinWaitActive(roblox)
                     sendAfk("RobloxPlayerBeta.exe")
@@ -308,6 +309,7 @@ fastMonitor()
                     {
                         robloxAfk.Value := str
                     }
+                    WinActivate(oldactive)
                 }
             }
         }
@@ -716,8 +718,7 @@ functions()
     }
 
     readOnlyFiles := [
-        "C:\Users\User\Documents\My Games\Rainbow Six - Siege\51e0474f-7c98-4afc-902b-8c1367f823d0\GameSettings.ini",
-        "C:\Users\User\Documents\EA Games\Mirror's Edge\TdGame\Config\TdEngine.ini"
+        "C:\Users\User\Documents\My Games\Rainbow Six - Siege\51e0474f-7c98-4afc-902b-8c1367f823d0\GameSettings.ini"
     ]
     for f in readOnlyFiles
     {
@@ -829,6 +830,18 @@ functions()
         if (WinExist("ahk_exe outlook.exe"))
         {
             olExists := true
+        }
+    }
+
+    if (WinExist("LonelyScreen AirPlay Receiver"))
+    {
+        for win in WinGetList("LonelyScreen AirPlay Receiver")
+        {
+            WinGetPos(, , &w, &h, "LonelyScreen AirPlay Receiver")
+            if (w == 422 && h == 236)
+            {
+                WinKill("LonelyScreen AirPlay Receiver")
+            }
         }
     }
 
@@ -1012,7 +1025,7 @@ discordThemeUpdate()
 }
 
 #HotIf WinActive("ahk_group lock")
-~*F9::
+~*F8::
 {  
     global lock := !lock
 }
