@@ -749,8 +749,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         copymod := false
         arr := [
-            c := codebase.DateTime(),
-            c.AddMonths(-7)
+            
         ]
 
         ; Siege query

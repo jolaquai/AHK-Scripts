@@ -648,38 +648,62 @@ class codebase
             }
             else if (dateparts.Length == 2)
             {
-                this._value := dateparts[1] . dateparts[2] . SubStr(A_Now, 7, 2)
+                this._value := dateparts[1] . Format("{1:02}", dateparts[2]) . SubStr(A_Now, 7, 2)
             }
             else if (dateparts.Length == 3)
             {
-                this._value := dateparts[1] . dateparts[2] . dateparts[3] . SubStr(A_Now, 9, 2)
+                this._value := dateparts[1] . Format("{1:02}", dateparts[2]) . Format("{1:02}", dateparts[3]) . SubStr(A_Now, 9, 2)
             }
             else if (dateparts.Length == 4)
             {
-                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . SubStr(A_Now, 11, 2)
+                this._value := dateparts[1] . Format("{1:02}", dateparts[2]) . Format("{1:02}", dateparts[3]) . Format("{1:02}", dateparts[4]) . SubStr(A_Now, 11, 2)
             }
             else if (dateparts.Length == 5)
             {
-                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . dateparts[5] . SubStr(A_Now, 13, 2)
+                this._value := dateparts[1] . Format("{1:02}", dateparts[2]) . Format("{1:02}", dateparts[3]) . Format("{1:02}", dateparts[4]) . Format("{1:02}", dateparts[5]) . SubStr(A_Now, 13, 2)
             }
             else if (dateparts.Length == 6)
             {
-                this._value := dateparts[1] . dateparts[2] . dateparts[3] . dateparts[4] . dateparts[5] . dateparts[6]
+                this._value := dateparts[1] . Format("{1:02}", dateparts[2]) . Format("{1:02}", dateparts[3]) . Format("{1:02}", dateparts[4]) . Format("{1:02}", dateparts[5]) . Format("{1:02}", dateparts[6])
             }
         }
 
         ToString() => this._value
 
-        year => Integer(SubStr(this._value, 1, 4))
-        month => Integer(SubStr(this._value, 5, 2))
-        day => Integer(SubStr(this._value, 7, 2))
-        hour => Integer(SubStr(this._value, 9, 2))
-        minute => Integer(SubStr(this._value, 11, 2))
-        second => Integer(SubStr(this._value, 13, 2))
+        year
+        {
+            get => Integer(SubStr(this._value, 1, 4))
+            set => this._value := value . SubStr(this._value, 5)
+        }
+        month
+        {
+            get => Integer(SubStr(this._value, 5, 2))
+            set => this._value := SubStr(this._value, 1, 4) . Format("{1:02}", value) . SubStr(this._value, 6)
+        }
+        day
+        {
+            get => Integer(SubStr(this._value, 7, 2))
+            set => this._value := SubStr(this._value, 1, 6) . Format("{1:02}", value) . SubStr(this._value, 8)
+        }
+        hour
+        {
+            get => Integer(SubStr(this._value, 9, 2))
+            set => this._value := SubStr(this._value, 1, 8) . Format("{1:02}", value) . SubStr(this._value, 10)
+        }
+        minute
+        {
+            get => Integer(SubStr(this._value, 11, 2))
+            set => this._value := SubStr(this._value, 1, 10) . Format("{1:02}", value) . SubStr(this._value, 12)
+        }
+        second
+        {
+            get => Integer(SubStr(this._value, 13, 2))
+            set => this._value := SubStr(this._value, 1, 12) . Format("{1:02}", value) . SubStr(this._value, 14)
+        }
 
         /**
          * Adds years to this `DateTime`.
-         * @param y The amount of years to add. May be negative and non-integer.
+         * @param y The amount of years to add. May be negative and non-integer. In the latter case, the amount of days is rounded down (i.e. `0.65 -> 0.65 * 365 == 237.25 -> 237`).
          */
         AddYears(y)
         {
@@ -711,30 +735,90 @@ class codebase
                 while (m < 1)
                 {
                     m++
-                    this._value := DateAdd(this._value, -codebase.DateTime.daysInMonth(this.month - 1, this.year), "D")
+                    this._value := DateAdd(this._value, -(codebase.DateTime.daysInMonth(this.month - 1, this.year) + (this.month - 1 == 1 ? 1 : 0)), "D")
                 }
                 if (m !== 0)
                 {
                     this._value := DateAdd(this._value, codebase.DateTime.daysInMonth(this.month - 1, this.year) * m, "D")
                 }
             }
-            ; TODO: fix
         }
 
+        /**
+         * Adds days to this `DateTime`.
+         * @param y The amount of days to add. May be negative and non-integer. In the latter case, the amount of hours is rounded down (i.e. `0.65 -> 0.65 * 24 == 15.6 -> 15`).
+         */
         AddDays(d)
         {
             this._value := DateAdd(this._value, d, "D")
         }
 
+        /**
+         * Adds hours to this `DateTime`.
+         * @param y The amount of hours to add. May be negative and non-integer. In the latter case, the amount of minutes is rounded down (i.e. `0.655 -> 0.655 * 60 == 39.3 -> 39`).
+         */
+        AddHours(h)
+        {
+            this._value := DateAdd(this._value, h, "H")
+        }
+
+        /**
+         * Adds minutes to this `DateTime`.
+         * @param y The amount of minutes to add. May be negative and non-integer. In the latter case, the amount of seconds is rounded down (i.e. `0.655 -> 0.65 * 60 == 39.3 -> 39`).
+         */
+        AddMinutes(m)
+        {
+            this._value := DateAdd(this._value, m, "M")
+        }
+
+        /**
+         * Adds seconds to this `DateTime`.
+         * @param y The amount of seconds to add. May be negative. Any fractional part is truncated, not rounded.
+         */
+        AddSeconds(s)
+        {
+            if (s < 0)
+            {
+                s := Ceil(s)
+            }
+            else
+            {
+                s := Floor(s)
+            }
+            this._value := DateAdd(this._value, s, "S")
+        }
+        
+        /**
+         * Calculates the number of days in a given month.
+         * @param month The month to calculate the days in.
+         * @param year The year in which to make the calculations. Defaults to `unset` if omitted, but must be passed if `month == 2`.
+         * @throws `ValueError` if `month` is `2` and `year` is `unset`.
+         * @returns The number of days in a given month.
+         */
         static daysInMonth(month, year?)
         {
-            if (month < 0 || month > 12)
+            if (month < 0)
             {
-                throw ValueError("Invalid value for ``month``. Received ``" . month . "``, expected a value between ``1`` and ``12`` inclusive.")
+                if (c := Ceil(month / 13))
+                {
+                    month := 13 - Abs(Mod(month, 13) - 1)
+                }
+                else
+                {
+                    month := 13 - Abs(month)
+                }
             }
+            else if (month > 12)
+            {
+                if (Floor(month / 13))
+                {
+                    month := Mod(month, 13) + 1
+                }
+            }
+
             if (month == 2 && !IsSet(year))
             {
-                throw Error("The days in a particular February cannot be determined without knowing which ``year`` it is.")
+                throw ValueError("The days in a particular February cannot be determined without knowing which ``year`` it is.")
             }
 
             if (month == 2)
@@ -756,9 +840,17 @@ class codebase
             }
         }
 
+        /**
+         * Determines if a given year is a leap year.
+         * @param year The year to check.
+         * @returns `true` if `year` is a leap year, `false` otherwise.
+         */
         static isLeapYear(year) => !Mod(year, 4) && (!!Mod(year, 100) || !Mod(year, 400))
     }
 
+    /**
+     * A class to allow working with and constructing paths.
+     */
     class Path
     {
         ; TODO
