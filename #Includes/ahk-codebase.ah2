@@ -610,8 +610,15 @@ class codebase
      */
     class DateTime
     {
+        /**
+         * An alias to `A_Now`.
+         */
         static Now => A_Now
 
+        /**
+         * The internal variable keeping the "value" of this `DateTime` object.
+         * @note This is not meant to be accessed directly. `get` operations are fine, but `set`ting this variable might have unexpected results or throw errors.
+         */
         _value := ""
 
         /**
@@ -668,33 +675,55 @@ class codebase
             }
         }
 
+        /**
+         * Returns the current value of this `DateTime` object.
+         * @returns An AHKv2 date-time string representing the value of this `DateTime` object.
+         */
         ToString() => this._value
 
+        /**
+         * Gets or sets the current `year` of this `DateTime` object.
+         */
         year
         {
             get => Integer(SubStr(this._value, 1, 4))
             set => this._value := value . SubStr(this._value, 5)
         }
+        /**
+         * Gets or sets the current `month` of this `DateTime` object.
+         */
         month
         {
             get => Integer(SubStr(this._value, 5, 2))
             set => this._value := SubStr(this._value, 1, 4) . Format("{1:02}", value) . SubStr(this._value, 6)
         }
+        /**
+         * Gets or sets the current `day` of this `DateTime` object.
+         */
         day
         {
             get => Integer(SubStr(this._value, 7, 2))
             set => this._value := SubStr(this._value, 1, 6) . Format("{1:02}", value) . SubStr(this._value, 8)
         }
+        /**
+         * Gets or sets the current `hour` of this `DateTime` object.
+         */
         hour
         {
             get => Integer(SubStr(this._value, 9, 2))
             set => this._value := SubStr(this._value, 1, 8) . Format("{1:02}", value) . SubStr(this._value, 10)
         }
+        /**
+         * Gets or sets the current `minute` of this `DateTime` object.
+         */
         minute
         {
             get => Integer(SubStr(this._value, 11, 2))
             set => this._value := SubStr(this._value, 1, 10) . Format("{1:02}", value) . SubStr(this._value, 12)
         }
+        /**
+         * Gets or sets the current `second` of this `DateTime` object.
+         */
         second
         {
             get => Integer(SubStr(this._value, 13, 2))
@@ -705,7 +734,7 @@ class codebase
          * Adds years to this `DateTime`.
          * @param y The amount of years to add. May be negative and non-integer. In the latter case, the amount of days is rounded down (i.e. `0.65 -> 0.65 * 365 == 237.25 -> 237`).
          */
-        AddYears(y)
+        addYears(y)
         {
             this._value := DateAdd(this._value, y * 365, "D")
         }
@@ -715,7 +744,7 @@ class codebase
          * @param m The amount of months to add. May be negative and non-integer.
          * @note Appropriate calculations are done to ensure `1 month == 1 month`, no matter which `DateTime` the addition starts with and how many months are added (i.e. `(2022-01-26).AddMonths(4) == (2022-05-26)`).
          */
-        AddMonths(m)
+        addMonths(m)
         {
             if (m > 0)
             {
@@ -748,7 +777,7 @@ class codebase
          * Adds days to this `DateTime`.
          * @param y The amount of days to add. May be negative and non-integer. In the latter case, the amount of hours is rounded down (i.e. `0.65 -> 0.65 * 24 == 15.6 -> 15`).
          */
-        AddDays(d)
+        addDays(d)
         {
             this._value := DateAdd(this._value, d, "D")
         }
@@ -757,7 +786,7 @@ class codebase
          * Adds hours to this `DateTime`.
          * @param y The amount of hours to add. May be negative and non-integer. In the latter case, the amount of minutes is rounded down (i.e. `0.655 -> 0.655 * 60 == 39.3 -> 39`).
          */
-        AddHours(h)
+        addHours(h)
         {
             this._value := DateAdd(this._value, h, "H")
         }
@@ -766,7 +795,7 @@ class codebase
          * Adds minutes to this `DateTime`.
          * @param y The amount of minutes to add. May be negative and non-integer. In the latter case, the amount of seconds is rounded down (i.e. `0.655 -> 0.65 * 60 == 39.3 -> 39`).
          */
-        AddMinutes(m)
+        addMinutes(m)
         {
             this._value := DateAdd(this._value, m, "M")
         }
@@ -775,7 +804,7 @@ class codebase
          * Adds seconds to this `DateTime`.
          * @param y The amount of seconds to add. May be negative. Any fractional part is truncated, not rounded.
          */
-        AddSeconds(s)
+        addSeconds(s)
         {
             if (s < 0)
             {
@@ -818,7 +847,7 @@ class codebase
 
             if (month == 2 && !IsSet(year))
             {
-                throw ValueError("The days in a particular February cannot be determined without knowing which ``year`` it is.")
+                throw UnsetError("``year`` must be set to determine the number of days in a particular February.")
             }
 
             if (month == 2)
@@ -853,7 +882,221 @@ class codebase
      */
     class Path
     {
-        ; TODO
+        /**
+         * The character that separates directories from one another in Windows paths.
+         */
+        static directorySeparator := '\'
+        /**
+         * The character that separates file names from their extensions in Windows paths.
+         */
+        static extensionSeparator := '.'
+        /**
+         * The character that separates entires in the `PATH` environment variable.
+         */
+        static pathSeparator := ';'
+        /**
+         * The character that separates drive letters or protocols from the following directory structure in Windows paths.
+         */
+        static driveSeparator := ':'
+
+        /**
+         * Trims a path.
+         * @param path The path to trim.
+         * @returns The trimmed path.
+         */
+        static validate(path) => RTrim(Trim(path, codebase.Path.extensionSeparator . codebase.Path.pathSeparator . codebase.Path.driveSeparator), codebase.Path.directorySeparator)
+
+        _path := ""
+
+        /**
+         * An Array of files in the directory currently being pointed to by this `Path` object.
+         * @note If this `Path` object is currently pointing to a file rather than a directory, the containing folder of that file is operated upon instead. This will then contain the file this `Path` object is currently pointing to. Even if this is the case, the location being pointed to is not changed.
+         */
+        files => codebase.directoryOperations.getFiles(this.current, false)
+        /**
+         * An Array of folders in the directory currently being pointed to by this `Path` object.
+         * @note If this `Path` object is currently pointing to a file rather than a directory, the containing folder of that file is operated upon instead. Even if this is the case, the location being pointed to is not changed.
+         */
+        folders => codebase.directoryOperations.getFolders(this.current, false)
+
+        /**
+         * Whether this `Path` object is currently pointing to a file.
+         * @note If the path currently being pointed to by this `Path` object does not exist, this is always `false`.
+         * @note Whether the location currently being pointed to by this `Path` object is a file is determined in the following way:
+         * - (`FileExist` returns `true` AND `DirExist` returns `false`)
+         * - OR (`this.isDirectory` is false AND `this._path` matches a specific RegEx pattern)
+         */
+        isFile => (!!FileExist(this._path) && !DirExist(this._path)) || (!(this.isDirectory) && RegExMatch(this._path, "(?:.*?\\)+[^.]*\..+"))
+        /**
+         * Whether this `Path` object is currently pointing to a folder.
+         * @note If the path currently being pointed to by this `Path` object does not exist, this is always `false`.
+         */
+        isDirectory => InStr(FileExist(this._path), "D") && !!DirExist(this._path)
+        /**
+         * Whether performing operations on the location currently being pointed to by this `Path` object are legal. `true` only if the path exists.
+         */
+        isValid => !!(FileExist(this._path) || DirExist(this._path))
+
+        /**
+         * The parent directory of the directory currently being pointed to by this `Path` object.
+         * @note If this `Path` object is currently pointing to a file rather than a directory, the containing folder of that file is operated upon instead. Even if this is the case, the location being pointed to is not changed.
+         */
+        parent
+        {
+            get
+            {
+                if (this.isFile)
+                {
+                    SplitPath(this._path, , &dir)
+                    return codebase.stringOperations.strJoin(codebase.Path.directorySeparator, , codebase.collectionOperations.arrayOperations.subarray(StrSplit(dir, codebase.Path.directorySeparator), 1, -1)*)
+                }
+                return codebase.stringOperations.strJoin(codebase.Path.directorySeparator, , codebase.collectionOperations.arrayOperations.subarray(StrSplit(this._path, codebase.Path.directorySeparator), 1, -1)*)
+            }
+        }
+        /**
+         * The directory currently being pointed to by this `Path` object.
+         * @note If this `Path` object is currently pointing to a file rather than a directory, the containing folder of that file is operated upon instead. Even if this is the case, the location being pointed to is not changed.
+         */
+        current
+        {
+            get
+            {
+                if (this.isFile)
+                {
+                    SplitPath(this._path, , &dir)
+                    return dir
+                }
+                return this._path
+            }
+        }
+
+        /**
+         * Instantiates a new `Path` object.
+         * @param pathparts Any number of path parts to join and store in this `Path` object.
+         * @note If `pathparts.Length == 1` and it is a `codebase.Path` object, the returned object will be an exact copy of the passed `Path`.
+         * @note If `pathparts[1]` is exactly one uppercase letter, it is assumed to be a drive letter and formatted as such.
+         * @note If `.` is encountered in `pathparts`, it is removed from the final path without effect.
+         * @note If `..` is encountered in `pathparts`, it and the directory immediately preceding it are removed from the final path, making it act as a "parent directory" accessor as usual for Windows.
+         * @returns A `Path` object.
+         */
+        __New(pathparts*)
+        {
+            if (pathparts.Length == 1 && pathparts[1] is codebase.Path)
+            {
+                this._path := pathparts[1]._path
+            }
+
+            if (StrLen(pathparts[1]) == 1 && pathparts[1] == StrUpper(pathparts[1]))
+            {
+                pathparts[1] := StrUpper(pathparts[1]) . ":"
+            }
+            parts := []
+            for part in pathparts
+            {
+                if (A_Index == 1)
+                {
+                    if (StrLen(part) == 1 && part == StrUpper(part))
+                    {
+                        parts.Push(StrUpper(pathparts[1]) . ":")
+                        continue
+                    }
+                }
+                if (part == ".")
+                {
+                    continue
+                }
+                if (part == "..")
+                {
+                    parts.Pop()
+                    continue
+                }
+
+                parts.Push(part)
+            }
+            this._path := codebase.Path.validate(codebase.stringOperations.strJoin(codebase.Path.directorySeparator, , parts*))
+        }
+
+        /**
+         * Opens a read-access `File` handle to the file currently being pointed to by this `Path` object.
+         * @throws `TargetError` if the location being pointed to by this `Path` object is a directory, not a file.
+         * @returns A `File` object with read-level access to the file.
+         */
+        read()
+        {
+            if (!(this.isFile))
+            {
+                throw TargetError("Cannot open ``File`` handle on a directory.")
+            }
+            return FileOpen(this._path, "r")
+        }
+
+        /**
+         * Opens a write-access `File` handle to the file currently being pointed to by this `Path` object.
+         * @throws `TargetError` if the location being pointed to by this `Path` object is a directory, not a file.
+         * @returns A `File` object with write-level access to the file.
+         */
+        write()
+        {
+            if (!(this.isFile))
+            {
+                throw TargetError("Cannot open ``File`` handle on a directory.")
+            }
+            return FileOpen(this._path, "rw")
+        }
+
+        /**
+         * Creates the file or directory currently being pointed to by this `Path` object.
+         * @note This creates the entirety of the directory structure necessary to reach the target location.
+         * @throws `TargetError` if the file or folder to be created already exists.
+         * @returns `true` when the file or directory has been created.
+         */
+        create()
+        {
+            if (this.isValid)
+            {
+                throw TargetError("The file or folder <" . this._path . "> already exists and cannot be created.")
+            }
+
+            if (this.isFile)
+            {
+                DirCreate(this.current)
+                DirDelete(this.current)
+                FileOpen(this._path, "rw").Close()
+                return true
+            }
+            else
+            {
+                DirCreate(this.current)
+                return true
+            }
+        }
+
+        /**
+         * Forcibly creates the file or directory currently being pointed to by this `Path` object, overwriting the target location if it already exists.
+         * @note This creates the entirety of the directory structure necessary to reach the target location. Excepting the target location (if it is a directory), which will be deleted and re-created, existing files and directories are not overwritten.
+         * @returns `true` when the file or directory has been created.
+         */
+        createForce()
+        {
+            if (this.isFile)
+            {
+                DirCreate(this.current)
+                DirDelete(this.current)
+                FileOpen(this._path, "w").Close()
+                return true
+            }
+            else
+            {
+                if (this.isValid)
+                {
+                    DirDelete(this.current, true)
+                }
+                DirCreate(this.current)
+                return true
+            }
+        }
+
+        ToString() => this._path
     }
 
     /**
@@ -2508,6 +2751,10 @@ class codebase
                 if (!IsSet(stop))
                 {
                     stop := arr.Length
+                }
+                if (stop < 0)
+                {
+                    stop := arr.Length + stop
                 }
 
                 if (stop == 0 || start > arr.Length)

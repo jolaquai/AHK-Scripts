@@ -254,8 +254,7 @@ Hotstring(":*?:<;3", ">;3")
 :*?:math_est::≙
 :*?:math_caret::
 {
-    A_Clipboard := "^"
-    codebase.Tool("Copied")
+    Send("{Raw}^")
 }
 
 :*?:math_diameter::Ø
@@ -747,9 +746,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
+        p := codebase.Path("C", "Users", "user", "Desktop", "Share", "no", "shit", "penis.bmp")
         copymod := false
         arr := [
-            
+            p,
+            p.create()
         ]
 
         ; Siege query
@@ -1186,20 +1187,23 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     +b::siegerapid.inc()
     +v::siegerapid.set(2)
 
-    ~RButton & LButton::
+    ~*RButton::
     mouse_override(*)
     {
         Loop
         {
-            if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.check(1))
+            if (GetKeyState("RButton", "P"))
             {
-                Send("{LAlt up}{Click}")
-                Sleep(10)
-            }
-            else if (GetKeyState("LButton", "P") && GetKeyState("RButton", "P") && siegerapid.check(2))
-            {
-                Send("{Click}{LButton up}")
-                break
+                if (GetKeyState("LButton", "P") && siegerapid.check(1))
+                {
+                    Send("{LAlt up}{Click}")
+                    Sleep(10)
+                }
+                else if (GetKeyState("LButton", "P") && siegerapid.check(2))
+                {
+                    Send("{Click}{LButton up}")
+                    return
+                }
             }
             else
             {
