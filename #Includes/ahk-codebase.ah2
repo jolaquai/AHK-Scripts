@@ -449,7 +449,10 @@ class codebase
         }
 
         t := Integer(t)
-        precision := 10 ** (3 - precision)
+        if (precision !== 0)
+        {
+            precision := 10 ** (3 - precision)
+        }
 
         if (t >= 1000 * 60 * 60)
         {
