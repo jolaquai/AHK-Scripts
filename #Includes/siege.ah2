@@ -5547,8 +5547,11 @@ class siege
             tpe := ""
             while (tpe == "")
             {
-                for n, v in siege.Weapon.types.list
+                for i in codebase.range(1, siege.Weapon.types.listName.Length)
                 {
+                    n := siege.Weapon.types.listName[i]
+                    v := siege.Weapon.types.listValue[i]
+
                     if (n == "Hand Cannon") ; || n == "Shield" !?
                     {
                         continue
@@ -5640,7 +5643,7 @@ class siege
         static techAttackDef() => "Destroy, disable or render " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " Attacker gadgets useless using Mute's GC90 Signal Disruptors, Bandit's CED-1 Shock Wires or Kaid's Rtila Electroclaws or by hacking Attacker drones using Mozzie's Pest."
         static trapper() => "Eliminate or incapacitate " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " opponents with Kapkan's Entry Denial Devices, Frost's Welcome Mats, Goyo's Volcán Canisters, Thorn's Razorbloom Shells or during and after they are tracked by Alibi's Primas. Eliminations count as 2 towards this."
         static unauthorizedAccess() => "Hack into Defender cameras as Dokkaebi or hack an Attacker drone as Mozzie " . Random(1, 2) * siege.challenges.challengeObjectiveMultiplier . " times."
-        static wallbangs()=> ""
+        static wallbangs() => ""
 
         static weeklyChallengeSet() => codebase.stringOperations.strJoin("`n", false,
             siege.challenges.wepTypeElims(),
