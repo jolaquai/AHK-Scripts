@@ -7,18 +7,7 @@ handle(err, ret)
 {
     if (InStr(err.Message, "function recursion limit exceeded"))
     {
-        if (
-            MsgBox(
-                "
-                (
-                    Too many Operators were excluded to perform a random pick!
-                    The script must reload.
-                    Would you like to copy the list of Operators you tried to omit?
-                )",
-            ,
-            codebase.msgboxopt.buttons.yesno
-            ) == "Yes"
-        )
+        if (MsgBox("Too many Operators were excluded to perform a random pick and the script must reload.`nWould you like to copy the list of Operators you tried to omit?", "Error", codebase.msgboxopt.buttons.yesno) == "Yes")
         {
             A_Clipboard := opts.opsToOmit.Value
         }
@@ -29,6 +18,7 @@ handle(err, ret)
 
 mainguittitle := "Operator Random Pick"
 optguititle := "Options"
+
 /**
  * The chance of generating a challenge for a generated Operator in %.
  *
@@ -36,10 +26,7 @@ optguititle := "Options"
  */
 challengechance := 30
 /**
- * If an Operator `nickname` matches one of the strings in this Array, it will never be picked.
- *
- * Any Operator `nickname`s specified in the options panel's `opsToOmit` Edit control will be combined with this.
- * @note Operator `nickname`s specified here will not be included in "Excluding..." lists above picks.
+ * If an Operator `nickname` matches one of the strings in this Array, it will never be picked. Any Operators not checked in the options panel will be combined with this. Operators ending here will not be included in "Excluding..." lists above picks.
  */
 hardcodedOmit := [
     
@@ -58,64 +45,40 @@ opt.OnEvent("Escape", Hide)
 opt.OnEvent("Close", Hide)
 opts := {
     ; Whether to omit the Operators that were picked during the LAST pick
-    excludePreviousPicks: opt.Add("Checkbox", "Checked", "Exclude previous three Operators from next first pick"),
-    ; Whether Operators specified in the Edit control below will be omitted from the next pick
-    excludeSpecifiedOps: opt.Add("Checkbox", "wp Checked", "Exclude the following Operators from all picks`n(Both ATK and DEF, delimited by `"comma space`")"),
-    ; Operator `nickname`s specified here will not be included in "Excluding..." lists above picks
-    opsToOmit: opt.Add("Edit", "wp r4 WantReturn -HScroll -VScroll")
+    excludePreviousPicks: opt.Add("Checkbox", "x10 y10 Checked y10", "Exclude previous " . (initThisManyOperatorSlots * 2) . " Operators from next first pick"),
+    ; Whether only Operators checked in the checkboxes below will be chosen
+    includeOnlyTheseOps: opt.Add("Checkbox", "x10 y25 Checked", "Only include the following Operators when picking"),
+    ; Operators checked here will not be included in "Excluding..." lists above picks
+    whichOps: populateOperatorCheckboxes()
 }
-
-opts.opsToOmit.OnEvent("LoseFocus", opsToOmit_Change)
-/**
- * When the user changes the value of the Edit control `opsToOmit`, this function is called.
- * - Set `omitFuncMustBeCalled` to `true`
- * - If the user has made the `opsToOmit` Edit control blank, set `combinedOmit` to `hardcodedOmit` and return
- * - Otherwise, split the value of `opsToOmit` by "comma space"
- * - Set `combinedOmit` to the resulting Array combined with `hardcodedOmit`
- * - If `combinedOmit` now contains enough Operators so that there are potentially not enough Defenders or Attackers left to pick exactly `initThisManyOperatorSlots`, warn the user about their input
- */
-opsToOmit_Change(*)
+populateOperatorCheckboxes()
 {
-    global combinedOmit, hardcodedOmit, warned, omitFuncMustBeCalled := true
-
-    if (!(opts.excludeSpecifiedOps.Value))
+    global checkboxOmit, combinedOmit
+    clicked(ctrl, info)
     {
-        combinedOmit := hardcodedOmit
-        return
+        if (ctrl.Value == 1)
+        {
+            checkboxOmit := codebase.collectionOperations.arrayOperations.remove(checkboxOmit, [ctrl.Text])
+        }
+        else
+        {
+            checkboxOmit.Push(ctrl.Text)
+        }
     }
 
-    split := StrSplit(opts.opsToOmit.Value, ', ')
-    combinedOmit := codebase.collectionOperations.arrayOperations.arrayConcat(hardcodedOmit, split)
-    if (combinedOmit.Length >= (Min(siege.attackers.list.Length, siege.defenders.list.Length) - initThisManyOperatorSlots + 1))
+    arr := []
+    for op in siege.defenders()
     {
-        MsgBox("Warning!`nThe amount of omitted Operators may lead to errors being thrown (" . split.Length . "). If this happens, the script reloads and the list of omitted Operators is lost.`nConsider omitting less Operators!")
+        check := opt.Add("Checkbox", "x30 y" . (45 + (15 * (A_Index - 1))) . " Checked Left", op.nickname)
+        check.OnEvent("Click", clicked)
+        arr.Push(check)
     }
-}
-opsToOmit_Change()
-opts.opsToOmit.OnEvent("Focus", opsToOmit_WarnAboutMisuse)
-/**
- * When the user focuses the Edit control `opsToOmit`, this function is called.
- * - If the user has not been warned about the more or less bad programming of the `opsToOmit` Edit control (i.e. `warned` has not been initialized), warn them
- * - Set `warned` to true
- */
-opsToOmit_WarnAboutMisuse(*)
-{
-    if (!IsSet(warned))
+    for op in siege.attackers()
     {
-        MsgBox(
-            "
-            (
-                Warning!
-                The functions that handle excluding Operators from picks are FAR from perfect and I'm still working on them.
-                That said, they DO work if used correctly. As such, here's a few tips to KEEP them working:
-                - If there's anything in the edit field that is NOT an Operator name, spelled as it should be (i.e. "Capitão" needs the "ã"), it will not have any effect on the pick, AND the misspelled name MIGHT show up in the list of excluded Operators at some point. It shouldn't, but it has, for some reason.
-                    - That said, it IS possible to specify just "a" as an "excluded Operator" and it will still work, however, it will match ANY Operator whose name contains "a" (i.e. "a" will match Ace, Alibi, ..., Dokkaebi, Ela, Finka, Glaz, Hibana, ..., Wamai, Warden, Zofia)
-                - Check the list before trusting a random pick. Operators specified in the list are NOT displayed as excluded so that the Text control doesn't become cluttered with Operator names if many are excluded.
-                - After changing the list, no matter which button is pressed, BOTH Operator classes will be randomized to apply the changes.
-            )"
-        )
+        check := opt.Add("Checkbox", "x140 y" . (45 + (15 * (A_Index - 1))) . " Checked Left", op.nickname)
+        check.OnEvent("Click", clicked)
+        arr.Push(check)
     }
-    global warned := true
 }
 
 optpnlshow := false
@@ -163,12 +126,14 @@ initoffset := 55
  */
 slotoffset := 20
 
+checkboxOmit := []
+combinedOmit := []
 /**
  * Which Defenders are not to be picked. This is updated with every pick for the Defenders, meaning it will contain a total of `combinedOmit.Length + initThisManyOperatorSlots` elements after a run has finished.
  */
 defomit := combinedOmit
 /**
- * Which Attackers are not to be pickeacd. This is updated with every pick for the Attackers, meaning it will contain a total of `combinedOmit.Length + initThisManyOperatorSlots` elements after a run has finished.
+ * Which Attackers are not to be picked. This is updated with every pick for the Attackers, meaning it will contain a total of `combinedOmit.Length + initThisManyOperatorSlots` elements after a run has finished.
  */
 atkomit := combinedOmit
 
@@ -265,7 +230,7 @@ bthbtn.OnEvent("Click", generate)
  */
 generate(sender, *)
 {
-    global omitFuncMustBeCalled, combinedOmit, opts, challengechance
+    global checkboxOmit, combinedOmit, opts, challengechance
     global defomit, defexclude, defnames, defprims, defsecs, defgdgs, defchln
     global atkomit, atkexclude, atknames, atkprims, atksecs, atkgdgs, atkchln
 
@@ -297,7 +262,17 @@ generate(sender, *)
             return
     }
 
-    ; If the user has turned off the option to omit the previous picked Operators, the class's list of omitted Operators is set to `combinedOmit`
+    if (opts.includeOnlyTheseOps.Value)
+    {
+        combinedOmit := codebase.collectionOperations.arrayOperations.arrayConcat(checkboxOmit, hardcodedOmit)
+        combinedOmit := codebase.collectionOperations.arrayOperations.removeDuplicates(combinedOmit)
+    }
+    else
+    {
+        combinedOmit := hardcodedOmit
+    }
+
+    ; If the user has turned off the option to omit the previously picked Operators, the class's list of omitted Operators is set to `combinedOmit`
     if (!(opts.excludePreviousPicks.Value))
     {
         %classomit% := combinedOmit.Clone()
@@ -306,16 +281,7 @@ generate(sender, *)
     Loop %cnames%.Length
     {
         ; "Excluding..." string shenanigans
-        omitInters := codebase.collectionOperations.arrayOperations.arrayIntersect(%classomit%, combinedOmit)
-        omitparts := []
-        for str in %classomit%
-        {
-            if (!(codebase.collectionOperations.arrayOperations.arrayContains(omitInters, str).Length))
-            {
-                omitparts.Push(str)
-            }
-        }
-        s := codebase.stringOperations.strJoin(', ', true, omitparts*)
+        s := codebase.stringOperations.strJoin(', ', true, codebase.collectionOperations.arrayOperations.arrayNotIntersect(%classomit%, combinedOmit)*)
         %classexclude%[A_Index].Value := "Excluding " . (s !== "" ? s : "nobody")
 
         ; Actual Operator / loadout generation
@@ -335,16 +301,6 @@ generate(sender, *)
         {
             %classomit%.Push(ranop.op.nickname)
         }
-    }
-
-    ; If the list of Operators to omit has changed, multiple calls to `generate` must be made to ensure the new exclusion list takes effect
-    if (omitFuncMustBeCalled)
-    {
-        omitFuncMustBeCalled := false
-        generate(defbtn)
-        generate(defbtn)
-        generate(atkbtn)
-        generate(atkbtn)
     }
 }
 

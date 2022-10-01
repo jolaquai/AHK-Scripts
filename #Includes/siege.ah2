@@ -5702,7 +5702,7 @@ class siege
      * Gets a random Operator from one of the Operator classes and randomizes their loadout.
      * @param opClass Which class to pull an Operator from. Value must be one of the following: `siege.attackers`, `siege.defenders`.
      * @param stringOutput Whether to return a string identifying the generated loadout instead of an object with that same data. Defaults to `false` if omitted.
-     * @param omit An Array of Operator names that will cause a repick, i.e. which will be guaranteed _not_ to be returned. Defaults to none if omitted.
+     * @param omit An Array of Operator names that will cause a repick, i.e. which are guaranteed _not_ to be returned. Defaults to none if omitted.
      * @returns An object identifying the generated loadout if `stringOutput` is falsey.
      * @returns A string identifying the generated loadout if `stringOutput` is truthy.
      */

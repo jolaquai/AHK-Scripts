@@ -11,6 +11,6 @@
 			"cmath": "cpp"
         },
         "lua.debug.variables.showIntegerAsHex": true,
-        "AutoHotkey2.InterpreterPath": "c:\\Users\\laquai.joshua.EDV\\Documents\\AutoHotkey64.exe"
+        "AutoHotkey2.InterpreterPath": ".\\AutoHotkey\\AutoHotkey64.exe"
 	},
 }
