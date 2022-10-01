@@ -8,6 +8,7 @@ codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
 if (!A_IsDebuggerAttached)
 {
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Roblox VR", 1000)
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
 }
@@ -746,11 +747,10 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        p := codebase.Path("C", "Users", "user", "Desktop", "Share", "no", "shit", "penis.bmp")
+        p := codebase.Path("C", "Users", "user", "Desktop", "Share", "no")
         copymod := false
         arr := [
-            p,
-            p.create()
+            
         ]
 
         ; Siege query
@@ -1194,15 +1194,18 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         {
             if (GetKeyState("RButton", "P"))
             {
-                if (GetKeyState("LButton", "P") && siegerapid.check(1))
+                if (GetKeyState("LButton", "P"))
                 {
-                    Send("{LAlt up}{Click}")
-                    Sleep(10)
-                }
-                else if (GetKeyState("LButton", "P") && siegerapid.check(2))
-                {
-                    Send("{Click}{LButton up}")
-                    return
+                    if (siegerapid.check(1))
+                    {
+                        Send("{LAlt up}{Click}")
+                        Sleep(10)
+                    }
+                    else if (siegerapid.check(2))
+                    {
+                        Send("{Click}{LButton up}")
+                        return
+                    }
                 }
             }
             else

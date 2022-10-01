@@ -909,7 +909,40 @@ class codebase
          */
         static validate(path) => RTrim(Trim(path, codebase.Path.extensionSeparator . codebase.Path.pathSeparator . codebase.Path.driveSeparator), codebase.Path.directorySeparator)
 
+        /**
+         * Constructs a relative path to a location from another location.
+         * @param path The target location.
+         * @param startingFrom The starting location. Must be a directory.
+         * @throws `TargetError` if `startingFrom` is a path to a file.
+         * @returns `path` with no changes if no relative path can be created from `startingFrom`.
+         * @returns A relative path to `path` from ``startingFrom``.
+         */
+        static relative(path, startingFrom)
+        {
+            if (path is codebase.Path)
+            {
+                path := path.ToString()
+            }
+            if (codebase.Path(startingFrom).isFile)
+            {
+                throw TargetError("Cannot create a relative path starting from a file path.")
+            }
+            if (codebase.Path(path).drive !== codebase.Path(startingFrom).drive)
+            {
+                return path
+            }
+        }
+
         _path := ""
+
+        /**
+         * Accesses parts of the path to the location currently being pointed to by this `Path` object.
+         * @param i The index of where to start extracting path parts. 
+         * @param j The index of where to stop extracting items. Defaults to `i` if omitted.
+         * @note Do not use this to construct relative paths; for that, use `codebase.Path.relative` instead.
+         * @returns The requested path part(s).
+         */
+        __Item[i, j := i] => codebase.stringOperations.strJoin(codebase.Path.directorySeparator, , codebase.collectionOperations.arrayOperations.subarray(StrSplit(this._path, codebase.Path.directorySeparator), i, j)*)
 
         /**
          * An Array of files in the directory currently being pointed to by this `Path` object.
@@ -917,10 +950,80 @@ class codebase
          */
         files => codebase.directoryOperations.getFiles(this.current, false)
         /**
-         * An Array of folders in the directory currently being pointed to by this `Path` object.
+         * An Array of directories in the directory currently being pointed to by this `Path` object.
          * @note If this `Path` object is currently pointing to a file rather than a directory, the containing folder of that file is operated upon instead. Even if this is the case, the location being pointed to is not changed.
          */
         folders => codebase.directoryOperations.getFolders(this.current, false)
+
+        /**
+         * The name of the file or directory currently being pointed to by this `Path` object.
+         * @note
+         * - For directories, this is the same as `this.current`.
+         */
+        name
+        {
+            get
+            {
+                SplitPath(this._path, &name)
+                return name
+            }
+        }
+        /**
+         * The directory of the file or directory currently being pointed to by this `Path` object.
+         * @note
+         * - For directories, this is the same as `this.parent`.
+         * - For files, this is the same as `this.current`. 
+         * - For network locations, this is the protocol prefix, domain name and directory.
+         */
+        directory
+        {
+            get
+            {
+                SplitPath(this._path, , &dir)
+                return dir
+            }
+        }
+        /**
+         * The nameNoExt of the file or directory currently being pointed to by this `Path` object.
+         * @note
+         * - For directories, this is the same as `this.name`.
+         */
+        nameNoExt
+        {
+            get
+            {
+                SplitPath(this._path, , , , &namenoext, &drv)
+                return namenoext
+            }
+        }
+        /**
+         * The extension of the file or directory currently being pointed to by this `Path` object.
+         * @note
+         * - For directories, this is an empty string.
+         */
+        extension
+        {
+            get
+            {
+                SplitPath(this._path, , , &ext)
+                return ext
+            }
+        }
+        /**
+         * The drive of the file or directory currently being pointed to by this `Path` object.
+         * @note
+         * - For directories, this is an empty string.
+         * - For network locations, this is the server name with leading `\\`.
+         * - For network locations, this is the protocol prefix and domain name.
+         */
+        drive
+        {
+            get
+            {
+                SplitPath(this._path, , , , , &drv)
+                return drv
+            }
+        }
 
         /**
          * Whether this `Path` object is currently pointing to a file.
@@ -1050,21 +1153,41 @@ class codebase
         /**
          * Creates the file or directory currently being pointed to by this `Path` object.
          * @note This creates the entirety of the directory structure necessary to reach the target location.
-         * @throws `TargetError` if the file or folder to be created already exists.
-         * @returns `true` when the file or directory has been created.
+         * @returns `true` if the file or directory could be created, `false` otherwise.
          */
         create()
         {
-            if (this.isValid)
+            try
             {
-                throw TargetError("The file or folder <" . this._path . "> already exists and cannot be created.")
+                if (this.isFile)
+                {
+                    DirCreate(this.current)
+                    FileOpen(this._path, "rw").Close()
+                    return true
+                }
+                else
+                {
+                    DirCreate(this.current)
+                    return true
+                }
             }
+            catch
+            {
+                return false
+            }
+        }
 
+        /**
+         * Forcibly creates the file or directory currently being pointed to by this `Path` object, overwriting the target location if it already exists.
+         * @note This creates the entirety of the directory structure necessary to reach the target location. Excepting the target location (if it is a directory), which will be deleted and re-created, existing files and directories are not overwritten.
+         * @returns `true` if the file or directory could be created.
+         */
+        createForce()
+        {
             if (this.isFile)
             {
                 DirCreate(this.current)
-                DirDelete(this.current)
-                FileOpen(this._path, "rw").Close()
+                FileOpen(this._path, "w").Close()
                 return true
             }
             else
@@ -1075,28 +1198,28 @@ class codebase
         }
 
         /**
-         * Forcibly creates the file or directory currently being pointed to by this `Path` object, overwriting the target location if it already exists.
-         * @note This creates the entirety of the directory structure necessary to reach the target location. Excepting the target location (if it is a directory), which will be deleted and re-created, existing files and directories are not overwritten.
-         * @returns `true` when the file or directory has been created.
+         * Deletes the file or directory currently being pointed to by this `Path` object.
+         * @note This does not delete directories higher up the file system, but _does_ recursively delete all files and directories, including the target location itself, contained in the location being pointed to.
+         * @returns `true` if the file or directory could be deleted, `false` otherwise.
          */
-        createForce()
+        delete()
         {
-            if (this.isFile)
+            try
             {
-                DirCreate(this.current)
-                DirDelete(this.current)
-                FileOpen(this._path, "w").Close()
-                return true
-            }
-            else
-            {
-                if (this.isValid)
+                if (this.isFile)
                 {
-                    DirDelete(this.current, true)
+                    FileDelete(this._path)
                 }
-                DirCreate(this.current)
-                return true
+                else
+                {
+                    DirDelete(this._path, true)
+                }
             }
+            catch
+            {
+                return false
+            }
+            return true
         }
 
         ToString() => this._path
@@ -2742,6 +2865,7 @@ class codebase
              * @throws `TypeError` if `arr` is not an Array.
              * @note An empty Array is returned if a value greater than `arr.Length` is explicitly passed for `start`.
              * @note An empty Array is returned if `0` is explicitly passed for `stop`.
+             * @note If `stop > start`, the elements at those indices are returned in reverse order.
              * @returns The subarray extracted from `arr`. This is always an Array, even if only one item is extracted.
              */
             static subarray(arr, start := 1, stop?)
