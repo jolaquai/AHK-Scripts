@@ -25,6 +25,7 @@ CB_Sigils := [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 IM_Sigils := [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 Sigils_Display := [1, 2, 3, 4]
 
+; Possible TODO: find unique n-length combinations in Arrays
 Demons := Map(
     "Variketh", [ 3,  4,  9,  2],
     "Fermok",   [ 4,  6,  9, 10],
@@ -163,7 +164,5 @@ demonselected(ctrl, info)
         Sigils_Display[4].Value := Sigils[demon[4]].ToString()
     }
 }
-ControlGetPos(, , , &h, LB_Demons)
-ED_ExtraInfo := MainWindow.Add("Edit", "ReadOnly w300 r5 x5 yp+" . (h + 5), )
 
 MainWindow.Show()

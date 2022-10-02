@@ -8397,7 +8397,7 @@ class siege
                         )
                     ]
                 ),
-                siege.BattlePass.Tier( ; 65 TODO
+                siege.BattlePass.Tier( ; 65
                     [
                         
                     ],
