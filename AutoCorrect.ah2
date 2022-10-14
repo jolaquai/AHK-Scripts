@@ -21,6 +21,9 @@ if (!A_IsDebuggerAttached)
  */
 class Rapidvar
 {
+    x := 10
+    y := 20
+
     /**
      * Instantiate a `Rapidvar`.
      * @param shorthand A short identifier to identify this `Rapidvar` with.
@@ -34,16 +37,7 @@ class Rapidvar
         this.max := max
         this.name := shorthand . "rapid"
         this.ttp := (po ? codebase.Tool.coords : codebase.Tool.center)
-        if (this.ttp == codebase.Tool.coords)
-        {
-            MonitorGet(MonitorGetPrimary(), &l, &t)
-            this.x := l + 10
-            this.y := t + 5
-        }
     }
-
-    x := 10
-    y := 20
 
     /**
      * Set the current value of the `Rapidvar` regardless of the configured maximum value.
@@ -53,6 +47,14 @@ class Rapidvar
     set(value)
     {
         this.value := value
+
+        if (this.ttp == codebase.Tool.coords)
+        {
+            MonitorGet(MonitorGetPrimary(), , , &r)
+            this.x := r + 10
+            this.y := 5
+            OutputDebug(this.x " - " this.y "`n")
+        }
 
         codebase.Tool(this.name . " switched to " . this.value, this.ttp, , this.x, this.y)
         return this.value
@@ -121,7 +123,7 @@ class Rapidvar
 }
 
 dbdrapid := Rapidvar("dbd")
-siegerapid := Rapidvar("siege")
+siegerapid := Rapidvar("siege", , true)
 xtrctnrapid := Rapidvar("xtrctn", , true)
 acorapid := Rapidvar("aco")
 csrapid := Rapidvar("cs")
@@ -724,6 +726,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 #HotIf ; Global hotkeys
     ; SC002::return
     ; SC029::SC002
+    ; *MButton::LButton
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
     ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
@@ -747,7 +750,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        p := codebase.Path("C", "Users", "user", "Desktop", "Share", "no")
+        p := codebase.Path("file.txt")
         copymod := false
         arr := [
             
@@ -765,10 +768,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                     {
                         if (
                             (false || !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length))
-                         && InStr(w.name, "roni")
+                         && class is Object
+                         && w.type & siege.Weapon.types.submachinegun
                         )
                         {
-                            arr.Push(Format("{1} - {2}", w.name, w.dps))
+                            arr.Push(Format("{1} - {2}", op.nickname, w.name))
                         }
                     }
                 }
@@ -806,7 +810,9 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^CtrlBreak::
     ^Pause::
     {
-        
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            
+        ))
     }
 
     ^+ö::

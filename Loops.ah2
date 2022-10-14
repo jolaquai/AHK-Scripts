@@ -55,6 +55,7 @@ afkCondition()
             && !GetKeyState("RButton", "P")
             && !GetKeyState("LButton", "P")
             && !GetKeyState("LAlt", "P")
+            && !GetKeyState("Space", "P")
         )
         {
             Loop
@@ -87,6 +88,12 @@ sendAfk(exe := "")
     {
         Send("{LCtrl down}")
         Send("{d down}")
+    }
+    else if (exe == "Mordhau-Win64-Shipping.exe")
+    {
+        Send("v{w down}")
+        Sleep(250)
+        Send("{w up}")
     }
     else if (exe == "KnockoutCity.exe")
     {
@@ -1049,6 +1056,7 @@ doTick := true
 roblox := "Roblox ahk_exe RobloxPlayerBeta.exe"
 
 triggers := [
+    "ahk_exe Mordhau-Win64-Shipping.exe",
     "ahk_exe RainbowSix.exe",
     "ahk_exe KnockoutCity.exe",
     ; "ahk_exe GTA5.exe",

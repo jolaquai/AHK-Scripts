@@ -10,7 +10,7 @@
  * - String concatenations are / should always be done explicitly: `"string 1" . " " . var` instead of `"string 1" " " var`.
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
- * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before 
+ * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
  *
  * The functions and some classes are sometimes only annotated, usually fully documented though, using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
@@ -220,7 +220,7 @@ class codebase
     }
 
     /**
-     * Set the 
+     * Set the
      * @param prio The priority to set for target processes. Must be one of the following values:
      * - One of the words `Low`, `Below`, `Normal`, `Above`, `High` or `Realtime`
      * - One of the letters `LBNAHR`
@@ -544,7 +544,7 @@ class codebase
 
     class misc
     {
-        
+
     }
 
     class constants
@@ -553,7 +553,7 @@ class codebase
          * The Unix time (seconds since midnight, January 1, 1970) `0` in YYYYMMDDHH24MISS format to use in date / time comparisons.
          */
         static ahkTimeZero := "19700101000000"
-        
+
         /**
          * Contains the numbers 0-9 in ascending order.
          */
@@ -819,7 +819,7 @@ class codebase
             }
             this._value := DateAdd(this._value, s, "S")
         }
-        
+
         /**
          * Calculates the number of days in a given month.
          * @param month The month to calculate the days in.
@@ -915,7 +915,7 @@ class codebase
          * @param startingFrom The starting location. Must be a directory.
          * @throws `TargetError` if `startingFrom` is a path to a file.
          * @returns `path` with no changes if no relative path can be created from `startingFrom`.
-         * @returns A relative path to `path` from ``startingFrom``.
+         * @returns A relative path to `path` from `startingFrom`.
          */
         static relative(path, startingFrom)
         {
@@ -933,11 +933,34 @@ class codebase
             }
         }
 
+        /**
+         * Resolves a path relative to the script's working directory to an absolute path.
+         * @param path The relative path. May be a `string` or a `codebase.Path` object.
+         * @returns The absolute path to the location `path` points to.
+         * @returns An attempt at creating the absolute path to the location being pointed to if it does not exist.
+         */
+        static resolveToAbsolute(path)
+        {
+            if (path is codebase.Path)
+            {
+                path := codebase.Path.validate(path.ToString())
+            }
+
+            Loop Files path, "FD"
+            {
+                return A_LoopFileFullPath
+            }
+            else
+            {
+                return A_WorkingDir . (SubStr(path, 1, 1) == "\" || SubStr(A_WorkingDir, -1) == "\" ? path : "\" . path)
+            }
+        }
+
         _path := ""
 
         /**
          * Accesses parts of the path to the location currently being pointed to by this `Path` object.
-         * @param i The index of where to start extracting path parts. 
+         * @param i The index of where to start extracting path parts.
          * @param j The index of where to stop extracting items. Defaults to `i` if omitted.
          * @note Do not use this to construct relative paths; for that, use `codebase.Path.relative` instead.
          * @returns The requested path part(s).
@@ -972,7 +995,7 @@ class codebase
          * The directory of the file or directory currently being pointed to by this `Path` object.
          * @note
          * - For directories, this is the same as `this.parent`.
-         * - For files, this is the same as `this.current`. 
+         * - For files, this is the same as `this.current`.
          * - For network locations, this is the protocol prefix, domain name and directory.
          */
         directory
@@ -1415,7 +1438,7 @@ class codebase
                     xo := A_ScreenWidth / 2
                     yo := A_ScreenHeight / 2
             }
-            
+
             if (display == 2)
             {
                 ToolTip(text, x, y, thisId)
@@ -1590,7 +1613,7 @@ class codebase
         /**
          * Reads one line from the standard input stream `stdin` and parses it as if it were a command-line command, splitting it into substrings appropriate for CLIs.
          * @note If reading fails, all handles are invalidated and the function returns an empty Array.
-         * @returns 
+         * @returns
          */
         readCLIParse()
         {
@@ -1667,7 +1690,7 @@ class codebase
             static task :=          0x002000
             static alwaysontop :=   0x040000
         }
-        
+
         class other
         {
             static help :=              0x004000
@@ -2385,6 +2408,17 @@ class codebase
             static arrayRemoveItem := "###00418632R_E_M_O_V_E_I_T_E_M9456345812###"
 
             /**
+             * Finds unique combinations of a specific length in a series of arrays.
+             */
+            static findUnique(n, arrs*)
+            {
+                for arr in arrs
+                {
+
+                }
+            }
+
+            /**
              * Evaluates a function on each item in an Array and returns the results in an Array.
              * @param f The function to evaluate on each item in the Array.
              * @param arr The Array to iterate over.
@@ -2731,7 +2765,7 @@ class codebase
                 {
                     throw TypeError("Invalid type for ``arr``. Received ``" . Type(arr) . "``, expected ``Array``.")
                 }
-                
+
                 for i in codebase.range(1, arr.Length, 1)
                 {
                     j := Random(1, arr.Length)
@@ -2785,7 +2819,7 @@ class codebase
                 partition(&pArr, sortDesc, stringComp, l, r)
                 {
                     pivot := pArr[Floor((r + l) / 2)]
-                    
+
                     i := l - 1
                     j := r + 1
 
@@ -2815,7 +2849,7 @@ class codebase
                             iJ := () => pArr[j] <= pivot
                         }
                     }
-                    
+
                     Loop
                     {
                         Loop
@@ -2843,7 +2877,7 @@ class codebase
                         codebase.collectionOperations.arrayOperations.arrSwap(&pArr, i, j)
                     }
                 }
-                
+
                 if (Type(arr) !== "Array")
                 {
                     throw TypeError("Invalid type for ``arr``. Received ``" . Type(arr) . "``, expected (a reference to) an ``Array``.")
@@ -2874,7 +2908,7 @@ class codebase
                 {
                     throw TypeError("Invalid type for ``arr``. Received ``" . Type(arr) . "``, expected ``Array``.")
                 }
-                
+
                 if (!IsSet(stop))
                 {
                     stop := arr.Length
@@ -3224,7 +3258,7 @@ class codebase
                 input := codebase.datatypes.UInt16()
                 S0 := codebase.datatypes.UInt16()
                 S1 := codebase.datatypes.UInt16()
-                
+
                 input.value := inp
                 if (input.value == 0x560A)
                 {
@@ -3586,7 +3620,7 @@ class codebase
                     codebase.math.trig.Csch, codebase.math.trig.ACsch
                 )
                 codebase.collectionOperations.mapOperations.mapCombine(&retMap, true, codebase.collectionOperations.mapOperations.mapInvert(retMap))
-                
+
                 try
                 {
                     return retMap.Get(trigFunc)
@@ -4063,7 +4097,7 @@ class codebase
                 {
                     throw ValueError("Invalid value for ``dim``. Received ``" . dim . "``, expected a value > ``2``.")
                 }
-                
+
                 d := []
                 Loop dim
                 {
@@ -4372,7 +4406,7 @@ class codebase
                     {
                         throw TypeError("Invalid type for ``vs[" . A_Index . "]``. Received ``" . Type(v) . "``, expected ``codebase.math.vectorGeometry.Vector``.")
                     }
-                    
+
                     if (v.dim > 3)
                     {
                         throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value ≥ ``2`` and ≤ ``3``.")
@@ -4545,7 +4579,7 @@ class codebase
                         }
                         this.dim := { y: xdim, x: arrsOrVectors.Length }
                     }
-                    
+
                     this.dim.DefineProp("ToString", { Call: (*) => this.dim.x . "x" . this.dim.y . "`n" })
 
                     if (arrsOrVectors[1] is Array)
@@ -5525,7 +5559,7 @@ class codebase
              * @returns The probability of randomly picking `h` correct elements from a specific subset of size `k` of `n`.
              */
             static specificChance(n, k, h) => (codebase.math.probability.choose(k, h) * codebase.math.probability.choose(n - k, k - h)) / codebase.math.probability.choose(n, k)
-            
+
             /**
              * Calculates the probability of correctly randomly picking a specific range of series of elements from a given subset size from a set. Used for scenarios where the desired number of correct random picks is described as "at least `lower`" or "at most `upper`".
              * @param n The size of the set.
@@ -5547,7 +5581,7 @@ class codebase
                 }
                 return codebase.math.sum(lower, upper, (s) => codebase.math.probability.choose(k, s) * codebase.math.probability.choose(n - k, k - s) / codebase.math.probability.choose(n, k))
             }
-            
+
             /**
              * Calculates the number of possible subsets in a set, with the following conditions (binomial coefficient):
              * - `abc = acb = bac = bca = cab = cba` and these are all counted as `1` total
@@ -5878,7 +5912,7 @@ class codebase
             {
                 SetTimer(this.timer, (runonce ? -1 : 0))
             }
-            
+
             monitor()
             {
                 now := []
@@ -5897,8 +5931,8 @@ class codebase
                 add := codebase.collectionOperations.arrayOperations.arrayNotIntersect(now, this.files)
                 ; Has a `Length` > `0` if the directory has had files removed
                 rem := codebase.collectionOperations.arrayOperations.arrayNotIntersect(this.files, now)
-                ; 
-                
+                ;
+
                 ; Show data in the debug console
                 ; OutputDebug(this.files.Length . "`n" . now.Length . "`n" . add.Length . "`n" . rem.Length . "`n`n")
 
@@ -6483,7 +6517,7 @@ class codebase
                     default:
                         throw ValueError("Invalid length of input hex color ``" . color . "``. Received ``" . StrLen(color) . "``, expected ``3``, ``4``, ``6`` or ``8``.")
                 }
-                
+
                 if (paste)
                 {
                     return codebase.stringOperations.strJoin(", ", true, cols*)
@@ -6638,7 +6672,7 @@ class codebase
             whr := ""
             return outMap
         }
-        
+
         /**
          * Call the `load` function of _TheArkive_'s AHKv2 rewrite of the JSON parser for AHK.
          * @param json The JSON string to parse to an object.
@@ -6887,7 +6921,7 @@ class codebase
          * @returns The minimum value of the data type. This is always `0` if `signed` is `false`.
          */
         static getMin(width, signed) => (signed == 1 ? - (2 ** width) : 0)
-        
+
         /**
          * Calculates the minimum value a variable of a data type with the given width can have.
          * @param width The width of the storage in bits.
@@ -6895,7 +6929,7 @@ class codebase
          * @returns The maximum value of the data type.
          */
         static getMax(width, signed) => (signed == 1 ? 2 ** (width - 1) - 1 : 2 ** this.width - 1)
-        
+
         class base
         {
             static signed := false

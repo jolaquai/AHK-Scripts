@@ -1,5 +1,5 @@
-F:
-cd F:\PROGRAMMING\AHK Scripts
+E:
+cd E:\PROGRAMMING\AHK Scripts
 taskkill /f /im autohotkey64.exe
 
 start AutoCorrect.ah2
