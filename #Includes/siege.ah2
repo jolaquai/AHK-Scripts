@@ -2708,7 +2708,7 @@ class siege
                     "CSRX 300",
                     siege.Weapon.types.marksmanrifle,
                     siege.Weapon.firingmodes.singleshot,
-                    127,
+                    135,
                     50,
                     5,
                     siege.Weapon.sights.x612,
@@ -3465,6 +3465,20 @@ class siege
                     true,
                     codebase.math.roundMultiple(1300, 60),
                     codebase.math.roundMultiple(2450, 60)
+                ),
+                siege.Weapon(
+                    "M45 Meusoc",
+                    siege.Weapon.types.handgun,
+                    siege.Weapon.firingmodes.singleshot,
+                    58,
+                    550,
+                    7,
+                    0,
+                    siege.Weapon.barrels.suppressor | siege.Weapon.barrels.muzzlebrake,
+                    0,
+                    true,
+                    codebase.math.roundMultiple(1100, 60),
+                    codebase.math.roundMultiple(1300, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.proximityalarm,
@@ -3625,6 +3639,20 @@ class siege
                     true,
                     codebase.math.roundMultiple(2540, 60),
                     codebase.math.roundMultiple(2540, 60)
+                ),
+                siege.Weapon(
+                    "Bailiff 410",
+                    siege.Weapon.types.shotgunShot,
+                    siege.Weapon.firingmodes.singleshot,
+                    30,
+                    485,
+                    5,
+                    0,
+                    0,
+                    0,
+                    true,
+                    codebase.math.roundMultiple(3260, 60),
+                    codebase.math.roundMultiple(3370, 60)
                 )
             ],
             siege.Weapon.gadgets.bulletproofcamera | siege.Weapon.gadgets.barbedwire,
