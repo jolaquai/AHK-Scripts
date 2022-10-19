@@ -10,6 +10,9 @@
 			"string": "cpp",
 			"cmath": "cpp"
         },
+        "workbench.editorAssociations": {
+            "*.docx": "cweijan.officeViewer"
+        },
         "lua.debug.variables.showIntegerAsHex": true,
         "AutoHotkey2.InterpreterPath": "e:\\PROGRAMMING\\AHK Scripts\\AutoHotkey\\AutoHotkey64.exe"
 	},

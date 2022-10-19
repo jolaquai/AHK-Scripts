@@ -868,9 +868,9 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     NumpadDot & Numpad7::Click()
     NumpadDot & Numpad9::Click("Right")
 
-    :*?b0:(::){Left}
-    :*?b0:[::]{Left}
-    :*?b0:{::{}}{Left}
+    ; :*?b0:(::){Left}
+    ; :*?b0:[::]{Left}
+    ; :*?b0:{::{}}{Left}
 
     #HotIf
 

@@ -70,14 +70,11 @@ scriptStartupTick := A_TickCount
 A_IsDebuggerAttached := !!InStr(codebase.WinInfo(A_ScriptHwnd, false).processQueryResult.CommandLine, "/Debug")
 
 ; Support the AHKv2-native practice of calling an object's `ToString` method if it cannot be stringified directly (which makes no sense if you think about it, cause there is no native `ToString` method)
-Object.Prototype.DefineProp("ToString", { Call: codebase.collectionOperations.objectOperations.toString })
+DefProp := { }.DefineProp
+DefProp(Object.Prototype, "ToString", { Call: codebase.collectionOperations.objectOperations.toString })
 
 /**
  * The `codebase` class containing all the subclasses and functions.
- * To make calling them easier, create function references:
- * ```
- * arrCnt := codebase.collectionOperations.arrayOperations.arrayContains.Bind({ })
- * ```
  */
 class codebase
 {
