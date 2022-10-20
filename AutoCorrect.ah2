@@ -750,7 +750,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         SetScrollLockState(false)
 
-        p := codebase.Path("file.txt")
         copymod := false
         arr := [
             
@@ -791,7 +790,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             str := ""
             for line in StrSplit(Trim(codebase.elemsOut(arr), '`n `t`r'), '`n')
             {
-                if (A_Index == 1)
+                if (InStr(line, "["))
                 {
                     continue
                 }
@@ -816,6 +815,13 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
     ^+ö::
+    {
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            
+        ))
+    }
+
+    ^!+ö::
     {
         MsgBox(A_Clipboard := codebase.elemsOut(
             
@@ -847,6 +853,13 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         Run(url)
         return
 
+        MsgBox(A_Clipboard := codebase.elemsOut(
+            
+        ))
+    }
+
+    ^!+ü::
+    {
         MsgBox(A_Clipboard := codebase.elemsOut(
             
         ))

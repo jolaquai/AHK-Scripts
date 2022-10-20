@@ -352,48 +352,59 @@ class codebase
 
             if (elem is Array)
             {
-                out .= "[Array ("
+                out .= "[Array (" . elem.Length . ")]`n"
                 arrelems := ""
-                lines := StrSplit(Trim(codebase.elemsOut(elem*), '`n '), '`n')
-                for line in lines
+                for sub in elem
                 {
-                    arrelems .= indentStr . line . "`n"
+                    arrelems .= indentStr . "[Element " . A_Index . "]`n"
+                    for line in StrSplit(Trim(codebase.elemsOut(sub), '`n'), "`n")
+                    {
+                        arrelems .= indentStr . indentStr . line . '`n'
+                    }
                 }
-                out .= elem.Length . ")]`n" . arrelems
+                out .= arrelems
             }
             else if (elem is Map)
             {
-                out .= "[Map ("
+                out .= "[Map (" . elem.Count . ")]`n"
                 kvpairs := ""
-                for a, b in elem
+                for k, v in elem
                 {
-                    kvpairs .= indentStr . "[Key-Value pair]`n"
-                    kvpairs .= indentStr . indentStr . 'Key | ' . Trim(codebase.elemsOut(a), '`n ') . '`n'
-                    kvpairs .= indentStr . indentStr . 'Value | ' . Trim(codebase.elemsOut(b), '`n ') . '`n'
+                    kvpairs .= indentStr . "[Key-Value " . A_Index . "]`n"
+                    kvpairs .= indentStr . indentStr . "[Key]`n"
+                    for line in StrSplit(Trim(codebase.elemsOut(k), '`n '), "`n")
+                    {
+                        kvpairs .= indentStr . indentStr . indentStr . line . "`n"
+                    }
+                    kvpairs .= indentStr . indentStr . "[Value]`n"
+                    for line in StrSplit(Trim(codebase.elemsOut(v), '`n '), "`n")
+                    {
+                        kvpairs .= indentStr . indentStr . indentStr . line . "`n"
+                    }
                 }
-                out .= elem.Count . ")]`n" . kvpairs
+                out .= kvpairs
             }
             else if (elem is Func)
             {
                 out .= (elem.Name !== "" ? elem.Name : "UnnamedFunc")
                 param := []
-                if (elem.MinArgs)
+                if (elem.MinParams)
                 {
-                    for j in codebase.range(1, elem.MinArgs)
+                    for j in codebase.range(1, elem.MinParams)
                     {
                         param.Push("p" . j)
                     }
                 }
-                if (elem.MinArgs !== elem.MaxArgs)
+                if (elem.MinParams !== elem.MaxParams)
                 {
-                    for j in codebase.range(elem.MinArgs + 1, elem.MaxArgs)
+                    for j in codebase.range(elem.MinParams + 1, elem.MaxParams)
                     {
                         param.Push("p" . j . "?")
                     }
                 }
-                s := "(" . codebase.stringOperations.strJoin(", ", , param*) . (elem.IsVariadic ? ", v*" : "") . ")"
+                out .= "(" . codebase.stringOperations.strJoin(", ", , param*) . (elem.IsVariadic ? ", v*" : "") . ")"
             }
-            else if (elem is String || elem is Number)
+            else if (elem is Primitive)
             {
                 out .= elem . "`n"
             }
@@ -418,12 +429,11 @@ class codebase
             }
             else
             {
-                throw TypeError("Invalid type for a value passed to ``codebase.elemsOut``. Received ``" . Type(elem) . "``, expected any handled Type.")
+                throw TypeError("Invalid type for a value passed to ``codebase.elemsOut``. Received ``" . Type(elem) . "``, expected any handled type.")
             }
         }
 
-
-        return Trim(out, '`t `n') . "`n"
+        return Trim(out, '`t`n') . "`n"
     }
 
     /**
@@ -904,7 +914,7 @@ class codebase
          * @param path The path to trim.
          * @returns The trimmed path.
          */
-        static validate(path) => RTrim(Trim(path, codebase.Path.extensionSeparator . codebase.Path.pathSeparator . codebase.Path.driveSeparator), codebase.Path.directorySeparator)
+        static validate(path) => RTrim(Trim(Trim(path, "`r`n`t "), codebase.Path.extensionSeparator . codebase.Path.pathSeparator . codebase.Path.driveSeparator), codebase.Path.directorySeparator)
 
         /**
          * Constructs a relative path to a location from another location.
@@ -1032,9 +1042,7 @@ class codebase
         /**
          * The drive of the file or directory currently being pointed to by this `Path` object.
          * @note
-         * - For directories, this is an empty string.
-         * - For network locations, this is the server name with leading `\\`.
-         * - For network locations, this is the protocol prefix and domain name.
+         * - For network locations, this is either the server name with leading `\\` or the protocol prefix and domain name.
          */
         drive
         {
@@ -1050,7 +1058,7 @@ class codebase
          * @note If the path currently being pointed to by this `Path` object does not exist, this is always `false`.
          * @note Whether the location currently being pointed to by this `Path` object is a file is determined in the following way:
          * - (`FileExist` returns `true` AND `DirExist` returns `false`)
-         * - OR (`this.isDirectory` is false AND `this._path` matches a specific RegEx pattern)
+         * - OR (`this.isDirectory` is false AND `this._path` points to a location with a file-like name)
          */
         isFile => (!!FileExist(this._path) && !DirExist(this._path)) || (!(this.isDirectory) && RegExMatch(this._path, "(?:.*?\\)+[^.]*\..+"))
         /**
@@ -1141,6 +1149,12 @@ class codebase
             }
             this._path := codebase.Path.validate(codebase.stringOperations.strJoin(codebase.Path.directorySeparator, , parts*))
         }
+
+        /**
+         * Resolves the path currently being pointed to by this `Path` object to an absolute path.
+         * @returns The new location this object now points to.
+         */
+        resolveToAbsolute() => this._path := codebase.Path.resolveToAbsolute(this._path)
 
         /**
          * Opens a read-access `File` handle to the file currently being pointed to by this `Path` object.
@@ -1264,6 +1278,7 @@ class codebase
          * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
          * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.ErrorHandler.notify` if omitted.
          * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
+         * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
          * @returns An `ErrorHandler` object.
          */
         __New(types?, mode := 1, custom?)
