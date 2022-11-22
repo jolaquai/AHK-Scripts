@@ -3265,7 +3265,7 @@ class codebase
             /**
              * An implementation of the RNG function of _Super Mario 64_.
              */
-            sm64rng(inp)
+            static sm64rng(inp)
             {
                 input := codebase.datatypes.UInt16()
                 S0 := codebase.datatypes.UInt16()

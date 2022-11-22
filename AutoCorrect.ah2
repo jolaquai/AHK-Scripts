@@ -142,6 +142,7 @@ mwrapid := Rapidvar("mw")
 huntrapid := Rapidvar("hunt", 2)
 swrapid := Rapidvar("sw")
 eftrapid := Rapidvar("eft")
+valorapid := Rapidvar("valo")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -688,6 +689,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 #HotIf !WinActive("ahk_exe HITMAN3.exe")
     && !WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe")
+    && !WinActive("ahk_exe VALORANT-Win64-Shipping.exe")
     && !WinActive("ahk_exe Shipping-ThiefGame.exe")
     && !WinActive("ahk_exe javaw.exe")
     && !WinActive("ahk_exe Mafia3DefinitiveEdition.exe")
@@ -755,6 +757,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             
         ]
 
+        input := 0
+        while (A_Index < 6)
+        {
+            arr.Push(input := codebase.math.misc.sm64rng(input))
+        }
+
         ; Siege query
         if (!(arr.Length))
         {
@@ -763,6 +771,9 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             {
                 for op in class
                 {
+                    prims := op.primaries
+                    secs := op.secondaries
+
                     for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
                     {
                         if (

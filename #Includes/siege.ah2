@@ -904,7 +904,7 @@ class siege
             95,
             "Seamus Cowden",
             { month: 4, day: 2, age: 35 },
-            2
+            1
         )
 
         static thatcher := siege.Operator(
@@ -977,7 +977,7 @@ class siege
             72,
             "Mike Baker",
             { month: 6, day: 22, age: 56 },
-            2
+            1
         )
 
         static ash := siege.Operator(
@@ -1227,8 +1227,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             [
@@ -1316,8 +1316,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "Bearing 9",
@@ -1359,8 +1359,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "6P41",
@@ -1380,7 +1380,7 @@ class siege
                     "AK-12",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
-                    45,
+                    40,
                     850,
                     30,
                     siege.Weapon.sights.x25max,
@@ -1446,8 +1446,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             [
@@ -1608,8 +1608,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             siege.Weapon.gadgets.stungrenade | siege.Weapon.gadgets.hardbreachcharge,
@@ -1740,8 +1740,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             siege.Weapon.gadgets.claymore | siege.Weapon.gadgets.hardbreachcharge,
@@ -2030,7 +2030,7 @@ class siege
             72,
             "Zofia Bosak",
             { month: 1, day: 28, age: 36 },
-            2
+            1
         )
 
         static dokkaebi := siege.Operator(
@@ -2117,7 +2117,7 @@ class siege
             70,
             "Grace Nam",
             { month: 2, day: 2, age: 29 },
-            2
+            3
         )
 
         static lion := siege.Operator(
@@ -2192,8 +2192,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "P9",
@@ -2293,8 +2293,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "GSH-18",
@@ -2512,8 +2512,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "SDP 9mm",
@@ -2672,8 +2672,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 ),
                 siege.Weapon(
                     "ITA12S",
@@ -2840,7 +2840,7 @@ class siege
                     "AK-12",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
-                    45,
+                    40,
                     850,
                     30,
                     siege.Weapon.sights.x15max,
@@ -2950,8 +2950,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
@@ -2962,7 +2962,7 @@ class siege
             77,
             "Samuel Leo Fisher",
             { month: 8, day: 8, age: 63 },
-            2
+            3
         )
 
         static flores := siege.Operator(
@@ -3080,7 +3080,7 @@ class siege
             71,
             "Anja Katarina Janković",
             { month: 4, day: 29, age: 27 },
-            2
+            1
         )
 
         static sens := siege.Operator(
@@ -3141,8 +3141,8 @@ class siege
                     0,
                     0,
                     false,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             siege.Weapon.gadgets.hardbreachcharge | siege.Weapon.gadgets.claymore,
@@ -3153,7 +3153,7 @@ class siege
             73,
             "Néon Ngoma Mutombo",
             { month: 3, day: 3, age: 30 },
-            1
+            3
         )
 
         static grim := siege.Operator(
@@ -3402,7 +3402,7 @@ class siege
             80,
             "Mark R. Chandar",
             { month: 10, day: 11, age: 25 },
-            2
+            1
         )
 
         static castle := siege.Operator(
@@ -4292,7 +4292,7 @@ class siege
             72,
             "Masaru Enatsu",
             { month: 10, day: 31, age: 36 },
-            1
+            2
         )
 
         static mira := siege.Operator(
@@ -4483,7 +4483,7 @@ class siege
             68,
             "Elżbieta Bosak",
             { month: 11, day: 8, age: 31 },
-            3
+            2
         )
 
         static vigil := siege.Operator(
@@ -4642,7 +4642,7 @@ class siege
                     26,
                     950,
                     30,
-                    siege.Weapon.sights.x15max,
+                    siege.Weapon.sights.nonmagmax,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip,
                     true,
@@ -4719,8 +4719,8 @@ class siege
                     0,
                     0,
                     true,
-                    codebase.math.roundMultiple(00, 60),
-                    codebase.math.roundMultiple(00, 60)
+                    codebase.math.roundMultiple(0, 60),
+                    codebase.math.roundMultiple(0, 60)
                 )
             ],
             [
@@ -5244,7 +5244,7 @@ class siege
             68,
             "Thandiwe Ndlovu",
             { month: 6, day: 16, age: 32 },
-            3
+            1
         )
 
         static aruni := siege.Operator(
@@ -5303,7 +5303,7 @@ class siege
             58,
             "Apha Tawanroong",
             { month: 8, day: 9, age: 42 },
-            2
+            1
         )
 
         static thunderbird := siege.Operator(
@@ -5376,7 +5376,7 @@ class siege
             70,
             "Mina Sky",
             { month: 4, day: 1, age: 36 },
-            3
+            2
         )
 
         static thorn := siege.Operator(
