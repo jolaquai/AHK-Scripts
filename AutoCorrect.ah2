@@ -11,6 +11,7 @@ if (!A_IsDebuggerAttached)
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Roblox VR", 1000)
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
     codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Valorant", 1000)
 }
 
 /**
@@ -389,6 +390,10 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 :*?:binver`:::binomialverteilung
 :*?C:Dnd`:::Do-Not-Disturb
 :*?:dnd`:::do-not-disturb
+
+#HotIf WinActive("ahk_exe firefox.exe")
+:*?:lyrics::site:azlyrics.com
+#HotIf
 
 :?:@Paul::@₱₳ɄⱠ
 :*?:@Dezzy::@ドミニク
@@ -2200,5 +2205,49 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             
             Send("{LButton}")
             Sleep(10)
+        }
+    }
+
+#HotIf WinActive("ahk_exe steam.exe")
+    || WinActive("ahk_exe steamwebhelper.exe")
+    ^1::
+    ^2::
+    ^3::
+    ^4::
+    ^5::
+    ^6::
+    {
+        n := SubStr(A_ThisHotkey, -1)
+        Send("[h" . n . "][/h" . n . "]{Left 5}")
+    }
+    
+    ^i::
+    ^u::
+    ^b::
+    {
+        n := SubStr(A_ThisHotkey, -1)
+        Send("[" . n . "][/" . n . "]{Left 4}")
+    }
+
+    :*?:_list::
+    :*?:_olist::
+    {
+        n := StrReplace(A_ThisHotkey, ":*?:_", "")
+        Send("[" . n . "][/" . n . "]{Left " . StrLen(n) + 3 . "}")
+    }
+
+    LShift & +::
+    RShift & +::
+    {
+        Send("[*]")
+    }
+
+#HotIf WinActive("ahk_exe Solitude Underwater.exe")
+    F10::
+    {
+        codebase.Tool("Spamming", codebase.Tool.center, 500)
+        Loop
+        {
+            Send("{Space}")
         }
     }

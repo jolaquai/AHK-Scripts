@@ -901,10 +901,11 @@ slowMonitor()
     FileOpen("C:\Users\User\Desktop\Share\remote.txt", "w")
 }
 
-#HotIf WinActive("ahk_group lock")
+; #HotIf WinActive("ahk_group lock")
 ~*F8::
 {  
-    global lock := !lock
+    global
+    codebase.Tool(lock := !lock)
 }
 
 ; Autorun
@@ -931,7 +932,6 @@ triggers := [
     "ahk_exe KnockoutCity.exe",
     ; "ahk_exe GTA5.exe",
     "ahk_exe csgo.exe",
-    "ahk_exe VALORANT-Win64-Shipping.exe",
     "ahk_exe bf1.exe",
     "ahk_exe DeadByDaylight-Win64-Shipping.exe",
     roblox,
