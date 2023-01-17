@@ -770,6 +770,13 @@ class siege
          */
         suppresseddamage := ""
         /**
+         * The damage of the weapon with an Extended Barrel equipped on it.
+         *
+         * - This is `0` for Shields.
+         * - This is `0` if the weapon cannot be equipped with an Extended Barrel.
+         */
+        extendedbarreldamage := ""
+        /**
          * The amount of damage per second the weapon can deal, considering magazine capacity, fire rate and reload time.
          * @note While also easily calculable using `damage * (rpm / 60)`, this desperately needed an overhaul due to that formula ranking the "BOSG.12.2" as the most powerful gun in the game dps-wise. I think we all agree that that's not true in all aspects.
          * @note This is calculated using a weapon's `capacity` and `reloadTactical` props. For example, if `capacity` is `30`, it is assumed that the last of the actual `30 + 1` rounds is left in the chamber to allow continuous tactical reloads.
@@ -831,6 +838,7 @@ class siege
             this.grips := grips
             this.underbarrel := underbarrel
             this.suppresseddamage := Round(this.barrels & siege.Weapon.barrels.suppressor ? this.damage * siege.Weapon.suppressedDamageMultiplier : 0)
+            this.extendedbarreldamage := Round(this.barrels & siege.Weapon.barrels.extendedbarrel ? this.damage * 1.15 : 0)
             this.reloadTactical := reloadTactical
             this.reloadEmpty := reloadEmpty
             if (this.type & ~(siege.Weapon.types.shield))
@@ -1138,7 +1146,7 @@ class siege
                     25,
                     siege.Weapon.sights.x15max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
-                    siege.Weapon.grips.verticalgrip,
+                    0,
                     true,
                     codebase.math.roundMultiple(1420, 60),
                     codebase.math.roundMultiple(2320, 60)
@@ -1689,7 +1697,7 @@ class siege
                     "PARA-308",
                     siege.Weapon.types.assaultrifle,
                     siege.Weapon.firingmodes.fullauto,
-                    48,
+                    47,
                     650,
                     30,
                     siege.Weapon.sights.x2max,
@@ -1776,7 +1784,7 @@ class siege
                     "Supernova",
                     siege.Weapon.types.shotgunShot,
                     siege.Weapon.firingmodes.singleshot,
-                    48,
+                    55,
                     75,
                     7,
                     siege.Weapon.sights.nonmagmax,
@@ -2329,7 +2337,7 @@ class siege
                     "AR-15.50",
                     siege.Weapon.types.marksmanrifle,
                     siege.Weapon.firingmodes.singleshot,
-                    62,
+                    67,
                     450,
                     10,
                     siege.Weapon.sights.x3max,
@@ -2346,7 +2354,7 @@ class siege
                     44,
                     750,
                     30,
-                    siege.Weapon.sights.x15max,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -2635,7 +2643,7 @@ class siege
                     "Supernova",
                     siege.Weapon.types.shotgunShot,
                     siege.Weapon.firingmodes.singleshot,
-                    48,
+                    55,
                     75,
                     7,
                     siege.Weapon.sights.nonmagmax,
@@ -3166,7 +3174,7 @@ class siege
                     48,
                     690,
                     30,
-                    siege.Weapon.sights.nonmagmax,
+                    siege.Weapon.sights.x2max,
                     siege.Weapon.barrels.suppressor | siege.Weapon.barrels.flashhider | siege.Weapon.barrels.compensator | siege.Weapon.barrels.muzzlebrake | siege.Weapon.barrels.extendedbarrel,
                     siege.Weapon.grips.verticalgrip | siege.Weapon.grips.angledgrip,
                     true,
@@ -4052,7 +4060,7 @@ class siege
                     "9mm C1",
                     siege.Weapon.types.submachinegun,
                     siege.Weapon.firingmodes.fullauto,
-                    45,
+                    36,
                     575,
                     34,
                     siege.Weapon.sights.x15max,
@@ -4229,7 +4237,7 @@ class siege
                     "Supernova",
                     siege.Weapon.types.shotgunShot,
                     siege.Weapon.firingmodes.singleshot,
-                    48,
+                    55,
                     75,
                     7,
                     siege.Weapon.sights.nonmagmax,
@@ -5386,7 +5394,7 @@ class siege
                     "UZK50GI",
                     siege.Weapon.types.submachinegun,
                     siege.Weapon.firingmodes.fullauto,
-                    44,
+                    36,
                     700,
                     22,
                     siege.Weapon.sights.nonmagmax,
