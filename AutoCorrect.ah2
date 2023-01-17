@@ -731,9 +731,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Hotkeys
 
 #HotIf ; Global hotkeys
-    ; SC002::return
-    ; SC029::SC002
-    ; *MButton::LButton
+    Volume_Mute::F15
+    LShift & Volume_Mute::F16
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
     ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
@@ -1834,7 +1833,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     +b::rbrapid.inc()
 
-    CapsLock::e
+    ; CapsLock::e
     ; g::Send("{f down}")
 
     F10::
@@ -2249,5 +2248,25 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         Loop
         {
             Send("{Space}")
+        }
+    }
+
+#HotIf WinActive("ahk_exe VALORANT-Win64-Shipping.exe")
+    +b::valorapid.inc()
+
+    ~*LButton::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("LButton", "P") && valorapid.check(1)))
+            {
+                break
+            }
+            
+            Send("{Blind}{LButton}")
+            Sleep(50)
+            Send("{Blind}{LButton}")
+            Sleep(100)
         }
     }

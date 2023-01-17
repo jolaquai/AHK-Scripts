@@ -654,7 +654,8 @@ functions()
         "Feedback Hub",
         "Steam - News",
         "Special Offers",
-        "Quick Assist"
+        "Quick Assist",
+        "ahk_exe Narrator.exe"
     ]
     for win in killList
     {
@@ -901,11 +902,11 @@ slowMonitor()
     FileOpen("C:\Users\User\Desktop\Share\remote.txt", "w")
 }
 
-; #HotIf WinActive("ahk_group lock")
+#HotIf ; #HotIf WinActive("ahk_group lock")
 ~*F8::
 {  
     global
-    codebase.Tool(lock := !lock)
+    lock := !lock
 }
 
 ; Autorun
@@ -916,6 +917,7 @@ GroupAdd("lock", "ahk_exe TslGame.exe")
 
 GroupAdd("noCaps", "ahk_exe RainbowSix.exe")
 GroupAdd("noCaps", "ahk_exe r5apex.exe")
+GroupAdd("noCaps", "ahk_exe VALORANT-Win64-Shipping.exe")
 
 ProcessSetPriority("BelowNormal")
 
