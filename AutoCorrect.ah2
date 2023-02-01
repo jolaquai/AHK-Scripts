@@ -1,6 +1,6 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
 #Include #Includes\ahk-codebase.ah2
-#Include #Includes\siege.ah2
+; #Include #Includes\siege.ah2
 ; #Include #Includes\Dictionary.ah2
 codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
 
@@ -341,6 +341,22 @@ insertCharacterFromUnicodeCode(ThisHotkey)
     Send("{Backspace " . StrLen(ih.Input) . "}")
     A_Clipboard := ""
     for x in StrSplit(ih.Input)
+    {
+        ; -> U+HEX/DEC
+        n := Format("{:04X}", Ord(x)) . "/" . Ord(x)
+        A_Clipboard .= (A_Index > 1 ? " " : "") . "U+" . n
+    }
+}
+:*?:box_identify::
+{
+    input := InputBox("Input symbols")
+    if (input.Result = "Cancel")
+    {
+        codebase.Tool("Input terminated, exiting...", codebase.Tool.center)
+        return
+    }
+    A_Clipboard := ""
+    for x in StrSplit(input.Value)
     {
         ; -> U+HEX/DEC
         n := Format("{:04X}", Ord(x)) . "/" . Ord(x)
@@ -731,6 +747,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Hotkeys
 
 #HotIf ; Global hotkeys
+    SC029::F18
     Volume_Mute::F15
     LShift & Volume_Mute::F16
     SC00D::Send("``{Space}")
@@ -765,33 +782,6 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         while (A_Index < 6)
         {
             arr.Push(input := codebase.math.misc.sm64rng(input))
-        }
-
-        ; Siege query
-        if (!(arr.Length))
-        {
-            copymod := true
-            for class in [siege.attackers(), siege.defenders()]
-            {
-                for op in class
-                {
-                    prims := op.primaries
-                    secs := op.secondaries
-
-                    for w in codebase.collectionOperations.arrayOperations.arrayConcat(op.primaries, op.secondaries)
-                    {
-                        if (
-                            (false || !(codebase.collectionOperations.arrayOperations.arrayContainsPartial(arr, w.name, false).Length))
-                         && class is Object
-                         && w.type & siege.Weapon.types.submachinegun
-                        )
-                        {
-                            arr.Push(Format("{1} - {2}", op.nickname, w.name))
-                        }
-                    }
-                }
-            }
-            codebase.collectionOperations.arrayOperations.arrSort(&arr, true)
         }
 
         if (!(arr.Length))

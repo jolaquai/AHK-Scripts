@@ -330,7 +330,7 @@ fastMonitor()
             robloxAfk.Value := str
         }
     }
-    
+
     ; Monitors
     /* DISABLED UNTIL IT WORKS CORRECTLY
     static dontmove, winlist
@@ -342,7 +342,7 @@ fastMonitor()
     if (winlist.Length !== (new := WinGetList()).Length)
     {
         winlist := new
-
+    
         for win in winlist
         {
             ; If a window's client width and height are the monitor's resolution, it's a game running in Fullscreen or Windowed Borderless
@@ -386,9 +386,9 @@ fastMonitor()
     try
     {
         if (
-               (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
+            (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
             && (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
-            && PixelSearch(&cx, &cy, DBD_X1, DBD_Y1, DBD_X2, DBD_Y1, "0x3C4347", 50) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+            && PixelSearch(&cx, &cy, DBD_X1, DBD_Y1, DBD_X2, DBD_Y1, "0x3C4347", 50)    ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
         )
         {
             ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
@@ -400,7 +400,7 @@ fastMonitor()
                 Round((16 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/16`t[Heal]",
                 Round((14 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/14`t[Totem]",
                 Round((12 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/12`t[S. Mend]",
-                Round(( 8 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2)  . "/8`t[Mend]"
+                Round((8 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/8`t[Mend]"
             ]
 
             if (percent !== dbdPrev)
@@ -418,8 +418,8 @@ fastMonitor()
 
                 codebase.Tool(
                     codebase.stringOperations.strJoin("`n", , c*)
-                        . "`n" . percent . "%"
-                        . "`t@ ~" . dbdRate . "%/s",
+                    . "`n" . percent . "%"
+                    . "`t@ ~" . dbdRate . "%/s",
                     codebase.Tool.coords, 400, cx, DBD_Y1 + 20
                 )
 
@@ -467,7 +467,7 @@ fastMonitor()
                 }
                 if ((cx >= 1912 && cx <= 1921) || (cy >= 51 && cy <= 81))
                 {
-                    
+
                 }
                 OutputDebug(Format("Found ({1}, {2})`n", cx, cy))
 
@@ -479,7 +479,7 @@ fastMonitor()
                 {
                     codebase.Tool(
                         Round(45 * (percent / 100), 2) . "sec"
-                            . "`n" . percent . "%",
+                        . "`n" . percent . "%",
                         codebase.Tool.coords, 1000, cx, cy
                     )
 
@@ -534,9 +534,9 @@ fastMonitor()
         MonitorGet(MonitorGetPrimary(), , , &R6PROG_WIDTH, &R6PROG_HEIGHT)
     }
 
-    R6PROG_X1 := Floor(1714 * (R6PROG_WIDTH / 3840))
-    R6PROG_Y1 := Floor(1296 * (R6PROG_HEIGHT / 2160))
-    R6PROG_X2 := Floor(2125 * (R6PROG_WIDTH / 3840))
+    R6PROG_X1 := Floor(857 * (R6PROG_WIDTH / 1920))
+    R6PROG_Y1 := Floor(628 * (R6PROG_HEIGHT / 1080))
+    R6PROG_X2 := Floor(1064 * (R6PROG_WIDTH / 1920))
     PB_R6PROG_WIDTH := R6PROG_X2 - R6PROG_X1
 
     static R6PROGLastUpdate := A_TickCount
@@ -546,9 +546,9 @@ fastMonitor()
     try
     {
         if (
-               (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
+            (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
             && (GetKeyState("F", "P") || GetKeyState("MButton", "P") || GetKeyState("CapsLock", "P") || GetKeyState("LButton", "P"))
-            && PixelSearch(&cx, &cy, R6PROG_X2, R6PROG_Y1, R6PROG_X1, R6PROG_Y1, "0xFFFFFF", 15) ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
+            && PixelSearch(&cx, &cy, R6PROG_X2, R6PROG_Y1, R6PROG_X1, R6PROG_Y1, "0xFFFFFF", 15)    ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
         )
         {
             ; (cx, cy) is the right-most pixel of the progress bar that _is_ filled
@@ -573,8 +573,8 @@ fastMonitor()
 
                 codebase.Tool(
                     codebase.stringOperations.strJoin("`n", , c*)
-                        . "`n" . percent . "%"
-                        . "`t@ ~" . R6PROGRate . "%/s",
+                    . "`n" . percent . "%"
+                    . "`t@ ~" . R6PROGRate . "%/s",
                     codebase.Tool.coords, 1000, cx, R6PROG_Y1 + 15
                 )
 
@@ -680,7 +680,7 @@ functions()
 
     if (
         p := WinExist("Video Call - WhatsApp")
-     || p := WinExist("Voice Call - WhatsApp")
+        || p := WinExist("Voice Call - WhatsApp")
     )
     {
         WinMove(3840, 0, 1920, 1080, p)
@@ -718,7 +718,7 @@ functions()
         SetTitleMatchMode(3)
 
         wins := ["PhasmoMenu v0.3.9.3", "Player", "Ghost", "GhostInfo", "PlayerInfo", "ItemInfo", "Spawn", "Evidence", "Cash/Items/Exp", "CursedObjects", "KeyBinds ", "Teleport"]
-        
+
         for n in codebase.range(2, wins.Length)
         {
             WinGetPos(&x, &y, &w, &h, wins[n - 1])
@@ -764,7 +764,7 @@ functions()
                 {
                     dodgedCE := false
 
-                    celoop:
+celoop:
                     Run("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Cheat Engine.lnk", "C:\Program Files\Cheat Engine 7.4")
                     Sleep(2500)
 
@@ -790,7 +790,7 @@ functions()
 
         if (!WinExist("ahk_exe RockSniffer.exe"))
         {
-            rsnloop:
+rsnloop:
             Run("E:\Programs\RockSniffer 0.3.4\RockSniffer.exe", "E:\Programs\RockSniffer 0.3.4")
             Sleep(2500)
 
@@ -884,6 +884,22 @@ functions()
         }
     }
 
+    if (DirExist("C:\Users\user\Downloads\*valorant*"))
+    {
+        try
+        {
+            DirDelete("C:\Users\user\Downloads\*valorant*")
+        }
+    }
+
+    if (FileExist("C:\Users\user\Downloads\*valorant*"))
+    {
+        try
+        {
+            FileDelete("C:\Users\user\Downloads\*valorant*")
+        }
+    }
+
     Sleep(0)
 }
 
@@ -902,9 +918,9 @@ slowMonitor()
     FileOpen("C:\Users\User\Desktop\Share\remote.txt", "w")
 }
 
-#HotIf ; #HotIf WinActive("ahk_group lock")
+#HotIf    ; #HotIf WinActive("ahk_group lock")
 ~*F8::
-{  
+{
     global
     lock := !lock
 }
@@ -956,7 +972,7 @@ dodgedCE := 0
 
 olExists := 0
 
-lock := 1
+lock := 0
 
 csBombTimerActive := false
 csBombTimerEnd := 0

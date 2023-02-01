@@ -1,6 +1,7 @@
 ﻿#HotIf WinActive("ahk_exe RainbowSix.exe")
 !F4::
 {
+    return
     if (MsgBox("Really kill Siege?", , 4) == "Yes")
     {
         routine("ahk_exe RainbowSix.exe")
@@ -21,7 +22,7 @@ routine(target := unset)
      *
      * `3` uses `WinKill()`, which just kills the process.
      *
-     * `4` uses a `taskkill` cmd call. Comparable to method `3` but w 
+     * `4` uses a `taskkill` cmd call. Comparable to method `3` but even more aggressive.
      */
     mode := 2
 
