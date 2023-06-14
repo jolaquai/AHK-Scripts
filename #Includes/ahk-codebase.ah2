@@ -6190,7 +6190,7 @@ class codebase
 
             for j in hex
             {
-                res += (j is Number ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
+                res += (IsNumber(j) ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
             }
 
             if (neg)
