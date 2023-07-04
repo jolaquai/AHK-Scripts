@@ -144,6 +144,8 @@ huntrapid := Rapidvar("hunt", 2)
 swrapid := Rapidvar("sw")
 eftrapid := Rapidvar("eft")
 valorapid := Rapidvar("valo")
+ptrapid := Rapidvar("pt")
+totrapid := Rapidvar("tot")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -313,8 +315,8 @@ Hotstring(":*?:<;3", ">;3")
 :b0*?:\x+::
 insertCharacterFromUnicodeCode(ThisHotkey)
 {
-    ih := InputHook("V L4", "{Escape}")
-    codebase.Tool("Waiting for Unicode char code...", codebase.Tool.center)
+    ih := InputHook("V", "{Escape}{Enter}")
+    codebase.Tool("Waiting for Unicode char code, then Enter...", codebase.Tool.center)
     ih.Start()
     ih.Wait()
     ih.Stop()
@@ -323,7 +325,31 @@ insertCharacterFromUnicodeCode(ThisHotkey)
         codebase.Tool("Input terminated through Escape, exiting...", codebase.Tool.center)
         return
     }
-    Send("{Backspace 7}" . (A_Clipboard := Chr(InStr(ThisHotkey, "\x") ? Integer("0x" . ih.Input) : Integer(ih.Input))))
+
+    input := ih.Input
+    if (ih.EndReason == "EndKey" && ih.EndKey == "Enter")
+    {
+        ; Get rid of the Enter
+        input := SubStr(input, 1, StrLen(input) - 1)
+    }
+    length := StrLen(input)
+    if (!Mod(length, 4))
+    {
+        codebase.Tool("Invalid input, length must be a multiple of 4, exiting...", codebase.Tool.center)
+        return
+    }
+
+    ; 3 = '\u+' or '\x+, 1 = Enter, length = length of input
+    Send("{Backspace " . 3 + 1 + length . "}")
+
+    toSend := ""
+    start := 1
+    ; 4 chars at a time
+    while (start < length)
+    {
+        toSend .= Chr(codebase.convert.HexToDec(SubStr(ih.Input, start, 4)))
+        start += 4
+    }
 }
 
 :*?:symb_identify::
@@ -608,7 +634,8 @@ insertCharacterFromUnicodeCode(ThisHotkey)
             ; Word usually interprets "weird" arrows as ""
             input := StrReplace(input, "", "→")
             ; Replace vertical tabs by "normal" newlines
-            input := StrReplace(input, "", "`n`n")
+            input := StrReplace(input, "
+", "`n`n")
             ; Make all formatted quotation marks into normal ones
             ; Word will still create the appropriate ones should this tool be used to paste text in there
             input := StrReplace(input, "„", "`"")
@@ -747,13 +774,16 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Hotkeys
 
 #HotIf ; Global hotkeys
-    SC029::F18
+    ; SC029::F18
     Volume_Mute::F15
     LShift & Volume_Mute::F16
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
     ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
     ; <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
+    
+    NumpadDel::Send("{Blind};")
+    NumpadDot::Send("{Blind},")
 
 #HotIf ; Context-insensitive hotkeys
     <+>^ü::
@@ -775,14 +805,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         copymod := false
         arr := [
-            
+            Linq.Template([])
         ]
 
-        input := 0
-        while (A_Index < 6)
-        {
-            arr.Push(input := codebase.math.misc.sm64rng(input))
-        }
+        ; -----------Testing START-----------
+        
+        ; -----------Testing STOP------------
 
         if (!(arr.Length))
         {
@@ -814,8 +842,18 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ^CtrlBreak::
     ^Pause::
     {
+        obj := Object()
+        _lock := codebase.Lock(obj)
+        try
+        {
+            _mylock := codebase.Lock(obj)
+        }
+        catch codebase.Lock.LockError
+        {
+            MsgBox("Object already locked")
+        }
+        return
         MsgBox(A_Clipboard := codebase.elemsOut(
-            
         ))
     }
 
@@ -1171,7 +1209,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 ; Context-sensitive hotkeys
 
 #HotIf WinActive("VSCode")
-    NumpadDot::Send(".")
+    ; NumpadDot::Send(".")
 
 #HotIf !ProcessExist("ShareX.exe")
     PrintScreen::Send("#+s")
@@ -1209,7 +1247,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
     +b::siegerapid.inc()
-    +v::siegerapid.set(2)
+    ; +v::siegerapid.set(2)
 
     ~*RButton::
     mouse_override(*)
@@ -1222,13 +1260,15 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
                 {
                     if (siegerapid.check(1))
                     {
-                        Send("{LAlt up}{Click}")
+                        Send("{Blind}{Click}")
                         Sleep(10)
                     }
                     else if (siegerapid.check(2))
                     {
-                        Send("{Click}{LButton up}")
-                        return
+                        Send("{Blind}{LButton down}")
+                        Sleep(100)
+                        Send("{Blind}{LButton up}")
+                        Sleep(200)
                     }
                 }
             }
@@ -1316,6 +1356,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             capspresses := 0
         }
     }
+
+    ^Esc::return
 
 ; Extraction
 #HotIf WinActive("ahk_exe R6-Extraction.exe")
@@ -1830,13 +1872,37 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         Loop
         {
+            then := A_Now
             if (!WinActive("Roblox"))
             {
                 break
             }
+            Send("{Blind}{LButton}")
+            if (DateDiff(A_Now, then, "s") > 2)
+            {
+                Send(" ")
+                then := A_Now
+            }
+            continue
 
-            Send("{Blind}{Click}")
-            Sleep(10)
+            if (!WinActive("Roblox"))
+            {
+                break
+            }
+            Click("1127 552")
+            Sleep(100)
+            if (!WinActive("Roblox"))
+            {
+                break
+            }
+            Click("1181 720")
+            Sleep(100)
+            if (!WinActive("Roblox"))
+            {
+                break
+            }
+            Click("1158 885")
+            Sleep(100)
         }
     }
 
@@ -1971,6 +2037,12 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         WinActivate("ahk_exe GTA5.exe")
         Send("{LShift down}{d down}}")
+    }
+
+    F6::
+    {
+        WinActivate("ahk_exe GTA5.exe")
+        Send("{w down}}")
     }
 
     >+ä::
@@ -2241,22 +2313,37 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
-#HotIf WinActive("ahk_exe VALORANT-Win64-Shipping.exe")
-    +b::valorapid.inc()
+#HotIf WinActive("ahk_exe Playtime_Multiplayer-Win64-Shipping.exe")
+    +b::ptrapid.inc()
 
-    ~*LButton::
+    ~*Space::
     {
         global
         Loop
         {
-            if (!(GetKeyState("LButton", "P") && valorapid.check(1)))
+            if (!(GetKeyState("Space", "P") && ptrapid.check()))
             {
                 break
             }
             
-            Send("{Blind}{LButton}")
-            Sleep(50)
-            Send("{Blind}{LButton}")
-            Sleep(100)
+            Send("{Blind}{Space}")
+        }
+    }
+
+#HotIf WinActive("ahk_exe TOTClient-Win64-Shipping.exe")
+    +b::totrapid.inc()
+
+    ~LButton::
+    {
+        global
+        Loop
+        {
+            if (!(GetKeyState("LButton", "P") && totrapid.check()))
+            {
+                break
+            }
+            
+            Send("{LButton}")
+            Sleep(10)
         }
     }

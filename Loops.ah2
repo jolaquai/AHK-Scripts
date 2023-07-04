@@ -119,6 +119,9 @@ sendAfk(exe := "")
     }
     else if (exe == "RobloxPlayerBeta.exe")
     {
+        Send("{Space}")
+        return
+
         Send("{w down}")
         Sleep(250)
         Send("{w up}")
@@ -876,7 +879,7 @@ rsnloop:
         }
     }
 
-    if (WinActive("ahk_group noCaps"))
+    if (WinActive("ahk_group noCaps") || true)
     {
         while (GetKeyState("CapsLock", "T") && !GetKeyState("CapsLock", "P"))
         {
@@ -884,6 +887,7 @@ rsnloop:
         }
     }
 
+    /*
     if (DirExist("C:\Users\user\Downloads\*valorant*"))
     {
         try
@@ -891,7 +895,7 @@ rsnloop:
             DirDelete("C:\Users\user\Downloads\*valorant*")
         }
     }
-
+    
     if (FileExist("C:\Users\user\Downloads\*valorant*"))
     {
         try
@@ -899,6 +903,7 @@ rsnloop:
             FileDelete("C:\Users\user\Downloads\*valorant*")
         }
     }
+    */
 
     Sleep(0)
 }
@@ -956,7 +961,9 @@ triggers := [
     "ahk_exe Rocksmith2014.exe",
     "Sea of Thieves",
     "ahk_exe VALORANT-Win64-Shipping.exe",
-    ;"Notepad"
+    "ahk_exe starwarsbattlefrontii.exe",
+    ;"Notepad",
+    "ahk_exe Pandemic.exe"
 ]
 
 rsDodgeCEtriggers := [

@@ -122,6 +122,7 @@ catch
     try %A_Args[1]%(codebase.collectionOperations.arrayOperations.subarray(A_Args, 2)*)
     catch
     {
-        throw ValueError("Unrecognized lookup action ``" . A_Args[1] . "``.") 
+        throw
+        ValueError("Unrecognized lookup action ``" . A_Args[1] . "``.")
     }
 }

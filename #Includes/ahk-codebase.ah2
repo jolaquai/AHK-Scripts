@@ -29,6 +29,7 @@ eh := codebase.ErrorHandler([Error], codebase.ErrorHandler.reload)
 #Include MimeTypeMap.ah2
 #Include UnicodeBlockMap.ah2
 #Include HTTPStatusMap.ah2
+#Include AhkLinq.ah2
 
 SendMode("Event")
 #SingleInstance force
@@ -1664,6 +1665,60 @@ class codebase
     }
 
     /**
+     * A class to provide mutual-exclusion lock functionality.
+     * @note While AHKv2 does not multithread in the usual sense (instead, one thread is _suspended_ while another runs), this can allow for a more controlled environment. Using the word "thread" cautiously, in hopes that consumers of this class now know what I mean: for example, when one "thread" holds a `Lock` on an object, is then suspended and another "thread" tries to obtain a `Lock` on that same object, it should yield control back to the original "thread" to finish its work. If it doesn't, the usual deadlock scenario occurs. The `Lock` is maintained until the object is destroyed.
+     */
+    class Lock
+    {
+        class LockError extends Error
+        {
+            __New(message, obj)
+            {
+                this := super()
+                Message := message
+            }
+        }
+
+        static locks := []
+
+        static isLocked(obj) => codebase.collectionOperations.arrayOperations.arrayContains(codebase.Lock.locks, obj)
+
+        static tryObtain(obj)
+        {
+            if (!(codebase.collectionOperations.arrayOperations.arrayContains(codebase.Lock.locks, obj)))
+            {
+                return codebase.Lock(obj)
+            }
+            return ""
+        }
+
+        /**
+         * The object locked by this `Lock` object.
+         */
+        lockOn := ""
+
+         /**
+         * Instantiates a new `Lock` object on the given object.
+         * @param obj The object to obtain a `Lock` on.
+         */
+        __New(obj)
+        {
+            if (codebase.collectionOperations.arrayOperations.arrayContains(codebase.Lock.locks, obj))
+            {
+                throw codebase.Lock.LockError("Object is already locked.", obj)
+            }
+            codebase.Lock.locks.Push(obj)
+            this.lockOn := obj
+        }
+
+        __Delete()
+        {
+            codebase.collectionOperations.arrayOperations.remove(codebase.Lock.locks, this.lockOn)
+            this.lockOn := ""
+        }
+    }
+
+    /**
      * A class to make styling and setting options for message boxes easier.
      *
      * To use options from the subclasses, add them in the message box's `options` parameter.
@@ -3078,7 +3133,7 @@ class codebase
              */
             static e := Exp(1)
             /**
-             * `π` ("pi"), defined as the ratio of a circle's circumference to its diameter.
+             * `π` ("pi"), defined as the ratio of a circle's circumference to its diameter or 4 times the arctangent of `1`.
              */
             static pi := 4 * ATan(1)
             /**
@@ -6659,11 +6714,17 @@ class codebase
                 whr.Send()
             }
 
+            bytes := []
+            for byte in whr.ResponseBody
+            {
+                bytes.Push(byte)
+            }
+
             try
             {
                 outMap := Map(
                     "JSON", codebase.requests.parseJson(whr.ResponseText),
-                    "ResponseBody", whr.ResponseBody,
+                    "ResponseBody", bytes,
                     "ResponseHeaders", StrSplit(whr.GetAllResponseHeaders(), Chr(13) . Chr(10)),
                     "ResponseText", whr.ResponseText,
                     "ResponseTextFormatted", codebase.requests.dumpJson(codebase.requests.parseJson(whr.ResponseText)),
@@ -6674,7 +6735,7 @@ class codebase
             catch
             {
                 outMap := Map(
-                    "ResponseBody", whr.ResponseBody,
+                    "ResponseBody", bytes,
                     "ResponseHeaders", StrSplit(whr.GetAllResponseHeaders(), Chr(13) . Chr(10)),
                     "ResponseText", whr.ResponseText,
                     "Status", whr.Status,
