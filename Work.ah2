@@ -257,3 +257,42 @@ ci.Focus()
     }
     return codebase.Tool("Failed", codebase.Tool.center, 1000)
 }
+
+#HotIf WinActive("ahk_exe teams.exe")
+; Fülüb Casing
+^+p::
+{
+    static ClickTextField() => Click("1601, 1146")
+    static ClickSizeButton() => Click("947, 1044")
+    static ClickSmall() => Click("968, 1002")
+    static ClickBig() => Click("968, 940")
+
+    old := A_CoordModeMouse
+    CoordMode("Mouse", "Window")
+
+    while (!(GetKeyState("F8", "P")))
+    {
+        Send("{Shift Down}{Right}{Shift Up}")
+        ;Sleep(20)
+        if (Mod(A_Index, 3) == 0)
+        {
+            ClickSizeButton()
+            ClickSmall()
+        }
+        else if (Mod(A_Index, 2) == 0)
+        {
+            Send("{Right}")
+            continue
+        }
+        else
+        {
+            ClickSizeButton()
+            ClickBig()
+        }
+        ;Sleep(20)
+        Send("{Right}")
+        ;Sleep(20)
+    }
+
+    A_CoordModeMouse := old
+}
