@@ -111,6 +111,137 @@ codebase.Tool('Reloaded ' . A_ScriptName)
 :*?:symb_em::—
 :*?:symb_en::–
 
+:*?:lang_abstract::
+:*?:lang_add::
+:*?:lang_alias::
+:*?:lang_and::
+:*?:lang_args::
+:*?:lang_as::
+:*?:lang_ascending::
+:*?:lang_async::
+:*?:lang_await::
+:*?:lang_base::
+:*?:lang_bool::
+:*?:lang_break::
+:*?:lang_by::
+:*?:lang_byte::
+:*?:lang_case::
+:*?:lang_catch::
+:*?:lang_char::
+:*?:lang_checked::
+:*?:lang_class::
+:*?:lang_const::
+:*?:lang_continue::
+:*?:lang_decimal::
+:*?:lang_default::
+:*?:lang_delegate::
+:*?:lang_descending::
+:*?:lang_do::
+:*?:lang_double::
+:*?:lang_dynamic::
+:*?:lang_else::
+:*?:lang_enum::
+:*?:lang_equals::
+:*?:lang_event::
+:*?:lang_explicit::
+:*?:lang_extern::
+:*?:lang_false::
+:*?:lang_file::
+:*?:lang_finally::
+:*?:lang_fixed::
+:*?:lang_float::
+:*?:lang_for::
+:*?:lang_foreach::
+:*?:lang_from::
+:*?:lang_get::
+:*?:lang_global::
+:*?:lang_goto::
+:*?:lang_group::
+:*?:lang_if::
+:*?:lang_implicit::
+:*?:lang_in::
+:*?:lang_init::
+:*?:lang_int::
+:*?:lang_interface::
+:*?:lang_internal::
+:*?:lang_into::
+:*?:lang_is::
+:*?:lang_join::
+:*?:lang_let::
+:*?:lang_lock::
+:*?:lang_long::
+:*?:lang_managed::
+:*?:lang_nameof::
+:*?:lang_namespace::
+:*?:lang_new::
+:*?:lang_nint::
+:*?:lang_not::
+:*?:lang_notnull::
+:*?:lang_nuint::
+:*?:lang_null::
+:*?:lang_object::
+:*?:lang_on::
+:*?:lang_operator::
+:*?:lang_or::
+:*?:lang_orderby::
+:*?:lang_out::
+:*?:lang_override::
+:*?:lang_params::
+:*?:lang_partial::
+:*?:lang_private::
+:*?:lang_protected::
+:*?:lang_public::
+:*?:lang_readonly::
+:*?:lang_record::
+:*?:lang_ref::
+:*?:lang_remove::
+:*?:lang_required::
+:*?:lang_return::
+:*?:lang_sbyte::
+:*?:lang_scoped::
+:*?:lang_sealed::
+:*?:lang_select::
+:*?:lang_set::
+:*?:lang_short::
+:*?:lang_sizeof::
+:*?:lang_stackalloc::
+:*?:lang_static::
+:*?:lang_string::
+:*?:lang_struct::
+:*?:lang_switch::
+:*?:lang_this::
+:*?:lang_throw::
+:*?:lang_true::
+:*?:lang_try::
+:*?:lang_typeof::
+:*?:lang_uint::
+:*?:lang_ulong::
+:*?:lang_unchecked::
+:*?:lang_unmanaged::
+:*?:lang_unsafe::
+:*?:lang_ushort::
+:*?:lang_using::
+:*?:lang_value::
+:*?:lang_var::
+:*?:lang_virtual::
+:*?:lang_void::
+:*?:lang_volatile::
+:*?:lang_when::
+:*?:lang_where::
+:*?:lang_while::
+:*?:lang_with::
+:*?:lang_yield::
+InsertLangword(hk)
+{
+    hk := SubStr(hk, 10)
+    old := A_Clipboard
+    A_Clipboard := "<see langword=`"" . hk . "`"/>"
+    Sleep(500)
+    Send("^v")
+    Sleep(500)
+    A_Clipboard := old
+}
+
 /*
 presentGui := Gui('AlwaysOnTop', 'Present GUI')
 presentGui.Add('Text', 'Center w150 r1', 'Clock-in')
@@ -233,29 +364,62 @@ ci.Focus()
     input := InputBox("Type a Unicode codepoint")
     if (input.Result == "OK")
     {
+        len := StrLen(input.Value)
+        if (Mod(len, 4))
+        {
+            MsgBox("Code point(s) must have length mod 4!")
+        }
+
         WinActivate(prev)
-        Send(Chr(codebase.convert.HexToDec(input.Value)))
+        toSend := ""
+
+        ; Split into 4-char chunksStrLen(input.Value)
+        i := 1
+        while (i < len)
+        {
+            toSend .= Chr(codebase.convert.HexToDec(SubStr(input.Value, i, 4)))
+            i += 4
+        }
+        Send(toSend)
+    }
+}
+
+!NumpadSub::
+{
+    input := InputBox("Type any characters to identify")
+    if (input.Result == "OK")
+    {
+        template := "https://www.babelstone.co.uk/Unicode/whatisit.html?string="
+        Run(template . input.Value)
     }
 }
 
 #HotIf WinActive("ahk_exe devenv.exe")
-^!+c::
+lastHotkey := ""
+
+^!+d::
 {
-    Send("^c")
-    if (ClipWait(0.25))
+    global
+
+    old := A_Clipboard
+    A_Clipboard := "<div>`r`n</div>"
+    Send("^v")
+    A_Clipboard := old
+    Sleep(250)
+    Send("{Up}{Enter}")
+
+    lastHotkey := A_ThisHotkey
+}
+^z::
+{
+    global
+
+    Loop (InStr(lastHotkey, "^!+d") ? 3 : 1)
     {
-        newLines := []
-        lines := StrSplit(A_Clipboard, "`r`n", ' ')
-
-        for line in lines
-        {
-            newLines.Push(Trim(line))
-        }
-
-        A_Clipboard := codebase.stringOperations.strJoin("`r`n", true, newLines*)
-        return codebase.Tool("Copied without indentation", codebase.Tool.center, 1000)
+        Send("^z")
     }
-    return codebase.Tool("Failed", codebase.Tool.center, 1000)
+
+    lastHotkey := A_ThisHotkey
 }
 
 #HotIf WinActive("ahk_exe teams.exe")

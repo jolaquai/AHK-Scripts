@@ -14,6 +14,6 @@
             "*.docx": "cweijan.officeViewer"
         },
         "lua.debug.variables.showIntegerAsHex": true,
-        "AutoHotkey2.InterpreterPath": "e:\\PROGRAMMING\\AHK Scripts\\AutoHotkey\\AutoHotkey64.exe"
+        "AutoHotkey2.InterpreterPath": "c:\\Users\\laquai.joshua.EDV\\Documents\\AutoHotkey64.exe"
 	},
 }
