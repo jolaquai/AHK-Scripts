@@ -7,11 +7,16 @@ codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
 ; Function / Variable / Object / Class Declarations
 if (!A_IsDebuggerAttached)
 {
-    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", 1000)
-    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Roblox VR", 1000)
-    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", 1000)
-    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", 1000)
-    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Valorant", 1000)
+    ; Install a directory monitor on the entire captures directory instead of each game's individual directory
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures", true, 1000)
+
+    /*
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", false, 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Roblox VR", false, 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Counter-strike  Global Offensive", false, 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Overwatch", false, 1000)
+    codebase.directoryOperations.DirectoryMonitor("E:\YOUTUBE\Captures\Valorant", false, 1000)
+    */
 }
 
 /**
@@ -146,6 +151,7 @@ eftrapid := Rapidvar("eft")
 valorapid := Rapidvar("valo")
 ptrapid := Rapidvar("pt")
 totrapid := Rapidvar("tot")
+hitmanrapid := Rapidvar("hitman")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -350,6 +356,8 @@ insertCharacterFromUnicodeCode(ThisHotkey)
         toSend .= Chr(codebase.convert.HexToDec(SubStr(ih.Input, start, 4)))
         start += 4
     }
+
+    Send("{Raw}" . toSend)
 }
 
 :*?:symb_identify::
@@ -731,7 +739,7 @@ AppsKey & F7::Send("{Media_Play_Pause}")
 AppsKey & F8::Send("{Media_Next}")
 AppsKey & F10::Send("{Volume_Down}")
 AppsKey & F11::Send("{Volume_Up}")
-AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
+; AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Reload with Ctrl+S
 
@@ -748,12 +756,14 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     && !WinActive("ahk_exe RustClient.exe")
     && !WinActive("ahk_exe LittleNightmares.exe")
     && !WinActive("ahk_exe hl2.exe")
+    && !WinActive("ahk_exe Overwatch.exe")
     && !WinActive("ahk_exe NewColossus_x64vk.exe")
     && !WinActive("ahk_exe left4dead2.exe")
     && !WinActive("Roblox")
     && !WinActive("ahk_exe r5apex.exe")
     && !WinActive("ahk_exe EvilDead-Win64-Shipping.exe")
     && !WinActive("ahk_exe Aragami.exe")
+    && !WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
 ~^s::
 {
     ; Script process duplication due to rapid reloading should be prevented by this
@@ -776,11 +786,15 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 #HotIf ; Global hotkeys
     ; SC029::F18
     Volume_Mute::F15
+    ^+!z::u
     LShift & Volume_Mute::F16
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
+    CapsLock::LShift
     ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
     ; <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
+
+    Insert::LAlt
     
     NumpadDel::Send("{Blind};")
     NumpadDot::Send("{Blind},")
@@ -792,8 +806,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         for pname in procs 
         {
             while (ProcessClose(pname))
-            {
-                
+            {   
             }
         }
     }
@@ -1213,6 +1226,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 #HotIf !ProcessExist("ShareX.exe")
     PrintScreen::Send("#+s")
+#HotIf ProcessExist("ShareX.exe")
+    PrintScreen::Send("{F19}")
 
 ; Explorer
 #HotIf WinActive("ahk_exe explorer.exe")
@@ -1279,6 +1294,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         }
     }
 
+
     ~*1::
     ~*XButton1::
     ~*XButton2::
@@ -1304,18 +1320,52 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             nadeHeld := false
             Send("{" . nadeBtn . " up}")
         }
-        else
+        else if (A_ThisHotkey == "*2")
         {
-            if (A_ThisHotkey == "*2")
-            {
-                out .= "`nHolding"
-                nadeHeld := true
-                Send("{" . nadeBtn . " down}")
-            }
+            out .= "`nHolding"
+            nadeHeld := true
+            Send("{" . nadeBtn . " down}")
         }
 
         codebase.Tool(out, codebase.Tool.coords, , 10, 10)
     }
+
+/*
+    ~*1::
+    *XButton1::
+    ~*XButton2::
+    ~*LButton::
+    *2::
+    {
+        static nadeHeld := false
+        static nadeBtn := "Numpad9"
+        out := A_ThisHotkey
+
+        if (nadeHeld)
+        {
+            if (A_ThisHotkey == "*XButton1" || InStr(A_ThisHotkey, "LButton"))
+            {
+                out .= "`nThrowing"
+            }
+            else ; if (InStr(hotkey, "XButton1") || InStr(hotkey, "XButton2") || hotkey == "~1") ; Cancel
+            {
+                out .= (nadeHeld ? "`nCanceling" : "")
+                Send("{XButton1}")
+            }
+
+            nadeHeld := false
+            Send("{" . nadeBtn . " up}")
+        }
+        else if (A_ThisHotkey == "*XButton1")
+        {
+            out .= "`nHolding"
+            nadeHeld := true
+            Send("{" . nadeBtn . " down}")
+        }
+
+        codebase.Tool(out, codebase.Tool.coords, , 10, 10)
+    }
+*/
 
     ~f::
     f_hold(ThisHotkey)
@@ -1565,7 +1615,16 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; HITMAN 3
 #HotIf WinActive("ahk_exe HITMAN3.exe")
-    NumpadSub::Send("{Control down}")
+    ; +b::hitmanrapid.inc()
+
+    ; ~RButton & LButton::
+    ; {
+    ;     global
+    ;     if (hitmanrapid.check())
+    ;     {
+    ;         Send("{LButton up}")
+    ;     }
+    ; }
 
 ; Rocksmith 2014
 #HotIf WinActive("ahk_exe Rocksmith2014.exe")
@@ -2347,3 +2406,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
             Sleep(10)
         }
     }
+
+#HotIf WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
+    ~*WheelDown::Send("{Blind}{Space}")
+    ~*WheelUp::Send("{Blind}f")

@@ -3,6 +3,11 @@
 
 clipProcess(type)
 {
+    if (WinActive("ahk_exe devenv.exe"))
+    {
+        return
+    }
+
     static changed := false
 
     if (type !== 1 || changed)
@@ -120,6 +125,11 @@ sendAfk(exe := "")
     else if (exe == "RobloxPlayerBeta.exe")
     {
         Send("{Space}")
+        return
+
+        Send("{e down}")
+        Sleep(15000)
+        Send("{e up}")
         return
 
         Send("{w down}")
@@ -697,7 +707,7 @@ functions()
         WinMove(x - w - 5, y, , , "Add friends")
     }
 
-    if (WinActive("Shut Down Windows"))
+    if (WinActive("Shut Down Windows") && false)
     {
         if (MsgBox("Hibernate?", , 0x4) == "Yes")
         {
@@ -794,7 +804,7 @@ celoop:
         if (!WinExist("ahk_exe RockSniffer.exe"))
         {
 rsnloop:
-            Run("E:\Programs\RockSniffer 0.3.4\RockSniffer.exe", "E:\Programs\RockSniffer 0.3.4")
+            Run("E:\Programs\RockSniffer 0.4.1\RockSniffer.exe", "E:\Programs\RockSniffer 0.4.1")
             Sleep(2500)
 
             if (!WinExist("ahk_exe RockSniffer.exe") || MsgBox("Did RockSniffer start correctly?", "Correct RockSniffer startup", "0x4 T5") == "No")
@@ -887,7 +897,6 @@ rsnloop:
         }
     }
 
-    /*
     if (DirExist("C:\Users\user\Downloads\*valorant*"))
     {
         try
@@ -903,7 +912,6 @@ rsnloop:
             FileDelete("C:\Users\user\Downloads\*valorant*")
         }
     }
-    */
 
     Sleep(0)
 }
@@ -1016,7 +1024,7 @@ windowList := afkgui.Add("ListBox", "ReadOnly w" . elemWidth . " r" . triggers.L
 afkgui.Add("Button", "w" . elemWidth, "Edit").OnEvent("Click", (*) => Edit())
 afkgui.Add("Button", "w" . elemWidth, "Reload").OnEvent("Click", (*) => Reload())
 
-;afkgui.Show("X5 Y5")
+; afkgui.Show("X5 Y5")
 WinMinimize(afkgui.Hwnd)
 
 codebase.Tool("Reloaded Loops.ah2", true, , , 50)

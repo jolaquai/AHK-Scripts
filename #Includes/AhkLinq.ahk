@@ -243,18 +243,24 @@ class Linq
     }
 }
 
+; Add the Linq methods to the Enumerator prototype
 try
 {
+    ; This function will enumerate the items in an Enumerator object and return them as an array
     enumerateEnumerator(enumerator)
     {
+        ; Create the array which will hold the items
         arr := []
+        ; Loop over each item in the enumerator and add it to the array
         for item in enumerator
         {
             arr.Push(item)
         }
+        ; Return the array
         return arr
     }
 
+    ; Define a property on the Enumerator prototype called "Enumerate" which is a function that returns an array of the items in the enumerator
     defProp := {}.DefineProp
     defProp(Enumerator.Prototype, "Enumerate", { Call: enumerateEnumerator })
 }

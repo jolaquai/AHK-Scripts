@@ -23,7 +23,7 @@ notes := ""
 ; Directives / pre-execution statements
 ; These don't usually need to be set in every new script but doing it might help in specific cases. They can be overridden at any time by calling the built-in setter functions or supplying #directives with other arguments than the ones in here.
 
-eh := codebase.ErrorHandler([Error], codebase.ErrorHandler.reload)
+eh := codebase.errors.ErrorHandler([Error], codebase.errors.ErrorHandler.reload)
 
 #Include JSON.ah2
 #Include MimeTypeMap.ah2
@@ -327,7 +327,7 @@ class codebase
      * - Map: The function is recursively called on each key-value pair.
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
-     * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
+     * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.errors.ErrorHandler.output}`.
      * - Objects: The object's `ToString` method is called. On simple objects, this compiles the object's OwnProps and their values into a string. Objects instantiated from user-defined classes should overwrite `ToString` if warranted.
      * @returns An output string constructed while traversing the values in `elems`.
      */
@@ -411,7 +411,7 @@ class codebase
             }
             else if (elem is Error)
             {
-                out .= "[Unthrown " . Type(elem) . "]`n" . codebase.ErrorHandler.output(elem, false) . "`n"
+                out .= "[Unthrown " . Type(elem) . "]`n" . codebase.errors.ErrorHandler.output(elem, false) . "`n"
             }
             else if (elem is Object)
             {
@@ -1260,144 +1260,162 @@ class codebase
         ToString() => this._path
     }
 
-    /**
-     * An object to accumulate or handle run-time Errors.
-     */
-    class ErrorHandler
+    class errors
     {
-        static custom := -2
-        static reload := -1
-        static suppress := 0
-        static notify := 1
-        static rethrow := 2
-        static stop := 3
-        static exit := 4
-
         /**
-         * Instantiates an `ErrorHandler` object.
-         * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
-         * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
-         * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.ErrorHandler.notify` if omitted.
-         * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
-         * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
-         * @returns An `ErrorHandler` object.
+         * An object to accumulate or handle run-time Errors.
          */
-        __New(types?, mode := 1, custom?)
+        class ErrorHandler
         {
-            OnError(this.handle.Bind(this), 1)
+            static custom := -2
+            static reload := -1
+            static suppress := 0
+            static notify := 1
+            static rethrow := 2
+            static stop := 3
+            static exit := 4
 
-            this.setTypes(IsSet(types) ? types : [Error])
-            this.setMode(mode)
-            if (IsSet(custom))
+            errs := []
+            mode := ""
+
+            /**
+            * Instantiates an `ErrorHandler` object.
+            * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
+            * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
+            * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.errors.ErrorHandler.notify` if omitted.
+            * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
+            * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
+            * @returns An `ErrorHandler` object.
+            */
+            __New(types?, mode := 1, custom?)
             {
-                if (custom is Func)
+                OnError(this.handle.Bind(this), 1)
+
+                this.setTypes(IsSet(types) ? types : [Error])
+                this.setMode(mode)
+                if (IsSet(custom))
                 {
-                    this.customFunc := custom
+                    if (custom is Func)
+                    {
+                        this.customFunc := custom
+                    }
                 }
             }
 
-            this.errs := []
-        }
-
-        __Delete()
-        {
-            OnError(this.handle, 0)
-        }
-
-        __Item[n]
-        {
-            get => this.errs[n]
-        }
-
-        handle(e, ret)
-        {
-            for t in this.types
+            __Delete()
             {
-                if (e is t)
+                OnError(this.handle, 0)
+            }
+
+            __Item[n]
+            {
+                get => this.errs[n]
+            }
+
+            handle(e, ret)
+            {
+                for t in this.types
                 {
-                    this.errs.Push(e)
-                    break
+                    if (e is t)
+                    {
+                        this.errs.Push(e)
+                        break
+                    }
+                    return
                 }
-                return
+
+                switch (this.mode)
+                {
+                    case codebase.errors.ErrorHandler.custom:
+                        return this.customFunc(e)
+                    case codebase.errors.ErrorHandler.reload:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        Reload()
+                    case codebase.errors.ErrorHandler.suppress:
+                        return -1
+                    case codebase.errors.ErrorHandler.notify:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        return -1
+                    case codebase.errors.ErrorHandler.rethrow:
+                        return 0
+                    case codebase.errors.ErrorHandler.stop:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        return 1
+                    case codebase.errors.ErrorHandler.exit:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        ExitApp(0)
+                }
             }
 
-            switch (this.mode)
+            /**
+            * Formats the information contained in an `Error` object.
+            * @param e The `Error` object the information of which to format into a string.
+            * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
+            * @returns A string with the information contained in `e`.
+            */
+            static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
+
+            /**
+            * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
+            * @param types An Array of types.
+            * @throws `TypeError` if `var` is not a `expected type`.
+            */
+            setTypes(types)
             {
-                case codebase.ErrorHandler.custom:
-                    return this.customFunc(e)
-                case codebase.ErrorHandler.reload:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    Reload()
-                case codebase.ErrorHandler.suppress:
-                    return -1
-                case codebase.ErrorHandler.notify:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    return -1
-                case codebase.ErrorHandler.rethrow:
-                    return 0
-                case codebase.ErrorHandler.stop:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    return 1
-                case codebase.ErrorHandler.exit:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    ExitApp(0)
+                errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
+
+                if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
+                {
+                    throw TypeError("Invalid type for ``types[" . A_Index . "]``. Received ``" . Type(types[A_Index]) . "``, expected ``Error`` or one of its subclasses.")
+                }
+
+                this.types := types
+            }
+
+            /**
+            * Changes how this `ErrorHandler` should react to an incoming error.
+            * @param mode One of the following values.
+            * - `codebase.errors.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
+            * - `codebase.errors.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
+            * - `codebase.errors.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
+            * - `codebase.errors.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
+            * - `codebase.errors.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
+            * - `codebase.errors.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
+            * - `codebase.errors.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
+            */
+            setMode(mode)
+            {
+                modes := [
+                    codebase.errors.ErrorHandler.custom,
+                    codebase.errors.ErrorHandler.reload,
+                    codebase.errors.ErrorHandler.suppress,
+                    codebase.errors.ErrorHandler.notify,
+                    codebase.errors.ErrorHandler.rethrow,
+                    codebase.errors.ErrorHandler.stop,
+                    codebase.errors.ErrorHandler.exit
+                ]
+
+                if (!(codebase.collectionOperations.arrayOperations.arrayContains(modes, mode).Length))
+                {
+                    throw ValueError("Invalid value for ``mode``. Received ``" . mode . "``, expected one of the following: ``codebase.errors.ErrorHandler.suppress``, ``codebase.errors.ErrorHandler.notify``, ``codebase.errors.ErrorHandler.stop``.")
+                }
+
+                this.mode := mode
             }
         }
 
-        /**
-         * Formats the information contained in an `Error` object.
-         * @param e The `Error` object the information of which to format into a string.
-         * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
-         * @returns A string with the information contained in `e`.
-         */
-        static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
-
-        /**
-         * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
-         * @param types An Array of types.
-         * @throws `TypeError` if `var` is not a `expected type`.
-         */
-        setTypes(types)
+        class NotImplementedError extends Error
         {
-            errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
-
-            if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
+            /**
+             * Instantiates a new `NotImplementedError` with the given target 
+             * @param target The full name of the method, function or class that is not implemented. Defaults to an empty string if omitted.
+             * @param message The error message to display. Defaults to `"The given target method, function or class is not implemented."` if omitted.
+             */
+            static __New(target := "", message := "The given target method, function or class is not implemented.")
             {
-                throw TypeError("Invalid type for ``types[" . A_Index . "]``. Received ``" . Type(types[A_Index]) . "``, expected ``Error`` or one of its subclasses.")
+                super(message)
+                this.Target := target
             }
-
-            this.types := types
-        }
-
-        /**
-         * Changes how this `ErrorHandler` should react to an incoming error.
-         * @param mode One of the following values.
-         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
-         * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
-         * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
-         * - `codebase.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
-         * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
-         */
-        setMode(mode)
-        {
-            modes := [
-                codebase.ErrorHandler.custom,
-                codebase.ErrorHandler.reload,
-                codebase.ErrorHandler.suppress,
-                codebase.ErrorHandler.notify,
-                codebase.ErrorHandler.rethrow,
-                codebase.ErrorHandler.stop,
-                codebase.ErrorHandler.exit
-            ]
-
-            if (!(codebase.collectionOperations.arrayOperations.arrayContains(modes, mode).Length))
-            {
-                throw ValueError("Invalid value for ``mode``. Received ``" . mode . "``, expected one of the following: ``codebase.ErrorHandler.suppress``, ``codebase.ErrorHandler.notify``, ``codebase.ErrorHandler.stop``.")
-            }
-
-            this.mode := mode
         }
     }
 
@@ -5906,19 +5924,21 @@ class codebase
             /**
              * Instatiates a new `codebase.directoryOperations.DirectoryMonitor` object.
              * @param path The path of the directory to monitor.
+             * @param recurse Whether or not to monitor subdirectories as well. Defaults to `false` if omitted.
              * @param interval The interval at which to check for changes. Defaults to `10000` (10 seconds) if omitted.
              * @param callbacks An object with one or more of the following props containing functions to be called when the corresponding event occurs. If omitted, the `add` and `remove` callbacks will be registered automatically. The default implementation of these display a Tooltip detailing the changes in the top-left corner of the right-most monitor.
              * - `add`: A file is added to the directory.
              * - `remove`: A file is removed from the directory.
              * @returns A `codebase.directoryOperations.DirectoryMonitor` object.
              */
-            __New(path, interval := 10000, callbacks?)
+            __New(path, recurse := false, interval := 10000, callbacks?)
             {
                 this.firstRun := true
 
                 this.timer := ObjBindMethod(this, "monitor")
 
                 this.path := path
+                this.recurse := recurse
                 this.interval := interval
                 this.tooltipTime := 4000
                 this.files := []
@@ -5983,7 +6003,7 @@ class codebase
             monitor()
             {
                 now := []
-                Loop Files this.path . "\*"
+                Loop Files this.path . "\*", (this.recurse ? "FR" : "F")
                 {
                     now.Push(A_LoopFileFullPath)
                 }
