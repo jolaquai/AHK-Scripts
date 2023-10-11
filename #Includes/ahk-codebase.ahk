@@ -6427,15 +6427,14 @@ class codebase
         static HexToDec(hex)
         {
             res := 0
+            hex := StrUpper(hex)
             hex := StrReplace(hex, "0x", "")
             hex := StrReplace(hex, "-", "", false, &neg)
-
-            hex := codebase.stringOperations.strReverse(hex)
             hex := StrSplit(hex)
 
             for j in hex
             {
-                res += (IsNumber(j) ? j : Ord(j) - 55) * (16 ** (A_Index - 1))
+                res += (IsNumber(j) ? j : Ord(j) - 55) * (16 ** (hex.Length - A_Index))
             }
 
             if (neg)
