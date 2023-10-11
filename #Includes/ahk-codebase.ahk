@@ -1,4 +1,4 @@
-/**
+﻿/**
  * My codebase library for most of my other AHK scripts.
  *
  * Notes:
@@ -10,7 +10,7 @@
  * - String concatenations are / should always be done explicitly: `"string 1" . " " . var` instead of `"string 1" " " var`.
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
- * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
+ * - On 8/19/2022, I made the switch to the `.ahk` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
  *
  * The functions and some classes are sometimes only annotated, usually fully documented though, using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
@@ -25,11 +25,11 @@ notes := ""
 
 eh := codebase.errors.ErrorHandler([Error], codebase.errors.ErrorHandler.reload)
 
-#Include JSON.ah2
-#Include MimeTypeMap.ah2
-#Include UnicodeBlockMap.ah2
-#Include HTTPStatusMap.ah2
-#Include AhkLinq.ah2
+#Include JSON.ahk
+#Include MimeTypeMap.ahk
+#Include UnicodeBlockMap.ahk
+#Include HTTPStatusMap.ahk
+#Include AhkLinq.ahk
 
 SendMode("Event")
 #SingleInstance force
@@ -1823,7 +1823,7 @@ class codebase
 
         /**
          * Returns the object's stored bits as a numerical value.
-         * @throws `ValueError` if `this.bits.Length` is `≥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
+         * @throws `ValueError` if `this.bits.Length` is `â‰¥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
          * @returns The `codebase.Binary` object's stored bits converted to a numerical value.
          */
         Value()
@@ -3151,19 +3151,19 @@ class codebase
              */
             static e := Exp(1)
             /**
-             * `π` ("pi"), defined as the ratio of a circle's circumference to its diameter or 4 times the arctangent of `1`.
+             * `Ï€` ("pi"), defined as the ratio of a circle's circumference to its diameter or 4 times the arctangent of `1`.
              */
             static pi := 4 * ATan(1)
             /**
-             * `φ` ("phi"), the golden ratio.
+             * `Ï†` ("phi"), the golden ratio.
              *
-             * Two quantities `a`, `b` with `a > b > 0` are said to be in the golden ratio `φ` if `(a + b) / a == a / b == φ`.
+             * Two quantities `a`, `b` with `a > b > 0` are said to be in the golden ratio `Ï†` if `(a + b) / a == a / b == Ï†`.
              */
             static phi := (1 + Sqrt(5)) / 2
             /**
-             * `δ_S` ("delta S"), the silver ratio.
+             * `Î´_S` ("delta S"), the silver ratio.
              *
-             * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `δ_S` if `(2a + b) / a == a / b == δ_S`.
+             * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `Î´_S` if `(2a + b) / a == a / b == Î´_S`.
              */
             static delta_S := 1 + Sqrt(2)
         }
@@ -3904,7 +3904,7 @@ class codebase
 
                 /**
                  * Calculates the scalar product ("dot product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `1` and ≤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -3913,7 +3913,7 @@ class codebase
                 scalarProduct(vs*) => codebase.math.vectorGeometry.scalarProduct(this, vs*)
                 /**
                  * Calculates the Vector product ("cross product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `1` and ≤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @throws `ValueError` if the `dim` property (dimension of the Vector) of `this` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4005,8 +4005,8 @@ class codebase
                 if (codebase.math.vectorGeometry.linearDependence(dv1, dv2))
                 {
                     ; The lines are at least parallel, now check whether they are actually the same line
-                    ; This is not exactly easy as it's basically solving a system of equations, however, since this is not as analytical and strict as school math, let's just solve one line for a value of `μ` and check if that value checks out overall
-                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + μ*v_n`
+                    ; This is not exactly easy as it's basically solving a system of equations, however, since this is not as analytical and strict as school math, let's just solve one line for a value of `Î¼` and check if that value checks out overall
+                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + Î¼*v_n`
                     m := (dv2.v1 !== 0 ? (pv1.v1 - pv2.v1) / dv2.v1 : (dv2.v2 !== 0 ? (pv1.v2 - pv2.v2) / dv2.v2 : (pv1.v3 - pv2.v3) / dv2.v3))
                     if (codebase.math.vectorGeometry.vectorCompare(codebase.math.vectorGeometry.scalarMultiply(1, pv1), l2(m)))
                     {
@@ -4022,7 +4022,7 @@ class codebase
                 else
                 {
                     ; The lines are not parallel, meaning they either intersect once or not at all
-                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + μ*v_n`
+                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + Î¼*v_n`
                     try
                     {
                         m := (dv2.v1 !== 0 ? (pv1.v1 - pv2.v1) / dv2.v1 : (dv2.v2 !== 0 ? (pv1.v2 - pv2.v2) / dv2.v2 : (pv1.v3 - pv2.v3) / dv2.v3))
@@ -4125,7 +4125,7 @@ class codebase
             {
                 if (vs.Length < 2)
                 {
-                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``≥ 2``.")
+                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``â‰¥ 2``.")
                 }
 
                 hdim := 0
@@ -4173,7 +4173,7 @@ class codebase
 
             /**
              * Creates a null Vector (all coordinates are `0`).
-             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `≥ 2`. Defaults to `3` if omitted.
+             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `â‰¥ 2`. Defaults to `3` if omitted.
              * @returns A null Vector with `dim` coordinates, all `0`.
              */
             static nullVector(dim := 3)
@@ -4223,9 +4223,9 @@ class codebase
                 }
 
                 ; If a coordinate in the direction Vector is `0`, the line defined by the vectors cannot intersect with the plane that is missing that coordinate as the two run parallel to each other, i.e.
-                ; - `dv.v1 = 0` -> `line ∉ x2x3`
-                ; - `dv.v2 = 0` -> `line ∉ x1x3`
-                ; - `dv.v3 = 0` -> `line ∉ x1x2`
+                ; - `dv.v1 = 0` -> `line âˆ‰ x2x3`
+                ; - `dv.v2 = 0` -> `line âˆ‰ x1x3`
+                ; - `dv.v3 = 0` -> `line âˆ‰ x1x2`
                 possibleIntersections := [1, 2, 3]
                 for e in [dv.v1, dv.v2, dv.v3]
                 {
@@ -4304,7 +4304,7 @@ class codebase
 
             /**
              * Checks whether a series of vectors is linearly dependent.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4385,7 +4385,7 @@ class codebase
                         ; In three-dimensional space, 4 vectors are always linearly dependent.
                         return true
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -4423,7 +4423,7 @@ class codebase
 
             /**
              * Calculates the scalar product ("dot product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4467,7 +4467,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.scalarProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -4475,7 +4475,7 @@ class codebase
 
             /**
              * Calculates the Vector product ("cross product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @throws `ValueError` if the `dim` property (dimension of the Vector) of the first Vector in `vs` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4494,7 +4494,7 @@ class codebase
 
                     if (v.dim > 3)
                     {
-                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value ≥ ``2`` and ≤ ``3``.")
+                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value â‰¥ ``2`` and â‰¤ ``3``.")
                     }
 
                     if (v.dim < 3)
@@ -4524,7 +4524,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.vectorProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -5699,7 +5699,7 @@ class codebase
 
             /**
              * Calculates the number of possible subsets in a set, with the following conditions (permutations):
-             * - `ab ≠ ba` and permutations that contain the same elements but in a different order are counted individually
+             * - `ab â‰  ba` and permutations that contain the same elements but in a different order are counted individually
              * - repetitions like picking `aa` are allowed
              * @param n The size of the set.
              * @param k The size of the subsets.
@@ -5725,7 +5725,7 @@ class codebase
 
             /**
              * Calculates the number of possible subsets in a set, with the following conditions (partial permutations):
-             * - `ab ≠ ba` and permutations that contain the same elements but in a different order are counted individually
+             * - `ab â‰  ba` and permutations that contain the same elements but in a different order are counted individually
              * - repetitions like picking `aa` are not allowed
              * @param n The size of the set.
              * @param k The size of the subsets.
@@ -5758,7 +5758,7 @@ class codebase
             }
 
             /**
-             * Calculates the expected value (`E(X)`, `mu`, `μ`) for a set of values and associated probabilities.
+             * Calculates the expected value (`E(X)`, `mu`, `Î¼`) for a set of values and associated probabilities.
              * @param x_i The values to use.
              * @param Px An associated probability for each element in `x_i`.
              * @throws `TypeError` if `x_i` is not an `Array`.

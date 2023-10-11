@@ -1,8 +1,8 @@
-; For the love of all things holy, DON'T import this anywhere just for teh lulz
+﻿; For the love of all things holy, DON'T import this anywhere just for teh lulz
 ; Having this loaded in a `Persistent(true)` script causes a permanent 19 MB memory usage increase
 
 ; Import the codebase library to allow calls to some often-needed functions and more
-#Include ahk-codebase.ah2
+#Include ahk-codebase.ahk
 
 class Dictionary
 {

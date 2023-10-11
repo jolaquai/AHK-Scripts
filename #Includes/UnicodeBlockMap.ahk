@@ -1,4 +1,4 @@
-class UnicodeBlockMap
+﻿class UnicodeBlockMap
 {
     /**
      * Identifies which method was used to build the map.

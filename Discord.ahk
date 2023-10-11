@@ -1,4 +1,4 @@
-﻿#Include ".\#Includes\ahk-codebase.ah2"
+﻿#Include ".\#Includes\ahk-codebase.ahk"
 
 cmd := "C:\Users\User\AppData\Local\Discord\app-1.0.9005\Discord.exe"
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Replicates the functionality of the `System.Linq.Enumerable` class in C#, slightly modified to account for factors such as AHKv2's lack of generics, strong typing etc.
  * 
  * Note that all of the methods in this class return `Enumerator` instances, which also replicates the lazy evaluation behavior of the `IEnumerable` interface in C#. You may enumerate the the results of these methods using `Enumerator.Enumerate()`. It replicates the `To#` methods in C#, where `#` is the desired type of the result.

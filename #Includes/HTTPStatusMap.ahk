@@ -1,4 +1,4 @@
-class HTTPStatusMap
+﻿class HTTPStatusMap
 {
     class responses
     {

@@ -1,4 +1,4 @@
-#Include #Includes\ahk-codebase.ah2
+﻿#Include #Includes\ahk-codebase.ahk
 codebase.Tool('Reloaded ' . A_ScriptName)
 
 ; Reload with Ctrl+S
@@ -24,92 +24,92 @@ codebase.Tool('Reloaded ' . A_ScriptName)
 ; Greek letters
 ; The uppercase character is inserted instead if just the 'g' in gr_alpha, for example, is capitalized. Or just capitalize the entire thing.
 ;   lowercase     ; uppercase
-:*?:gr_alpha::α ; Α
-:*?:gr_beta::β ; Β
-:*?:gr_gamma::γ ; Γ
-:*?:gr_delta::δ ; Δ
-:*?:gr_epsilon::ε ; Ε
-:*?:gr_zeta::ζ ; Ζ
-:*?:gr_eta::η ; Η
-:*?:gr_theta::θ ; Θ
-:*?:gr_iota::ι ; Ι
-:*?:gr_kappa::κ ; Κ
-:*?:gr_lambda::λ ; Λ
-:*?:gr_mu::μ ; Μ
-:*?:gr_nu::ν ; Ν
-:*?:gr_xi::ξ ; Ξ
-:*?:gr_omicron::ο ; Ο
-:*?:gr_pi::π ; Π
-:*?:gr_rho::ρ ; Ρ
-:*?:gr_sigma::σ ; Σ
-:*?:gr_tau::τ ; Τ
-:*?:gr_upsilon::υ ; Υ
-:*?:gr_phi::φ ; Φ
-:*?:gr_chi::χ ; Χ
-:*?:gr_psi::ψ ; Ψ
-:*?:gr_omega::ω ; Ω
+:*?:gr_alpha::Î± ; Î‘
+:*?:gr_beta::Î² ; Î’
+:*?:gr_gamma::Î³ ; Î“
+:*?:gr_delta::Î´ ; Î”
+:*?:gr_epsilon::Îµ ; Î•
+:*?:gr_zeta::Î¶ ; Î–
+:*?:gr_eta::Î· ; Î—
+:*?:gr_theta::Î¸ ; Î˜
+:*?:gr_iota::Î¹ ; Î™
+:*?:gr_kappa::Îº ; Îš
+:*?:gr_lambda::Î» ; Î›
+:*?:gr_mu::Î¼ ; Îœ
+:*?:gr_nu::Î½ ; Î
+:*?:gr_xi::Î¾ ; Îž
+:*?:gr_omicron::Î¿ ; ÎŸ
+:*?:gr_pi::Ï€ ; Î 
+:*?:gr_rho::Ï ; Î¡
+:*?:gr_sigma::Ïƒ ; Î£
+:*?:gr_tau::Ï„ ; Î¤
+:*?:gr_upsilon::Ï… ; Î¥
+:*?:gr_phi::Ï† ; Î¦
+:*?:gr_chi::Ï‡ ; Î§
+:*?:gr_psi::Ïˆ ; Î¨
+:*?:gr_omega::Ï‰ ; Î©
 
 ; Arrows
-:*?:arr_r::→
-:*?:arr_fat_r::⇒
+:*?:arr_r::â†’
+:*?:arr_fat_r::â‡’
 
-:*?:arr_l::←
-:*?:arr_fat_l::⇐
+:*?:arr_l::â†
+:*?:arr_fat_l::â‡
 
-:?:arr_d::↓
-:*?:arr_fat_d::⇓
+:?:arr_d::â†“
+:*?:arr_fat_d::â‡“
 
-:?:arr_u::↑
-:*?:arr_fat_u::⇑
+:?:arr_u::â†‘
+:*?:arr_fat_u::â‡‘
 
-:*?:arr_ul::↖
-:*?:arr_ur::↗
-:*?:arr_dr::↘
-:*?:arr_dl::↙
+:*?:arr_ul::â†–
+:*?:arr_ur::â†—
+:*?:arr_dr::â†˜
+:*?:arr_dl::â†™
 
-:*?:arr_double_l::↔
-:*?:arr_double_r::↔
-:*?:arr_double_d::↕
-:*?:arr_double_u::↕
+:*?:arr_double_l::â†”
+:*?:arr_double_r::â†”
+:*?:arr_double_d::â†•
+:*?:arr_double_u::â†•
 
-; Math :*?:math_approx::≈ :*?:math_neq::≠ :*?:=/=::≠
-:*?:math_corr::≙
-:*?:math_est::≙
+; Math :*?:math_approx::â‰ˆ :*?:math_neq::â‰  :*?:=/=::â‰ 
+:*?:math_corr::â‰™
+:*?:math_est::â‰™
 
-:*?:math_diameter::Ø
-:*?:math_average::Ø
+:*?:math_diameter::Ã˜
+:*?:math_average::Ã˜
 
-:*?:math_elementof::∈
-:*?:math_notelementof::∉
+:*?:math_elementof::âˆˆ
+:*?:math_notelementof::âˆ‰
 
-:*?:math_inf::∞
+:*?:math_inf::âˆž
 
-:*?:math_xor::⊕
+:*?:math_xor::âŠ•
 
-:*?:math_plusminus::±
-:*?:math_times_dot::∙
-:*?:math_times_cross::×
-:*?:math_div::÷
-:*?:math_sqrt::√
+:*?:math_plusminus::Â±
+:*?:math_times_dot::âˆ™
+:*?:math_times_cross::Ã—
+:*?:math_div::Ã·
+:*?:math_sqrt::âˆš
 
 :*?:math_lt::<
-:*?:math_le::≤
+:*?:math_le::â‰¤
 :*?:math_gt::>
-:*?:math_ge::≥
+:*?:math_ge::â‰¥
 
 ; Misc. symbols
-:*?:symb_checkmark::✓
-:*?:symb_lightning::↯
-:*?:symb_heart::♥r
-:*?:symb_bul_empty::◦
-:*?:symb_bul_fill::•
-:*?:symb_tm::™
-:*?:symb_fullblock::█
-:*?:symb_square::■
-:*?:symb_death::♰
+:*?:symb_checkmark::âœ“
+:*?:symb_lightning::â†¯
+:*?:symb_heart::â™¥r
+:*?:symb_bul_empty::â—¦
+:*?:symb_bul_fill::â€¢
+:*?:symb_tm::â„¢
+:*?:symb_fullblock::â–ˆ
+:*?:symb_square::â– 
+:*?:symb_death::â™°
 
-:*?:symb_em::—
-:*?:symb_en::–
+:*?:symb_em::â€”
+:*?:symb_en::â€“
 
 /*
 presentGui := Gui('AlwaysOnTop', 'Present GUI')
@@ -149,7 +149,7 @@ presentGui.Show('X1925 Y5')
 ci.Focus()
 */
 
->^>+ü::
+>^>+Ã¼::
 {
     A_Clipboard := WinGetProcessName(WinExist('A'))
 }
@@ -259,7 +259,7 @@ ci.Focus()
 }
 
 #HotIf WinActive("ahk_exe teams.exe")
-; Fülüb Casing
+; FÃ¼lÃ¼b Casing
 ^+p::
 {
     static ClickTextField() => Click("1601, 1146")

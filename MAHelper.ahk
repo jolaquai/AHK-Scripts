@@ -1,5 +1,5 @@
-; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ah2
+﻿; Import the codebase library to allow calls to some often-needed functions and more
+#Include #Includes\ahk-codebase.ahk
 
 MainWindow := Gui(, "Mortuary Assistant Gameplay Helper")
 MainWindow.Add("Text", "w600 r2 x5 y5 Center", "Choose the sigils the game reveals to you to automatically find the correct demon.`nDepending on which demon it is, 2 or 4 sigils may be required.")

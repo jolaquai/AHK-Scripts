@@ -1,8 +1,8 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ah2
-; #Include #Includes\siege.ah2
-; #Include #Includes\Dictionary.ah2
-codebase.Tool("Reloaded AutoCorrect.ah2", codebase.Tool.center, , , 15)
+#Include #Includes\ahk-codebase.ahk
+; #Include #Includes\siege.ahk
+; #Include #Includes\Dictionary.ahk
+codebase.Tool("Reloaded AutoCorrect.ahk", codebase.Tool.center, , , 15)
 
 ; Function / Variable / Object / Class Declarations
 if (!A_IsDebuggerAttached)
@@ -729,7 +729,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 return
 
 ; Alt-F4 Intercept and Behavior Alteration
-#Include #Includes\alt-f4.ah2
+#Include #Includes\alt-f4.ahk
 
 ; Shortcut Keys (for keyboards that do not have media buttons)
 ; Might have to change 'AppsKey' if it is unavailable

@@ -1,5 +1,5 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ah2
+#Include #Includes\ahk-codebase.ahk
 
 paths := [
     "C:\Users\User\Pictures\Roblox",

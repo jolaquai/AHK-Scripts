@@ -1,5 +1,5 @@
-; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ah2
+﻿; Import the codebase library to allow calls to some often-needed functions and more
+#Include #Includes\ahk-codebase.ahk
 
 perkMappings := Map()
 perks := []

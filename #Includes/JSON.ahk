@@ -1,4 +1,4 @@
-Jxon_Load(&src, args*) {
+﻿Jxon_Load(&src, args*) {
     static q := Chr(34)
     
     key := "", is_key := false
