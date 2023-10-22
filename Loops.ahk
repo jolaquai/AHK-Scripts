@@ -189,6 +189,9 @@ sendAfk(exe := "")
     }
 }
 
+/**
+ * Executes loop actions that run as fast as the internal timer engine allows at ~1ms (interrupted by all other loop functions).
+ */
 fastMonitor()
 {
     global
@@ -615,6 +618,10 @@ disClick(obj, *)
     }
 }
 
+/**
+ * Executes loop actions that run every 70 milliseconds (interrupts fastMonitor).
+ * This should be the function to react to WinActive checks etc. as `fastMonitor` is too sensitive to accurately detect window changes after interacting with them.
+ */
 functions()
 {
     global
@@ -913,9 +920,29 @@ rsnloop:
         }
     }
 
+    if (WinActive("Trial Expired VideoPad Professional"))
+    {
+        Click("888 544")
+        WinWaitActive("Register VideoPad")
+        typeRegistration()
+    }
+    if (WinActive("Register VideoPad"))
+    {
+        typeRegistration()
+    }
+
+    static typeRegistration()
+    {
+        Send("{RAW}210870705-mnrdenzi")
+        Send("{Enter}")
+    }
+
     Sleep(0)
 }
 
+/**
+ * Executes loop actions that run every 10 seconds with the highest priority (all other loop functions are interrupted by this).
+ */
 slowMonitor()
 {
     Loop Parse FileRead("C:\Users\User\Desktop\Share\remote.txt"), "`n", "`r"
