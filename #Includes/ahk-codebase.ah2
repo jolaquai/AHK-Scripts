@@ -103,6 +103,21 @@ class codebase
      * @returns The current Unix time (seconds since midnight, January 1, 1970) relative to the local time zone.
      */
     static getLocalTimezoneOffset() => A_NowUTC
+    /**
+     * Generates `GUID`s.
+     * @param n The amount of `GUID`s to generate. Defaults to `1` if omitted.
+     * @returns An Array of generated `GUID`s.
+     */
+    static getGuids(n := 1)
+    {
+        ret := []
+        Loop n
+        {
+            typeLib := ComObject("Scriptlet.TypeLib")
+            ret.Push(SubStr(typeLib.Guid, 2, 36))
+        }
+        return ret
+    }
 
     /**
      * Changes the state of one or multiple Windows Firewall rules.
@@ -2042,7 +2057,7 @@ class codebase
                 try out .= str . sep
                 catch
                 {
-                    out .= str.ToString() . sep
+                    out .= codebase.collectionOperations.objectOperations.ToString(str) . sep
                 }
             }
             return StrLen(sep) ? SubStr(out, 1, -StrLen(sep)) : out

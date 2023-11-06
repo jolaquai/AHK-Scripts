@@ -24,30 +24,30 @@ codebase.Tool('Reloaded ' . A_ScriptName)
 ; Greek letters
 ; The uppercase character is inserted instead if just the 'g' in gr_alpha, for example, is capitalized. Or just capitalize the entire thing.
 ;   lowercase     ; uppercase
-:*?:gr_alpha::α ; Α
-:*?:gr_beta::β ; Β
-:*?:gr_gamma::γ ; Γ
-:*?:gr_delta::δ ; Δ
+:*?:gr_alpha::α   ; Α
+:*?:gr_beta::β    ; Β
+:*?:gr_gamma::γ   ; Γ
+:*?:gr_delta::δ   ; Δ
 :*?:gr_epsilon::ε ; Ε
-:*?:gr_zeta::ζ ; Ζ
-:*?:gr_eta::η ; Η
-:*?:gr_theta::θ ; Θ
-:*?:gr_iota::ι ; Ι
-:*?:gr_kappa::κ ; Κ
-:*?:gr_lambda::λ ; Λ
-:*?:gr_mu::μ ; Μ
-:*?:gr_nu::ν ; Ν
-:*?:gr_xi::ξ ; Ξ
+:*?:gr_zeta::ζ    ; Ζ
+:*?:gr_eta::η     ; Η
+:*?:gr_theta::θ   ; Θ
+:*?:gr_iota::ι    ; Ι
+:*?:gr_kappa::κ   ; Κ
+:*?:gr_lambda::λ  ; Λ
+:*?:gr_mu::μ      ; Μ
+:*?:gr_nu::ν      ; Ν
+:*?:gr_xi::ξ      ; Ξ
 :*?:gr_omicron::ο ; Ο
-:*?:gr_pi::π ; Π
-:*?:gr_rho::ρ ; Ρ
-:*?:gr_sigma::σ ; Σ
-:*?:gr_tau::τ ; Τ
+:*?:gr_pi::π      ; Π
+:*?:gr_rho::ρ     ; Ρ
+:*?:gr_sigma::σ   ; Σ
+:*?:gr_tau::τ     ; Τ
 :*?:gr_upsilon::υ ; Υ
-:*?:gr_phi::φ ; Φ
-:*?:gr_chi::χ ; Χ
-:*?:gr_psi::ψ ; Ψ
-:*?:gr_omega::ω ; Ω
+:*?:gr_phi::φ     ; Φ
+:*?:gr_chi::χ     ; Χ
+:*?:gr_psi::ψ     ; Ψ
+:*?:gr_omega::ω   ; Ω
 
 ; Arrows
 :*?:arr_r::→
@@ -72,7 +72,10 @@ codebase.Tool('Reloaded ' . A_ScriptName)
 :*?:arr_double_d::↕
 :*?:arr_double_u::↕
 
-; Math :*?:math_approx::≈ :*?:math_neq::≠ :*?:=/=::≠
+; Math
+:*?:math_approx::≈
+:*?:math_neq::≠
+:*?:=/=::≠
 :*?:math_corr::≙
 :*?:math_est::≙
 
@@ -240,6 +243,31 @@ InsertLangword(hk)
     Send("^v")
     Sleep(500)
     A_Clipboard := old
+}
+
+:*?:__guid::
+{
+    A_Clipboard := codebase.getGuids()[1]
+    Send("^v")
+}
+:*?:__lguid::
+{
+    A_Clipboard := StrLower(codebase.getGuids()[1])
+    Send("^v")
+}
+^!+1::
+^!+2::
+^!+3::
+^!+4::
+^!+5::
+^!+6::
+^!+7::
+^!+8::
+^!+9::
+^!+0::
+{
+    A_Clipboard := codebase.stringOperations.strJoin("`r`n", false, codebase.getGuids(SubStr(A_ThisHotkey, 4))*)
+    Send("^v")
 }
 
 /*
@@ -460,3 +488,133 @@ lastHotkey := ""
 
     A_CoordModeMouse := old
 }
+
+#HotIf WinActive("ahk_exe FoxitPDFReader.exe")
+^c::
+{
+    ; Override copying from Foxit to allow working with the text in Regexs for <beginpage> checking
+    A_Clipboard := ""
+    Send("^c")
+    ClipWait(0.5)
+
+    ret := A_Clipboard
+    ret := StrReplace(ret, "`r", "`n")
+    ret := StrReplace(ret, "`n", " ")
+    ret := Trim(ret)
+    ret := Trim(ret, " -")
+    ret := RegExReplace(ret, "(\d+)(ff?\.)", "$1 $2")
+    ret := RegExReplace(ret, "[\^\$\.\*\+\?\(\)\[\]\{\}\|]", "\$0")
+
+    ;ret := StrReplace(ret, " ", ".*?")
+    ret := StrReplace(ret, " ", ".?")
+
+    A_Clipboard := ret
+
+    try
+    {
+        WinActivate("Find ahk_exe notepad++.exe")
+    }
+    catch
+    {
+        WinActivate("ahk_exe notepad++.exe")
+        Send("^f")
+    }
+    WinWaitActive("Find ahk_exe notepad++.exe")
+    Send("^v")
+    Send("{Enter}")
+}
+
++WheelDown::
+{
+    Send("{PgDn 5}")
+}
++WheelUp::
+{
+    Send("{PgUp 5}")
+}
+
+#HotIf WinActive("ahk_exe notepad++.exe")
+~^c::
+~^v::
+{
+    Send("+!s")
+}
+
++!1::
+InsertBp(hk)
+{
+    static lastSuppldesc := ["Lfg.", "93", "Oktober", "2020"]
+    static lastWasEven := 2
+    static lastPagenum := 0
+
+    pagenum := InputBox("pagenum", , , lastPagenum + 1)
+    if (pagenum.Result !== "OK" || !IsInteger(pagenum.Value))
+    {
+        return
+    }
+
+    evenBp := Mod(pagenum.Value, 2)
+    entries := (evenBp != Mod(lastPagenum, 2)) ? [
+        lastSuppldesc[1],
+        lastSuppldesc[2],
+        lastSuppldesc[3],
+        lastSuppldesc[4]
+    ] : [
+        lastSuppldesc[3],
+        lastSuppldesc[4],
+        lastSuppldesc[1],
+        lastSuppldesc[2]
+    ]
+    lastPagenum := Integer(pagenum.Value)
+
+    suppldescInput := InputBox("Suppldesc", , , codebase.stringOperations.strJoin(" ", false, entries*))
+    if (suppldescInput.Result !== "OK")
+    {
+        return
+    }
+    lastSuppldesc := StrSplit(suppldescInput.Value, ' ')
+    lastWasEven := evenBp
+
+    A_Clipboard := ""
+    A_Clipboard := '<beginpage leavebreak="' . (evenBp ? 'no' : 'yes') . '" pagenum="' . lastPagenum . '" suppldesc="' . codebase.stringOperations.strJoin(" ", false, lastSuppldesc*) . '" />'
+
+    WinActivate("ahk_exe notepad++.exe")
+    WinWaitActive("ahk_exe notepad++.exe")
+    Send("^v")
+    Send("+!s")
+}
+
+lockAllowed := false
+afkProtector()
+{
+    global
+
+    if (ProcessExist("testhost.exe"))
+    {
+        return
+    }
+    else if (A_TimeIdlePhysical > 20000)
+    {
+        ; Allow some time between tests finishing and locking the PC
+        Sleep(5000)
+    }
+
+    if (A_TimeIdlePhysical >= 20000)
+    {
+        if (lockAllowed)
+        {
+            DllCall("LockWorkStation")
+            lockAllowed := false
+        }
+    }
+    else if (A_TimeIdlePhysical >= 15000)
+    {
+        codebase.Tool("Locking in " . 20000 - A_TimeIdlePhysical . "ms", codebase.Tool.center)
+    }
+    else
+    {
+        lockAllowed := true
+    }
+}
+
+SetTimer(afkProtector, 250, 5)
