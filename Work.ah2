@@ -360,15 +360,22 @@ ci.Focus()
     {
         A_Clipboard := StrReplace(A_Clipboard, "C:\Users\laquai.joshua.EDV\Desktop\Alles\Alle", "\\sa13-laquaij-vm\Alle")
     }
+    if (InStr(A_Clipboard, "T:\"))
+    {
+        A_Clipboard := StrReplace(A_Clipboard, "T:\", "\\lm01\FREMDVERGABE\")
+    }
 }
 
 #HotIf !WinActive('ahk_exe devenv.exe')
     && !WinActive('ahk_exe Code.exe')
+    && !WinActive('ahk_exe Code - Insiders.exe')
     && !WinActive('ahk_exe firefox.exe')
-^Backspace:: Send('^+{Left}{Backspace}')
+    && !WinActive('ahk_exe teams.exe')
+    && !WinActive('ahk_exe msteams.exe')
+^Backspace::Send('^+{Left}{Backspace}')
 #HotIf
 
-^!+v:: Send("{Raw}" . A_Clipboard)
+^!+v::Send("{Raw}" . A_Clipboard)
 
 #HotIf WinActive('Joshua Laquai ahk_exe firefox.exe')
 :b0:}}::{Backspace}
@@ -383,7 +390,8 @@ ci.Focus()
     {
         f.WriteLine("'" . char . "' == \u" . Format("{:04x}", Ord(char)))
     }
-    Run('explorer.exe "' . path . '"')
+    f.Close()
+    ; Run('explorer.exe "' . path . '"')
 }
 
 !NumpadAdd::
@@ -585,6 +593,8 @@ InsertBp(hk)
 }
 
 lockAllowed := false
+lockAfter := 25000
+notifyBefore := 10000
 afkProtector()
 {
     global
@@ -593,13 +603,13 @@ afkProtector()
     {
         return
     }
-    else if (A_TimeIdlePhysical > 20000)
+    else if (A_TimeIdlePhysical > lockAfter)
     {
         ; Allow some time between tests finishing and locking the PC
         Sleep(5000)
     }
 
-    if (A_TimeIdlePhysical >= 20000)
+    if (A_TimeIdlePhysical >= lockAfter)
     {
         if (lockAllowed)
         {
@@ -607,9 +617,9 @@ afkProtector()
             lockAllowed := false
         }
     }
-    else if (A_TimeIdlePhysical >= 15000)
+    else if (A_TimeIdlePhysical >= (lockAfter - notifyBefore))
     {
-        codebase.Tool("Locking in " . 20000 - A_TimeIdlePhysical . "ms", codebase.Tool.center)
+        codebase.Tool("Locking in " . lockAfter - A_TimeIdlePhysical . "ms", codebase.Tool.center)
     }
     else
     {
