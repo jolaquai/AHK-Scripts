@@ -1,5 +1,5 @@
-#Include #Includes\ahk-codebase.ah2
-#Include #Includes\siege.ah2
+﻿#Include #Includes\ahk-codebase.ahk
+#Include #Includes\siege.ahk
 
 eh := ""
 OnError(handle, -1)

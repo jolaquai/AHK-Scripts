@@ -1,4 +1,4 @@
-/**
+﻿/**
  * My codebase library for most of my other AHK scripts.
  *
  * Notes:
@@ -10,7 +10,7 @@
  * - String concatenations are / should always be done explicitly: `"string 1" . " " . var` instead of `"string 1" " " var`.
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
- * - On 8/19/2022, I made the switch to the `.ah2` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
+ * - On 8/19/2022, I made the switch to the `.ahk` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
  *
  * The functions and some classes are sometimes only annotated, usually fully documented though, using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
@@ -23,13 +23,13 @@ notes := ""
 ; Directives / pre-execution statements
 ; These don't usually need to be set in every new script but doing it might help in specific cases. They can be overridden at any time by calling the built-in setter functions or supplying #directives with other arguments than the ones in here.
 
-eh := codebase.ErrorHandler([Error], codebase.ErrorHandler.reload)
+eh := codebase.errors.ErrorHandler([Error], codebase.errors.ErrorHandler.reload)
 
-#Include JSON.ah2
-#Include MimeTypeMap.ah2
-#Include UnicodeBlockMap.ah2
-#Include HTTPStatusMap.ah2
-#Include AhkLinq.ah2
+#Include JSON.ahk
+#Include MimeTypeMap.ahk
+#Include UnicodeBlockMap.ahk
+#Include HTTPStatusMap.ahk
+#Include AhkLinq.ahk
 
 SendMode("Event")
 #SingleInstance force
@@ -342,7 +342,7 @@ class codebase
      * - Map: The function is recursively called on each key-value pair.
      * - Function: The function's name and information about it is inserted. The amount of parameters it takes is displayed as follows, where `n` is any number: `pn` indicates a required parameter, `pn?` indicates an optional parameter, `v*` indicates a final variadic parameter.
      * - Primitive values (Strings, numbers, etc.): The value is inserted as-is.
-     * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.ErrorHandler.output}`.
+     * - `Error`s: The information contained by the `Error` object is compiled into a string in the following format: `[Unthrown {Error Type}]\n{Output from codebase.errors.ErrorHandler.output}`.
      * - Objects: The object's `ToString` method is called. On simple objects, this compiles the object's OwnProps and their values into a string. Objects instantiated from user-defined classes should overwrite `ToString` if warranted.
      * @returns An output string constructed while traversing the values in `elems`.
      */
@@ -426,7 +426,7 @@ class codebase
             }
             else if (elem is Error)
             {
-                out .= "[Unthrown " . Type(elem) . "]`n" . codebase.ErrorHandler.output(elem, false) . "`n"
+                out .= "[Unthrown " . Type(elem) . "]`n" . codebase.errors.ErrorHandler.output(elem, false) . "`n"
             }
             else if (elem is Object)
             {
@@ -1275,144 +1275,162 @@ class codebase
         ToString() => this._path
     }
 
-    /**
-     * An object to accumulate or handle run-time Errors.
-     */
-    class ErrorHandler
+    class errors
     {
-        static custom := -2
-        static reload := -1
-        static suppress := 0
-        static notify := 1
-        static rethrow := 2
-        static stop := 3
-        static exit := 4
-
         /**
-         * Instantiates an `ErrorHandler` object.
-         * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
-         * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
-         * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.ErrorHandler.notify` if omitted.
-         * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
-         * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
-         * @returns An `ErrorHandler` object.
+         * An object to accumulate or handle run-time Errors.
          */
-        __New(types?, mode := 1, custom?)
+        class ErrorHandler
         {
-            OnError(this.handle.Bind(this), 1)
+            static custom := -2
+            static reload := -1
+            static suppress := 0
+            static notify := 1
+            static rethrow := 2
+            static stop := 3
+            static exit := 4
 
-            this.setTypes(IsSet(types) ? types : [Error])
-            this.setMode(mode)
-            if (IsSet(custom))
+            errs := []
+            mode := ""
+
+            /**
+            * Instantiates an `ErrorHandler` object.
+            * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
+            * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
+            * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.errors.ErrorHandler.notify` if omitted.
+            * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
+            * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
+            * @returns An `ErrorHandler` object.
+            */
+            __New(types?, mode := 1, custom?)
             {
-                if (custom is Func)
+                OnError(this.handle.Bind(this), 1)
+
+                this.setTypes(IsSet(types) ? types : [Error])
+                this.setMode(mode)
+                if (IsSet(custom))
                 {
-                    this.customFunc := custom
+                    if (custom is Func)
+                    {
+                        this.customFunc := custom
+                    }
                 }
             }
 
-            this.errs := []
-        }
-
-        __Delete()
-        {
-            OnError(this.handle, 0)
-        }
-
-        __Item[n]
-        {
-            get => this.errs[n]
-        }
-
-        handle(e, ret)
-        {
-            for t in this.types
+            __Delete()
             {
-                if (e is t)
+                OnError(this.handle, 0)
+            }
+
+            __Item[n]
+            {
+                get => this.errs[n]
+            }
+
+            handle(e, ret)
+            {
+                for t in this.types
                 {
-                    this.errs.Push(e)
-                    break
+                    if (e is t)
+                    {
+                        this.errs.Push(e)
+                        break
+                    }
+                    return
                 }
-                return
+
+                switch (this.mode)
+                {
+                    case codebase.errors.ErrorHandler.custom:
+                        return this.customFunc(e)
+                    case codebase.errors.ErrorHandler.reload:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        Reload()
+                    case codebase.errors.ErrorHandler.suppress:
+                        return -1
+                    case codebase.errors.ErrorHandler.notify:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        return -1
+                    case codebase.errors.ErrorHandler.rethrow:
+                        return 0
+                    case codebase.errors.ErrorHandler.stop:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        return 1
+                    case codebase.errors.ErrorHandler.exit:
+                        MsgBox(codebase.errors.ErrorHandler.output(e))
+                        ExitApp(0)
+                }
             }
 
-            switch (this.mode)
+            /**
+            * Formats the information contained in an `Error` object.
+            * @param e The `Error` object the information of which to format into a string.
+            * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
+            * @returns A string with the information contained in `e`.
+            */
+            static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
+
+            /**
+            * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
+            * @param types An Array of types.
+            * @throws `TypeError` if `var` is not a `expected type`.
+            */
+            setTypes(types)
             {
-                case codebase.ErrorHandler.custom:
-                    return this.customFunc(e)
-                case codebase.ErrorHandler.reload:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    Reload()
-                case codebase.ErrorHandler.suppress:
-                    return -1
-                case codebase.ErrorHandler.notify:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    return -1
-                case codebase.ErrorHandler.rethrow:
-                    return 0
-                case codebase.ErrorHandler.stop:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    return 1
-                case codebase.ErrorHandler.exit:
-                    MsgBox(codebase.ErrorHandler.output(e))
-                    ExitApp(0)
+                errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
+
+                if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
+                {
+                    throw TypeError("Invalid type for ``types[" . A_Index . "]``. Received ``" . Type(types[A_Index]) . "``, expected ``Error`` or one of its subclasses.")
+                }
+
+                this.types := types
+            }
+
+            /**
+            * Changes how this `ErrorHandler` should react to an incoming error.
+            * @param mode One of the following values.
+            * - `codebase.errors.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
+            * - `codebase.errors.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
+            * - `codebase.errors.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
+            * - `codebase.errors.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
+            * - `codebase.errors.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
+            * - `codebase.errors.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
+            * - `codebase.errors.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
+            */
+            setMode(mode)
+            {
+                modes := [
+                    codebase.errors.ErrorHandler.custom,
+                    codebase.errors.ErrorHandler.reload,
+                    codebase.errors.ErrorHandler.suppress,
+                    codebase.errors.ErrorHandler.notify,
+                    codebase.errors.ErrorHandler.rethrow,
+                    codebase.errors.ErrorHandler.stop,
+                    codebase.errors.ErrorHandler.exit
+                ]
+
+                if (!(codebase.collectionOperations.arrayOperations.arrayContains(modes, mode).Length))
+                {
+                    throw ValueError("Invalid value for ``mode``. Received ``" . mode . "``, expected one of the following: ``codebase.errors.ErrorHandler.suppress``, ``codebase.errors.ErrorHandler.notify``, ``codebase.errors.ErrorHandler.stop``.")
+                }
+
+                this.mode := mode
             }
         }
 
-        /**
-         * Formats the information contained in an `Error` object.
-         * @param e The `Error` object the information of which to format into a string.
-         * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
-         * @returns A string with the information contained in `e`.
-         */
-        static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
-
-        /**
-         * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
-         * @param types An Array of types.
-         * @throws `TypeError` if `var` is not a `expected type`.
-         */
-        setTypes(types)
+        class NotImplementedError extends Error
         {
-            errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
-
-            if (codebase.collectionOperations.arrayOperations.arrayIntersect(errtypes, types).Length !== types.Length)
+            /**
+             * Instantiates a new `NotImplementedError` with the given target 
+             * @param target The full name of the method, function or class that is not implemented. Defaults to an empty string if omitted.
+             * @param message The error message to display. Defaults to `"The given target method, function or class is not implemented."` if omitted.
+             */
+            static __New(target := "", message := "The given target method, function or class is not implemented.")
             {
-                throw TypeError("Invalid type for ``types[" . A_Index . "]``. Received ``" . Type(types[A_Index]) . "``, expected ``Error`` or one of its subclasses.")
+                super(message)
+                this.Target := target
             }
-
-            this.types := types
-        }
-
-        /**
-         * Changes how this `ErrorHandler` should react to an incoming error.
-         * @param mode One of the following values.
-         * - `codebase.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
-         * - `codebase.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
-         * - `codebase.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
-         * - `codebase.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
-         * - `codebase.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
-         * - `codebase.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
-         */
-        setMode(mode)
-        {
-            modes := [
-                codebase.ErrorHandler.custom,
-                codebase.ErrorHandler.reload,
-                codebase.ErrorHandler.suppress,
-                codebase.ErrorHandler.notify,
-                codebase.ErrorHandler.rethrow,
-                codebase.ErrorHandler.stop,
-                codebase.ErrorHandler.exit
-            ]
-
-            if (!(codebase.collectionOperations.arrayOperations.arrayContains(modes, mode).Length))
-            {
-                throw ValueError("Invalid value for ``mode``. Received ``" . mode . "``, expected one of the following: ``codebase.ErrorHandler.suppress``, ``codebase.ErrorHandler.notify``, ``codebase.ErrorHandler.stop``.")
-            }
-
-            this.mode := mode
         }
     }
 
@@ -1820,7 +1838,7 @@ class codebase
 
         /**
          * Returns the object's stored bits as a numerical value.
-         * @throws `ValueError` if `this.bits.Length` is `≥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
+         * @throws `ValueError` if `this.bits.Length` is `â‰¥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
          * @returns The `codebase.Binary` object's stored bits converted to a numerical value.
          */
         Value()
@@ -3148,19 +3166,19 @@ class codebase
              */
             static e := Exp(1)
             /**
-             * `π` ("pi"), defined as the ratio of a circle's circumference to its diameter or 4 times the arctangent of `1`.
+             * `Ï€` ("pi"), defined as the ratio of a circle's circumference to its diameter or 4 times the arctangent of `1`.
              */
             static pi := 4 * ATan(1)
             /**
-             * `φ` ("phi"), the golden ratio.
+             * `Ï†` ("phi"), the golden ratio.
              *
-             * Two quantities `a`, `b` with `a > b > 0` are said to be in the golden ratio `φ` if `(a + b) / a == a / b == φ`.
+             * Two quantities `a`, `b` with `a > b > 0` are said to be in the golden ratio `Ï†` if `(a + b) / a == a / b == Ï†`.
              */
             static phi := (1 + Sqrt(5)) / 2
             /**
-             * `δ_S` ("delta S"), the silver ratio.
+             * `Î´_S` ("delta S"), the silver ratio.
              *
-             * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `δ_S` if `(2a + b) / a == a / b == δ_S`.
+             * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `Î´_S` if `(2a + b) / a == a / b == Î´_S`.
              */
             static delta_S := 1 + Sqrt(2)
         }
@@ -3901,7 +3919,7 @@ class codebase
 
                 /**
                  * Calculates the scalar product ("dot product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `1` and ≤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -3910,7 +3928,7 @@ class codebase
                 scalarProduct(vs*) => codebase.math.vectorGeometry.scalarProduct(this, vs*)
                 /**
                  * Calculates the Vector product ("cross product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `1` and ≤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @throws `ValueError` if the `dim` property (dimension of the Vector) of `this` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4002,8 +4020,8 @@ class codebase
                 if (codebase.math.vectorGeometry.linearDependence(dv1, dv2))
                 {
                     ; The lines are at least parallel, now check whether they are actually the same line
-                    ; This is not exactly easy as it's basically solving a system of equations, however, since this is not as analytical and strict as school math, let's just solve one line for a value of `μ` and check if that value checks out overall
-                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + μ*v_n`
+                    ; This is not exactly easy as it's basically solving a system of equations, however, since this is not as analytical and strict as school math, let's just solve one line for a value of `Î¼` and check if that value checks out overall
+                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + Î¼*v_n`
                     m := (dv2.v1 !== 0 ? (pv1.v1 - pv2.v1) / dv2.v1 : (dv2.v2 !== 0 ? (pv1.v2 - pv2.v2) / dv2.v2 : (pv1.v3 - pv2.v3) / dv2.v3))
                     if (codebase.math.vectorGeometry.vectorCompare(codebase.math.vectorGeometry.scalarMultiply(1, pv1), l2(m)))
                     {
@@ -4019,7 +4037,7 @@ class codebase
                 else
                 {
                     ; The lines are not parallel, meaning they either intersect once or not at all
-                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + μ*v_n`
+                    ; Since the first line of the system has the following format, the below formula works no matter what the values are: `x_n = B_n + Î¼*v_n`
                     try
                     {
                         m := (dv2.v1 !== 0 ? (pv1.v1 - pv2.v1) / dv2.v1 : (dv2.v2 !== 0 ? (pv1.v2 - pv2.v2) / dv2.v2 : (pv1.v3 - pv2.v3) / dv2.v3))
@@ -4122,7 +4140,7 @@ class codebase
             {
                 if (vs.Length < 2)
                 {
-                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``≥ 2``.")
+                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``â‰¥ 2``.")
                 }
 
                 hdim := 0
@@ -4170,7 +4188,7 @@ class codebase
 
             /**
              * Creates a null Vector (all coordinates are `0`).
-             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `≥ 2`. Defaults to `3` if omitted.
+             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `â‰¥ 2`. Defaults to `3` if omitted.
              * @returns A null Vector with `dim` coordinates, all `0`.
              */
             static nullVector(dim := 3)
@@ -4220,9 +4238,9 @@ class codebase
                 }
 
                 ; If a coordinate in the direction Vector is `0`, the line defined by the vectors cannot intersect with the plane that is missing that coordinate as the two run parallel to each other, i.e.
-                ; - `dv.v1 = 0` -> `line ∉ x2x3`
-                ; - `dv.v2 = 0` -> `line ∉ x1x3`
-                ; - `dv.v3 = 0` -> `line ∉ x1x2`
+                ; - `dv.v1 = 0` -> `line âˆ‰ x2x3`
+                ; - `dv.v2 = 0` -> `line âˆ‰ x1x3`
+                ; - `dv.v3 = 0` -> `line âˆ‰ x1x2`
                 possibleIntersections := [1, 2, 3]
                 for e in [dv.v1, dv.v2, dv.v3]
                 {
@@ -4301,7 +4319,7 @@ class codebase
 
             /**
              * Checks whether a series of vectors is linearly dependent.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4382,7 +4400,7 @@ class codebase
                         ; In three-dimensional space, 4 vectors are always linearly dependent.
                         return true
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -4420,7 +4438,7 @@ class codebase
 
             /**
              * Calculates the scalar product ("dot product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4464,7 +4482,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.scalarProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -4472,7 +4490,7 @@ class codebase
 
             /**
              * Calculates the Vector product ("cross product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to ≥ `2` and ≤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @throws `ValueError` if the `dim` property (dimension of the Vector) of the first Vector in `vs` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4491,7 +4509,7 @@ class codebase
 
                     if (v.dim > 3)
                     {
-                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value ≥ ``2`` and ≤ ``3``.")
+                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value â‰¥ ``2`` and â‰¤ ``3``.")
                     }
 
                     if (v.dim < 3)
@@ -4521,7 +4539,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.vectorProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ≥ ``2`` and ≤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
                 }
             }
 
@@ -5696,7 +5714,7 @@ class codebase
 
             /**
              * Calculates the number of possible subsets in a set, with the following conditions (permutations):
-             * - `ab ≠ ba` and permutations that contain the same elements but in a different order are counted individually
+             * - `ab â‰  ba` and permutations that contain the same elements but in a different order are counted individually
              * - repetitions like picking `aa` are allowed
              * @param n The size of the set.
              * @param k The size of the subsets.
@@ -5722,7 +5740,7 @@ class codebase
 
             /**
              * Calculates the number of possible subsets in a set, with the following conditions (partial permutations):
-             * - `ab ≠ ba` and permutations that contain the same elements but in a different order are counted individually
+             * - `ab â‰  ba` and permutations that contain the same elements but in a different order are counted individually
              * - repetitions like picking `aa` are not allowed
              * @param n The size of the set.
              * @param k The size of the subsets.
@@ -5755,7 +5773,7 @@ class codebase
             }
 
             /**
-             * Calculates the expected value (`E(X)`, `mu`, `μ`) for a set of values and associated probabilities.
+             * Calculates the expected value (`E(X)`, `mu`, `Î¼`) for a set of values and associated probabilities.
              * @param x_i The values to use.
              * @param Px An associated probability for each element in `x_i`.
              * @throws `TypeError` if `x_i` is not an `Array`.
@@ -5921,19 +5939,21 @@ class codebase
             /**
              * Instatiates a new `codebase.directoryOperations.DirectoryMonitor` object.
              * @param path The path of the directory to monitor.
+             * @param recurse Whether or not to monitor subdirectories as well. Defaults to `false` if omitted.
              * @param interval The interval at which to check for changes. Defaults to `10000` (10 seconds) if omitted.
              * @param callbacks An object with one or more of the following props containing functions to be called when the corresponding event occurs. If omitted, the `add` and `remove` callbacks will be registered automatically. The default implementation of these display a Tooltip detailing the changes in the top-left corner of the right-most monitor.
              * - `add`: A file is added to the directory.
              * - `remove`: A file is removed from the directory.
              * @returns A `codebase.directoryOperations.DirectoryMonitor` object.
              */
-            __New(path, interval := 10000, callbacks?)
+            __New(path, recurse := false, interval := 10000, callbacks?)
             {
                 this.firstRun := true
 
                 this.timer := ObjBindMethod(this, "monitor")
 
                 this.path := path
+                this.recurse := recurse
                 this.interval := interval
                 this.tooltipTime := 4000
                 this.files := []
@@ -5998,7 +6018,7 @@ class codebase
             monitor()
             {
                 now := []
-                Loop Files this.path . "\*"
+                Loop Files this.path . "\*", (this.recurse ? "FR" : "F")
                 {
                     now.Push(A_LoopFileFullPath)
                 }

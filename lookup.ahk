@@ -1,4 +1,4 @@
-﻿#Include ".\#Includes\ahk-codebase.ah2"
+﻿#Include ".\#Includes\ahk-codebase.ahk"
 
 wolfram_appid := "P364EJ-HP72P7YLVP"
 for arg in A_Args

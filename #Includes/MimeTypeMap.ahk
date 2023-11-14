@@ -1,4 +1,4 @@
-/**
+﻿/**
  * A wrapper for a `Map` object which maps extensions to MIME types and vice versa.
  */
 class MimeTypeMap

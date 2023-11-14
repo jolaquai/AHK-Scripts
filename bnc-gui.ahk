@@ -1,5 +1,5 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include F:\PROGRAMMING\AHK Scripts\#Includes\ahk-codebase.ah2
+#Include F:\PROGRAMMING\AHK Scripts\#Includes\ahk-codebase.ahk
 OnError((*) => 0)
 
 g := Gui(, "Binomialverteilungsrechner lol")

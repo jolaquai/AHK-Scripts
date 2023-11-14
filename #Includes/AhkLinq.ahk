@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Replicates the functionality of the `System.Linq.Enumerable` class in C#, slightly modified to account for factors such as AHKv2's lack of generics, strong typing etc.
  * 
  * Note that all of the methods in this class return `Enumerator` instances, which also replicates the lazy evaluation behavior of the `IEnumerable` interface in C#. You may enumerate the the results of these methods using `Enumerator.Enumerate()`. It replicates the `To#` methods in C#, where `#` is the desired type of the result.
@@ -243,18 +243,24 @@ class Linq
     }
 }
 
+; Add the Linq methods to the Enumerator prototype
 try
 {
+    ; This function will enumerate the items in an Enumerator object and return them as an array
     enumerateEnumerator(enumerator)
     {
+        ; Create the array which will hold the items
         arr := []
+        ; Loop over each item in the enumerator and add it to the array
         for item in enumerator
         {
             arr.Push(item)
         }
+        ; Return the array
         return arr
     }
 
+    ; Define a property on the Enumerator prototype called "Enumerate" which is a function that returns an array of the items in the enumerator
     defProp := {}.DefineProp
     defProp(Enumerator.Prototype, "Enumerate", { Call: enumerateEnumerator })
 }

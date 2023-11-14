@@ -1,8 +1,13 @@
 ﻿; Import the codebase library to allow calls to some often-needed functions and more
-#Include #Includes\ahk-codebase.ah2
+#Include #Includes\ahk-codebase.ahk
 
 clipProcess(type)
 {
+    if (WinActive("ahk_exe devenv.exe"))
+    {
+        return
+    }
+
     static changed := false
 
     if (type !== 1 || changed)
@@ -122,6 +127,11 @@ sendAfk(exe := "")
         Send("{Space}")
         return
 
+        Send("{e down}")
+        Sleep(15000)
+        Send("{e up}")
+        return
+
         Send("{w down}")
         Sleep(250)
         Send("{w up}")
@@ -179,6 +189,9 @@ sendAfk(exe := "")
     }
 }
 
+/**
+ * Executes loop actions that run as fast as the internal timer engine allows at ~1ms (interrupted by all other loop functions).
+ */
 fastMonitor()
 {
     global
@@ -605,6 +618,10 @@ disClick(obj, *)
     }
 }
 
+/**
+ * Executes loop actions that run every 70 milliseconds (interrupts fastMonitor).
+ * This should be the function to react to WinActive checks etc. as `fastMonitor` is too sensitive to accurately detect window changes after interacting with them.
+ */
 functions()
 {
     global
@@ -630,7 +647,7 @@ functions()
                 {
                     SplitPath(A_ScriptFullPath, , &dir, , , &drv)
                     f := FileOpen('reAhk.bat', "w")
-                    f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ah2`nstart Loops.ah2")
+                    f.Write(drv . "`ncd " . dir . "`ntaskkill /f /im autohotkey64.exe`n`nstart AutoCorrect.ahk`nstart Loops.ahk")
                     f.Close()
                     Run('reAhk.bat')
                 }
@@ -697,7 +714,7 @@ functions()
         WinMove(x - w - 5, y, , , "Add friends")
     }
 
-    if (WinActive("Shut Down Windows"))
+    if (WinActive("Shut Down Windows") && false)
     {
         if (MsgBox("Hibernate?", , 0x4) == "Yes")
         {
@@ -794,7 +811,7 @@ celoop:
         if (!WinExist("ahk_exe RockSniffer.exe"))
         {
 rsnloop:
-            Run("E:\Programs\RockSniffer 0.3.4\RockSniffer.exe", "E:\Programs\RockSniffer 0.3.4")
+            Run("E:\Programs\RockSniffer 0.4.1\RockSniffer.exe", "E:\Programs\RockSniffer 0.4.1")
             Sleep(2500)
 
             if (!WinExist("ahk_exe RockSniffer.exe") || MsgBox("Did RockSniffer start correctly?", "Correct RockSniffer startup", "0x4 T5") == "No")
@@ -887,7 +904,6 @@ rsnloop:
         }
     }
 
-    /*
     if (DirExist("C:\Users\user\Downloads\*valorant*"))
     {
         try
@@ -903,11 +919,30 @@ rsnloop:
             FileDelete("C:\Users\user\Downloads\*valorant*")
         }
     }
-    */
+
+    if (WinActive("Trial Expired VideoPad Professional"))
+    {
+        Click("888 544")
+        WinWaitActive("Register VideoPad")
+        typeRegistration()
+    }
+    if (WinActive("Register VideoPad"))
+    {
+        typeRegistration()
+    }
+
+    static typeRegistration()
+    {
+        Send("{RAW}210870705-mnrdenzi")
+        Send("{Enter}")
+    }
 
     Sleep(0)
 }
 
+/**
+ * Executes loop actions that run every 10 seconds with the highest priority (all other loop functions are interrupted by this).
+ */
 slowMonitor()
 {
     Loop Parse FileRead("C:\Users\User\Desktop\Share\remote.txt"), "`n", "`r"
@@ -1016,10 +1051,10 @@ windowList := afkgui.Add("ListBox", "ReadOnly w" . elemWidth . " r" . triggers.L
 afkgui.Add("Button", "w" . elemWidth, "Edit").OnEvent("Click", (*) => Edit())
 afkgui.Add("Button", "w" . elemWidth, "Reload").OnEvent("Click", (*) => Reload())
 
-;afkgui.Show("X5 Y5")
+; afkgui.Show("X5 Y5")
 WinMinimize(afkgui.Hwnd)
 
-codebase.Tool("Reloaded Loops.ah2", true, , , 50)
+codebase.Tool("Reloaded Loops.ahk", true, , , 50)
 
 if ((f := codebase.directoryOperations.getNewest("E:\YOUTUBE\Captures\Tom Clancy's Rainbow Six  Siege", true, "*.vpj")) !== "")
 {

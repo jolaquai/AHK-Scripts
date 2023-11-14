@@ -1,4 +1,4 @@
-#Include #Includes\ahk-codebase.ah2
+﻿#Include #Includes\ahk-codebase.ah2
 codebase.Tool('Reloaded ' . A_ScriptName)
 
 ; Reload with Ctrl+S
@@ -356,13 +356,13 @@ ci.Focus()
     A_Clipboard := ''
     Send('^c')
     ClipWait(0.25)
-    if (InStr(A_Clipboard, "C:\Users\laquai.joshua.EDV\Desktop\Alles\Alle"))
+    if (InStr(A_Clipboard, "\\sa13-laquaij-vm\Alle"))
     {
-        A_Clipboard := StrReplace(A_Clipboard, "C:\Users\laquai.joshua.EDV\Desktop\Alles\Alle", "\\sa13-laquaij-vm\Alle")
+        A_Clipboard := StrReplace(A_Clipboard, "\\sa13-laquaij-vm\Alle", "\\sa13-laquaij-vm\Alle")
     }
-    if (InStr(A_Clipboard, "T:\"))
+    if (InStr(A_Clipboard, "\\lm01\FREMDVERGABE\"))
     {
-        A_Clipboard := StrReplace(A_Clipboard, "T:\", "\\lm01\FREMDVERGABE\")
+        A_Clipboard := StrReplace(A_Clipboard, "\\lm01\FREMDVERGABE\", "\\lm01\FREMDVERGABE\")
     }
 }
 
