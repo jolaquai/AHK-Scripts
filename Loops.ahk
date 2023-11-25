@@ -722,7 +722,7 @@ functions()
         }
     }
 
-    if (WinExist("ahk_exe RainbowSix.exe"))
+    if (WinExist("ahk_group crossOverGroup"))
     {
         if (!ProcessExist("CrossOver.exe"))
         {
@@ -974,6 +974,9 @@ GroupAdd("lock", "ahk_exe TslGame.exe")
 GroupAdd("noCaps", "ahk_exe RainbowSix.exe")
 GroupAdd("noCaps", "ahk_exe r5apex.exe")
 GroupAdd("noCaps", "ahk_exe VALORANT-Win64-Shipping.exe")
+
+GroupAdd("crossOverGroup", "ahk_exe RainbowSix.exe")
+GroupAdd("crossOverGroup", "ahk_exe Discovery.exe")
 
 ProcessSetPriority("BelowNormal")
 

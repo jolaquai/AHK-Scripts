@@ -152,6 +152,7 @@ valorapid := Rapidvar("valo")
 ptrapid := Rapidvar("pt")
 totrapid := Rapidvar("tot")
 hitmanrapid := Rapidvar("hitman")
+finalsrapid := Rapidvar("finals")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -739,7 +740,7 @@ AppsKey & F7::Send("{Media_Play_Pause}")
 AppsKey & F8::Send("{Media_Next}")
 AppsKey & F10::Send("{Volume_Down}")
 AppsKey & F11::Send("{Volume_Up}")
-; AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
+AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Reload with Ctrl+S
 
@@ -764,6 +765,7 @@ AppsKey & F11::Send("{Volume_Up}")
     && !WinActive("ahk_exe EvilDead-Win64-Shipping.exe")
     && !WinActive("ahk_exe Aragami.exe")
     && !WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
+    && !WinActive("ahk_exe Discovery.exe")
 ~^s::
 {
     ; Script process duplication due to rapid reloading should be prevented by this
@@ -1438,14 +1440,14 @@ AppsKey & F11::Send("{Volume_Up}")
     {
         MouseGetPos(&x, &y)
 
-        MouseMove(382, 1800)
+        MouseMove(191, 900)
         Sleep(30)
         Loop 10
         {
             Click("WheelDown")
         }
         Sleep(50)
-        Click("218 1844")
+        Click("109 922")
         Sleep(50)
 
         MouseMove(x, y)
@@ -1457,15 +1459,15 @@ AppsKey & F11::Send("{Volume_Up}")
         KeyWait("LButton", "D")
         KeyWait("LButton", "U")
 
-        MouseMove(388, 1640)
+        MouseMove(194, 820)
         Sleep(50)
-        Click("388 1640")
+        Click("194 820")
 
         KeyWait("Enter", "D")
         KeyWait("Enter", "U")
 
         Send("gy")
-        MouseMove(1928, 1696)
+        MouseMove(1084, 848)
     }
 
 ; Dead By Daylight
@@ -1625,6 +1627,13 @@ AppsKey & F11::Send("{Volume_Up}")
     ;         Send("{LButton up}")
     ;     }
     ; }
+
+    ~*g::
+    {
+        Send("{Tab}")
+        Sleep(50)
+        Send("{Tab}")
+    }
 
 ; Rocksmith 2014
 #HotIf WinActive("ahk_exe Rocksmith2014.exe")
@@ -2410,3 +2419,21 @@ AppsKey & F11::Send("{Volume_Up}")
 #HotIf WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
     ~*WheelDown::Send("{Blind}{Space}")
     ~*WheelUp::Send("{Blind}f")
+
+#HotIf WinActive("ahk_exe Discovery.exe")
+    +b::finalsrapid.inc()
+
+    ; ~*LButton::
+    ; {
+    ;     global
+    ;     Loop
+    ;     {
+    ;         if (!(GetKeyState("LButton", "P") && finalsrapid.check()))
+    ;         {
+    ;             break
+    ;         }
+            
+    ;         Send("{LButton}")
+    ;         Sleep(10)
+    ;     }
+    ; }
