@@ -1,4 +1,4 @@
-﻿#Include #Includes\ahk-codebase.ah2
+﻿#Include #Includes\ahk-codebase.ahk
 codebase.Tool('Reloaded ' . A_ScriptName)
 
 ; Reload with Ctrl+S
