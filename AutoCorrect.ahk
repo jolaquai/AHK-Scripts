@@ -152,6 +152,7 @@ valorapid := Rapidvar("valo")
 ptrapid := Rapidvar("pt")
 totrapid := Rapidvar("tot")
 hitmanrapid := Rapidvar("hitman")
+finalsrapid := Rapidvar("finals")
 
 robloxSwitchKeys := [
     "~*XButton2",
@@ -411,6 +412,138 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 
 :*?:symb_em::—
 :*?:symb_en::–
+
+; langwords
+:*?:lang_abstract::
+:*?:lang_add::
+:*?:lang_alias::
+:*?:lang_and::
+:*?:lang_args::
+:*?:lang_as::
+:*?:lang_ascending::
+:*?:lang_async::
+:*?:lang_await::
+:*?:lang_base::
+:*?:lang_bool::
+:*?:lang_break::
+:*?:lang_by::
+:*?:lang_byte::
+:*?:lang_case::
+:*?:lang_catch::
+:*?:lang_char::
+:*?:lang_checked::
+:*?:lang_class::
+:*?:lang_const::
+:*?:lang_continue::
+:*?:lang_decimal::
+:*?:lang_default::
+:*?:lang_delegate::
+:*?:lang_descending::
+:*?:lang_do::
+:*?:lang_double::
+:*?:lang_dynamic::
+:*?:lang_else::
+:*?:lang_enum::
+:*?:lang_equals::
+:*?:lang_event::
+:*?:lang_explicit::
+:*?:lang_extern::
+:*?:lang_false::
+:*?:lang_file::
+:*?:lang_finally::
+:*?:lang_fixed::
+:*?:lang_float::
+:*?:lang_for::
+:*?:lang_foreach::
+:*?:lang_from::
+:*?:lang_get::
+:*?:lang_global::
+:*?:lang_goto::
+:*?:lang_group::
+:*?:lang_if::
+:*?:lang_implicit::
+:*?:lang_in::
+:*?:lang_init::
+:*?:lang_int::
+:*?:lang_interface::
+:*?:lang_internal::
+:*?:lang_into::
+:*?:lang_is::
+:*?:lang_join::
+:*?:lang_let::
+:*?:lang_lock::
+:*?:lang_long::
+:*?:lang_managed::
+:*?:lang_nameof::
+:*?:lang_namespace::
+:*?:lang_new::
+:*?:lang_nint::
+:*?:lang_not::
+:*?:lang_notnull::
+:*?:lang_nuint::
+:*?:lang_null::
+:*?:lang_object::
+:*?:lang_on::
+:*?:lang_operator::
+:*?:lang_or::
+:*?:lang_orderby::
+:*?:lang_out::
+:*?:lang_override::
+:*?:lang_params::
+:*?:lang_partial::
+:*?:lang_private::
+:*?:lang_protected::
+:*?:lang_public::
+:*?:lang_readonly::
+:*?:lang_record::
+:*?:lang_ref::
+:*?:lang_remove::
+:*?:lang_required::
+:*?:lang_return::
+:*?:lang_sbyte::
+:*?:lang_scoped::
+:*?:lang_sealed::
+:*?:lang_select::
+:*?:lang_set::
+:*?:lang_short::
+:*?:lang_sizeof::
+:*?:lang_stackalloc::
+:*?:lang_static::
+:*?:lang_string::
+:*?:lang_struct::
+:*?:lang_switch::
+:*?:lang_this::
+:*?:lang_throw::
+:*?:lang_true::
+:*?:lang_try::
+:*?:lang_typeof::
+:*?:lang_uint::
+:*?:lang_ulong::
+:*?:lang_unchecked::
+:*?:lang_unmanaged::
+:*?:lang_unsafe::
+:*?:lang_ushort::
+:*?:lang_using::
+:*?:lang_value::
+:*?:lang_var::
+:*?:lang_virtual::
+:*?:lang_void::
+:*?:lang_volatile::
+:*?:lang_when::
+:*?:lang_where::
+:*?:lang_while::
+:*?:lang_with::
+:*?:lang_yield::
+InsertLangword(hk)
+{
+    hk := SubStr(hk, 10)
+    old := A_Clipboard
+    A_Clipboard := "<see langword=`"" . hk . "`"/>"
+    Sleep(500)
+    Send("^v")
+    Sleep(500)
+    A_Clipboard := old
+}
 
 ; Rarely needed and usually useless because this sends inputs, not the symbols (i.e. `n becomes an Enter input)
 :*?:symb_tab::`t
@@ -739,7 +872,7 @@ AppsKey & F7::Send("{Media_Play_Pause}")
 AppsKey & F8::Send("{Media_Next}")
 AppsKey & F10::Send("{Volume_Down}")
 AppsKey & F11::Send("{Volume_Up}")
-; AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
+AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
 ; Reload with Ctrl+S
 
@@ -764,6 +897,7 @@ AppsKey & F11::Send("{Volume_Up}")
     && !WinActive("ahk_exe EvilDead-Win64-Shipping.exe")
     && !WinActive("ahk_exe Aragami.exe")
     && !WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
+    && !WinActive("ahk_exe Discovery.exe")
 ~^s::
 {
     ; Script process duplication due to rapid reloading should be prevented by this
@@ -1438,14 +1572,14 @@ AppsKey & F11::Send("{Volume_Up}")
     {
         MouseGetPos(&x, &y)
 
-        MouseMove(382, 1800)
+        MouseMove(191, 900)
         Sleep(30)
         Loop 10
         {
             Click("WheelDown")
         }
         Sleep(50)
-        Click("218 1844")
+        Click("109 922")
         Sleep(50)
 
         MouseMove(x, y)
@@ -1457,15 +1591,15 @@ AppsKey & F11::Send("{Volume_Up}")
         KeyWait("LButton", "D")
         KeyWait("LButton", "U")
 
-        MouseMove(388, 1640)
+        MouseMove(194, 820)
         Sleep(50)
-        Click("388 1640")
+        Click("194 820")
 
         KeyWait("Enter", "D")
         KeyWait("Enter", "U")
 
         Send("gy")
-        MouseMove(1928, 1696)
+        MouseMove(1084, 848)
     }
 
 ; Dead By Daylight
@@ -1625,6 +1759,13 @@ AppsKey & F11::Send("{Volume_Up}")
     ;         Send("{LButton up}")
     ;     }
     ; }
+
+    ~*g::
+    {
+        Send("{Tab}")
+        Sleep(50)
+        Send("{Tab}")
+    }
 
 ; Rocksmith 2014
 #HotIf WinActive("ahk_exe Rocksmith2014.exe")
@@ -2410,3 +2551,21 @@ AppsKey & F11::Send("{Volume_Up}")
 #HotIf WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
     ~*WheelDown::Send("{Blind}{Space}")
     ~*WheelUp::Send("{Blind}f")
+
+#HotIf WinActive("ahk_exe Discovery.exe")
+    +b::finalsrapid.inc()
+
+    ; ~*LButton::
+    ; {
+    ;     global
+    ;     Loop
+    ;     {
+    ;         if (!(GetKeyState("LButton", "P") && finalsrapid.check()))
+    ;         {
+    ;             break
+    ;         }
+            
+    ;         Send("{LButton}")
+    ;         Sleep(10)
+    ;     }
+    ; }
