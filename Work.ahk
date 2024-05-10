@@ -1,8 +1,9 @@
-﻿#Include #Includes\ahk-codebase.ah2
+﻿#Include #Includes\ahk-codebase.ahk
 codebase.Tool('Reloaded ' . A_ScriptName)
 
 ; Reload with Ctrl+S
 ; #HotIf !WinActive('ahk_exe HITMAN3.exe')
+/* NEVER EVER USE THIS WHEN RUNNING IN A VM
 ~^s::
 {
     ; Script process duplication due to rapid reloading should be prevented by this
@@ -19,6 +20,7 @@ codebase.Tool('Reloaded ' . A_ScriptName)
     }
     Reload()
 }
+*/
 
 #HotIf
 ; Greek letters
@@ -270,6 +272,11 @@ InsertLangword(hk)
     Send("^v")
 }
 
+^!+F10::
+{
+    WinSetAlwaysOnTop(-1, 'A')
+}
+
 /*
 presentGui := Gui('AlwaysOnTop', 'Present GUI')
 presentGui.Add('Text', 'Center w150 r1', 'Clock-in')
@@ -311,7 +318,11 @@ ci.Focus()
 >^>+ü::
 {
     A_Clipboard := WinGetProcessName(WinExist('A'))
+    MsgBox("Copied name of active process: '" . A_Clipboard . "'")
 }
+
+SC00D::Send("``{Space}")
+LShift & SC00D::Send("``{Space}")
 
 #HotIf WinActive('ahk_exe AcroRd32.exe') && WinExist('Arbortext')
 ^c::
@@ -372,10 +383,10 @@ ci.Focus()
     && !WinActive('ahk_exe firefox.exe')
     && !WinActive('ahk_exe teams.exe')
     && !WinActive('ahk_exe msteams.exe')
-^Backspace::Send('^+{Left}{Backspace}')
+^Backspace:: Send('^+{Left}{Backspace}')
 #HotIf
 
-^!+v::Send("{Raw}" . A_Clipboard)
+^!+v:: Send("{Raw}" . A_Clipboard)
 
 #HotIf WinActive('Joshua Laquai ahk_exe firefox.exe')
 :b0:}}::{Backspace}
@@ -400,21 +411,32 @@ ci.Focus()
     input := InputBox("Type a Unicode codepoint")
     if (input.Result == "OK")
     {
-        len := StrLen(input.Value)
-        if (Mod(len, 4))
-        {
-            MsgBox("Code point(s) must have length mod 4!")
-        }
-
-        WinActivate(prev)
         toSend := ""
-
-        ; Split into 4-char chunksStrLen(input.Value)
-        i := 1
-        while (i < len)
+        if (InStr(input.Value, " "))
         {
-            toSend .= Chr(codebase.convert.HexToDec(SubStr(input.Value, i, 4)))
-            i += 4
+            split := StrSplit(input.Value, " ")
+            for code in split
+            {
+                toSend .= Chr(codebase.convert.HexToDec(code))
+            }
+        }
+        else
+        {
+            len := StrLen(input.Value)
+            if (Mod(len, 4))
+            {
+                MsgBox("Code point(s) must have length mod 4!")
+            }
+
+            WinActivate(prev)
+
+            ; Split into 4-char chunksStrLen(input.Value)
+            i := 1
+            while (i < len)
+            {
+                toSend .= Chr(codebase.convert.HexToDec(SubStr(input.Value, i, 4)))
+                i += 4
+            }
         }
         Send(toSend)
     }
@@ -591,40 +613,3 @@ InsertBp(hk)
     Send("^v")
     Send("+!s")
 }
-
-lockAllowed := false
-lockAfter := 25000
-notifyBefore := 10000
-afkProtector()
-{
-    global
-
-    if (ProcessExist("testhost.exe"))
-    {
-        return
-    }
-    else if (A_TimeIdlePhysical > lockAfter)
-    {
-        ; Allow some time between tests finishing and locking the PC
-        Sleep(5000)
-    }
-
-    if (A_TimeIdlePhysical >= lockAfter)
-    {
-        if (lockAllowed)
-        {
-            DllCall("LockWorkStation")
-            lockAllowed := false
-        }
-    }
-    else if (A_TimeIdlePhysical >= (lockAfter - notifyBefore))
-    {
-        codebase.Tool("Locking in " . lockAfter - A_TimeIdlePhysical . "ms", codebase.Tool.center)
-    }
-    else
-    {
-        lockAllowed := true
-    }
-}
-
-SetTimer(afkProtector, 250, 5)
