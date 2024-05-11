@@ -1838,7 +1838,7 @@ class codebase
 
         /**
          * Returns the object's stored bits as a numerical value.
-         * @throws `ValueError` if `this.bits.Length` is `â‰¥ 64` as a signed 64-bit integer may not be able to represent all bits as a number.
+         * @throws `ValueError` if `this.bits.Length` is `>= 64` as a signed 64-bit integer may not be able to represent all bits as a number.
          * @returns The `codebase.Binary` object's stored bits converted to a numerical value.
          */
         Value()
@@ -3919,7 +3919,7 @@ class codebase
 
                 /**
                  * Calculates the scalar product ("dot product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to >= `1` and <= `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -3928,7 +3928,7 @@ class codebase
                 scalarProduct(vs*) => codebase.math.vectorGeometry.scalarProduct(this, vs*)
                 /**
                  * Calculates the Vector product ("cross product") of a series of vectors.
-                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `1` and â‰¤ `3`.
+                 * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to >= `1` and <= `3`.
                  * @throws `ValueError` if < `1` or > `3` vectors were passed.
                  * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
                  * @throws `ValueError` if the `dim` property (dimension of the Vector) of `this` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4140,7 +4140,7 @@ class codebase
             {
                 if (vs.Length < 2)
                 {
-                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``â‰¥ 2``.")
+                    throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value ``>= 2``.")
                 }
 
                 hdim := 0
@@ -4188,7 +4188,7 @@ class codebase
 
             /**
              * Creates a null Vector (all coordinates are `0`).
-             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `â‰¥ 2`. Defaults to `3` if omitted.
+             * @param dim The dimension of the null Vector. This will be equal to the Vector.dim property defined at `codebase.math.vectorGeometry.Vector` object instatiation. Must be `>= 2`. Defaults to `3` if omitted.
              * @returns A null Vector with `dim` coordinates, all `0`.
              */
             static nullVector(dim := 3)
@@ -4319,7 +4319,7 @@ class codebase
 
             /**
              * Checks whether a series of vectors is linearly dependent.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to >= `2` and <= `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4400,7 +4400,7 @@ class codebase
                         ; In three-dimensional space, 4 vectors are always linearly dependent.
                         return true
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value >= ``2`` and <= ``4``.")
                 }
             }
 
@@ -4438,7 +4438,7 @@ class codebase
 
             /**
              * Calculates the scalar product ("dot product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to >= `2` and <= `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @note If any of the vectors' dimension is not equal to the `Max` of all the dimension values encountered in `vs`, `0` is assumed for the missing coordinate(s).
@@ -4482,7 +4482,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.scalarProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value >= ``2`` and <= ``4``.")
                 }
             }
 
@@ -4490,7 +4490,7 @@ class codebase
 
             /**
              * Calculates the Vector product ("cross product") of a series of vectors.
-             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to â‰¥ `2` and â‰¤ `4`.
+             * @param vs The vectors to use for the calculation. `vs.Length` must evaluate to >= `2` and <= `4`.
              * @throws `ValueError` if < `2` or > `4` vectors were passed.
              * @throws `TypeError` if any of the values in `vs` is not a `codebase.math.vectorGeometry.Vector`.
              * @throws `ValueError` if the `dim` property (dimension of the Vector) of the first Vector in `vs` is not `3` as Vector products are only defined in three-dimensional space.
@@ -4509,7 +4509,7 @@ class codebase
 
                     if (v.dim > 3)
                     {
-                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value â‰¥ ``2`` and â‰¤ ``3``.")
+                        throw ValueError("Invalid value for ``vs[" . A_Index . "].dim``. Received ``" . vs[A_Index].dim . "``, expected a value >= ``2`` and <= ``3``.")
                     }
 
                     if (v.dim < 3)
@@ -4539,7 +4539,7 @@ class codebase
                     case 4:
                         return codebase.math.vectorGeometry.vectorProduct(codebase.math.vectorGeometry.vectorProduct(vs[1], vs[2]), codebase.math.vectorGeometry.vectorProduct(vs[3], vs[4]))
                     default:
-                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value â‰¥ ``2`` and â‰¤ ``4``.")
+                        throw ValueError("Invalid value for ``vs.Length``. Received ``" . vs.Length . "``, expected a value >= ``2`` and <= ``4``.")
                 }
             }
 
@@ -6670,7 +6670,7 @@ class codebase
     class requests
     {
         /**
-         * Escapes all problematic characters for use in an URL.
+         * Escapes all problematic characters for use in a URL.
          * @param str The string to escape.
          * @returns The escaped string.
          */

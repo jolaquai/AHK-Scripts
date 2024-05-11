@@ -419,7 +419,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 :*?:lang_alias::
 :*?:lang_and::
 :*?:lang_args::
-:*?:lang_as::
+:?:lang_as::
 :*?:lang_ascending::
 :*?:lang_async::
 :*?:lang_await::
@@ -453,7 +453,7 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 :*?:lang_finally::
 :*?:lang_fixed::
 :*?:lang_float::
-:*?:lang_for::
+:?:lang_for::
 :*?:lang_foreach::
 :*?:lang_from::
 :*?:lang_get::
@@ -462,9 +462,9 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 :*?:lang_group::
 :*?:lang_if::
 :*?:lang_implicit::
-:*?:lang_in::
+:?:lang_in::
 :*?:lang_init::
-:*?:lang_int::
+:?:lang_int::
 :*?:lang_interface::
 :*?:lang_internal::
 :*?:lang_into::
@@ -478,14 +478,14 @@ insertCharacterFromUnicodeCode(ThisHotkey)
 :*?:lang_namespace::
 :*?:lang_new::
 :*?:lang_nint::
-:*?:lang_not::
+:?:lang_not::
 :*?:lang_notnull::
 :*?:lang_nuint::
 :*?:lang_null::
 :*?:lang_object::
 :*?:lang_on::
 :*?:lang_operator::
-:*?:lang_or::
+:?:lang_or::
 :*?:lang_orderby::
 :*?:lang_out::
 :*?:lang_override::
@@ -866,7 +866,7 @@ return
 
 ; Shortcut Keys (for keyboards that do not have media buttons)
 ; Might have to change 'AppsKey' if it is unavailable
-AppsKey & F2::Run("ribbons.scr /s")
+Launch_Mail::Run("ribbons.scr /s")
 AppsKey & F6::Send("{Media_Prev}")
 AppsKey & F7::Send("{Media_Play_Pause}")
 AppsKey & F8::Send("{Media_Next}")
@@ -1392,6 +1392,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         sendstr := StrReplace(sendstr, '<', ' ')
         sendstr := StrReplace(sendstr, '>', ' ')
 
+        Send(sendstr)
+    }
+    NumpadDiv::
+    {
+        sendstr := "see y'all, have a good one! <3"
         Send(sendstr)
     }
 
@@ -2552,20 +2557,121 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     ~*WheelDown::Send("{Blind}{Space}")
     ~*WheelUp::Send("{Blind}f")
 
-#HotIf WinActive("ahk_exe Discovery.exe")
-    +b::finalsrapid.inc()
+#HotIf WinActive("ahk_exe Mafia3DefinitiveEdition.exe")
+    ; Toggle the title bar of the window
+    ^!+p::
+    {
+        old := WinGetStyle("A")
+        flag := 0xC0000
+        if (old & flag == flag)
+        {
+            WinSetStyle(old & ~flag, "A")
+        }
+        else
+        {
+            WinSetStyle(old | flag, "A")
+        }
+    }
 
-    ; ~*LButton::
-    ; {
-    ;     global
-    ;     Loop
-    ;     {
-    ;         if (!(GetKeyState("LButton", "P") && finalsrapid.check()))
-    ;         {
-    ;             break
-    ;         }
-            
-    ;         Send("{LButton}")
-    ;         Sleep(10)
-    ;     }
-    ; }
+#HotIf WinActive("ahk_exe re7.exe")
+    WheelDown::return
+    WheelUp::return
+
+GetIsHelldiversActive()
+{
+    static winTitleBuf := Buffer(256)
+    DllCall("user32\GetWindowText", "Ptr", DllCall("user32\GetForegroundWindow"), "Ptr", winTitleBuf, "UInt", winTitleBuf.Size)
+    return StrGet(winTitleBuf, "UTF-16") == "HELLDIVERS™ 2"
+}
+
+#HotIf false
+    Numpad1::sendStratagemCode("Reinforce")
+    Numpad2::sendStratagemCode("SOS Beacon")
+    Numpad3::sendStratagemCode("Resupply")
+    Numpad4::sendStratagemCode("MG-43 Machine Gun")
+    Numpad5::sendStratagemCode("Orbital Precision Strike")
+    Numpad6::sendStratagemCode("Eagle Airstrike")
+
+    sendStratagemCode(name)
+    {
+        static stratagems := Map(
+            "A/AC-8 Autocannon Sentry", "DURULU",
+            "A/ARC-3 Tesla Tower", "DURULR",
+            "A/G-16 Gatling Sentry", "DURL",
+            "A/M-12 Mortar Sentry", "DURRD",
+            "A/M-23 EMS Mortar Sentry", "DURDR",
+            "A/MG-43 Machine Gun Sentry", "DURRU",
+            "A/MLS-4X Rocket Sentry", "DURRL",
+            "AC-8 Autocannon", "DLDUUR",
+            "APW-1 Anti-Materiel Rifle", "DLRUD",
+            "ARC-3 Arc Thrower", "DRDULL",
+            "AX/AR-23 `"Guard Dog`"", "DULURD",
+            "AX/LAS-5 `"Guard Dog`" Rover", "DULURR",
+            "B-1 Supply Pack", "DLDUUD",
+            "E/MG-101 HMG Emplacement", "DULRRL",
+            "Eagle 110MM Rocket Pods", "URUL",
+            "Eagle 500kg Bomb", "URDDD",
+            "Eagle Airstrike", "URDR",
+            "Eagle Cluster Bomb", "URDDR",
+            "Eagle Napalm Airstrike", "URDU",
+            "Eagle Rearm", "UULUR",
+            "Eagle Smoke Strike", "URUD",
+            "Eagle Strafing Run", "URR",
+            "EAT-17 Expendable Anti-tank", "DDLUR",
+            "FAF-14 SPEAR Launcher", "DDUDD",
+            "FLAM-40 Flamethrower", "DLUDU",
+            "FX-12 Shield Generator Relay", "DDLRLR",
+            "GL-21 Grenade Launcher", "DLULD",
+            "GR-8 Recoilless Rifle", "DLRRL",
+            "Illumination Flare", "RRLL",
+            "LAS-98 Laser Cannon", "DLDUL",
+            "LIFT-850 Jump Pack", "DUUDU",
+            "M-105 Stalwart", "DLDUUL",
+            "MD-6 Anti-Personnel Minefield", "DLUR",
+            "MD-I4 Incendiary Mines", "DLLD",
+            "MG-43 Machine Gun", "DLDUR",
+            "NUX-223 Hellbomb", "DULDURDU",
+            "Orbital 120MM HE Barrage", "RRDLRD",
+            "Orbital 380MM HE Barrage", "RDUULDD",
+            "Orbital Airburst Strike", "RRR",
+            "Orbital EMS Strike", "RRLD",
+            "Orbital Gas Strike", "RRDR",
+            "Orbital Gatling Barrage", "RDLUU",
+            "Orbital Laser", "RDURD",
+            "Orbital Precision Strike", "RRU",
+            "Orbital Railcannon Strike", "RUDDR",
+            "Orbital Smoke Strike", "RRDU",
+            "Orbital Walking Barrage", "RDRDRD",
+            "Reinforce", "UDRLU",
+            "Resupply", "DDUR",
+            "RS-422 Railgun", "DRDULR",
+            "Seismic Probe", "UULRDD",
+            "SH-20 Ballistic Shield Backpack", "DLDDUL",
+            "SH-32 Shield Generator Pack", "DULRLR",
+            "SOS Beacon", "UDRU",
+            "SSSD Delivery", "DDDUU",
+            "Upload Data", "DDUUU",
+        )
+        static upKey := "w"
+        static downKey := "s"
+        static leftKey := "a"
+        static rightKey := "d"
+
+        for (key in StrSplit(stratagems[name]))
+        {
+            keyToSend := ""
+            switch (key)
+            {
+                case "U":
+                    keyToSend := upKey
+                case "D":
+                    keyToSend := downKey
+                case "L":
+                    keyToSend := leftKey
+                case "R":
+                    keyToSend := rightKey
+            }
+            Send("{Blind}" . keyToSend)
+            Sleep(50)
+        }
+    }

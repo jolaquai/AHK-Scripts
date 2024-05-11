@@ -20,10 +20,11 @@ clipProcess(type)
     {
         changed := true
         str := RegExReplace(A_Clipboard, "\?.*", "")
-        A_Clipboard := str . "`n" . StrReplace(StrReplace(StrReplace(str,
+        A_Clipboard := str . "`n" . StrReplace(StrReplace(StrReplace(StrReplace(str,
             "https://", "spotify:"),
             "/", ":"),
-            "open.spotify.com", "")
+            "open.spotify.com", ""),
+            "::", ":")
     }
     else if (InStr(A_Clipboard, "cdn.discordapp.com/avatars") && RegExMatch(A_Clipboard, "webp(\?size=).*"))
     {
@@ -1007,7 +1008,8 @@ triggers := [
 rsDodgeCEtriggers := [
     "ahk_exe VALORANT-Win64-Shipping.exe",
     "ahk_exe RobloxPlayerBeta.exe",
-    "ahk_exe csgo.exe"
+    "ahk_exe csgo.exe",
+    "ahk_exe FortniteClient-Win64-Shipping.exe"
 ]
 
 rsExists := 0
@@ -1055,7 +1057,7 @@ afkgui.Add("Button", "w" . elemWidth, "Edit").OnEvent("Click", (*) => Edit())
 afkgui.Add("Button", "w" . elemWidth, "Reload").OnEvent("Click", (*) => Reload())
 
 ; afkgui.Show("X5 Y5")
-WinMinimize(afkgui.Hwnd)
+; WinMinimize(afkgui.Hwnd)
 
 codebase.Tool("Reloaded Loops.ahk", true, , , 50)
 

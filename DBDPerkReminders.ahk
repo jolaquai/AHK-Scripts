@@ -57,8 +57,8 @@ preFetchPerkMappings()
         
         ; Request the perk's Wiki page
         desc := codebase.requests.makeRequest("https://deadbydaylight.fandom.com/wiki/" . perk, "GET").Get("ResponseText")
-        ; Extract the rawPerkDesc div
-        RegExMatch(desc, 's)<div class="rawPerkDesc" style="display:none;">(.*?)<\/div>', &desc)
+        ; Extract the perkDesc div
+        RegExMatch(desc, 's)<div class="perkDesc divTableCell">(.*?)<\/div>', &desc)
         desc := desc[1]
         ; Retired perk? Leave it out
         if (InStr(desc, "THIS PERK HAS BEEN RETIRED."))
