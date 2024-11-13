@@ -35,6 +35,7 @@ clipProcess(type)
     {
         changed := true
         A_Clipboard := StrReplace(A_Clipboard, "www.youtube.com/watch?v=", "youtu.be/")
+        A_Clipboard := RegExReplace(A_Clipboard, "&[^t][^&]+", "")
     }
     else if (InStr(A_Clipboard, "steamcommunity.com") || InStr(A_Clipboard, "store.steampowered.com"))
     {
@@ -384,6 +385,7 @@ fastMonitor()
     */
 
     ; Dead By Daylight progress bar monitor
+    /*
     static DBD_WIDTH := 0
     static DBD_HEIGHT := 0
     if (DBD_WIDTH == 0 || DBD_HEIGHT == 0)
@@ -600,6 +602,7 @@ fastMonitor()
             }
         }
     }
+    */
 }
 
 disClick(obj, *)
@@ -960,7 +963,7 @@ slowMonitor()
 }
 
 #HotIf    ; #HotIf WinActive("ahk_group lock")
-~*F8::
+~*^+F8::
 {
     global
     lock := !lock
@@ -971,12 +974,13 @@ slowMonitor()
 GroupAdd("lock", "Sea of Thieves ahk_exe ApplicationFrameHost.exe")
 GroupAdd("lock", "ahk_exe RainbowSix.exe")
 GroupAdd("lock", "ahk_exe TslGame.exe")
+GroupAdd("lock", "ahk_exe VALORANT-Win64-Shipping.exe")
 
 GroupAdd("noCaps", "ahk_exe RainbowSix.exe")
 GroupAdd("noCaps", "ahk_exe r5apex.exe")
 GroupAdd("noCaps", "ahk_exe VALORANT-Win64-Shipping.exe")
 
-GroupAdd("crossOverGroup", "ahk_exe RainbowSix.exe")
+; GroupAdd("crossOverGroup", "ahk_exe RainbowSix.exe")
 GroupAdd("crossOverGroup", "ahk_exe Discovery.exe")
 
 ProcessSetPriority("BelowNormal")

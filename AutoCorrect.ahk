@@ -129,7 +129,7 @@ class Rapidvar
 }
 
 dbdrapid := Rapidvar("dbd")
-siegerapid := Rapidvar("siege", , true)
+;siegerapid := Rapidvar("siege", , true)
 xtrctnrapid := Rapidvar("xtrctn", , true)
 acorapid := Rapidvar("aco")
 csrapid := Rapidvar("cs")
@@ -545,6 +545,11 @@ InsertLangword(hk)
     A_Clipboard := old
 }
 
+; C# abbrevs
+:*?:__gagr::.GetAwaiter().GetResult()
+:*?:__caf::.ConfigureAwait(false)
+:*?:__fgagr::.ConfigureAwait(false).GetAwaiter().GetResult()
+
 ; Rarely needed and usually useless because this sends inputs, not the symbols (i.e. `n becomes an Enter input)
 :*?:symb_tab::`t
 :*?:symb_newline::`n
@@ -577,9 +582,6 @@ InsertLangword(hk)
 #HotIf WinActive("ahk_exe firefox.exe")
 :*?:lyrics::site:azlyrics.com
 #HotIf
-
-:?:@Paul::@₱₳ɄⱠ
-:*?:@Dezzy::@ドミニク
 
 ; Emojis
 ; #HotIf !WinActive("ahk_exe discord.exe")
@@ -898,6 +900,9 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     && !WinActive("ahk_exe Aragami.exe")
     && !WinActive("ahk_exe Backrooms-Win64-Shipping.exe")
     && !WinActive("ahk_exe Discovery.exe")
+    && !WinActive("ahk_exe GhostOfTsushima.exe")
+    && !WinActive("ahk_exe tf_win64.exe")
+    && !WinActive("ahk_exe re4.exe")
 ~^s::
 {
     ; Script process duplication due to rapid reloading should be prevented by this
@@ -924,11 +929,11 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     LShift & Volume_Mute::F16
     SC00D::Send("``{Space}")
     LShift & SC00D::Send("``{Space}")
-    CapsLock::LShift
+    ; CapsLock::LShift
     ; <^>!SC00C::Send("{LAlt down}{Numpad9}{Numpad2}{LAlt up}")
     ; <^>!SC01B::Send("{LAlt down}{Numpad1}{Numpad2}{Numpad6}{LAlt up}")
-
-    Insert::LAlt
+    ^Numpad8::WheelUp
+    ^Numpad7::WheelDown
     
     NumpadDel::Send("{Blind};")
     NumpadDot::Send("{Blind},")
@@ -940,7 +945,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         for pname in procs 
         {
             while (ProcessClose(pname))
-            {   
+            {
             }
         }
     }
@@ -1375,6 +1380,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     }
 
 ; Siege
+/*
 #HotIf WinActive("ahk_exe RainbowSix.exe")
     :*?b0: ki::`:`:
     :*?b0: cu::`:`:
@@ -1504,7 +1510,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
         codebase.Tool(out, codebase.Tool.coords, , 10, 10)
     }
-*/
+
 
     ~f::
     f_hold(ThisHotkey)
@@ -1548,6 +1554,8 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     ^Esc::return
 
+*/
+
 ; Extraction
 #HotIf WinActive("ahk_exe R6-Extraction.exe")
     +b::xtrctnrapid.inc()
@@ -1577,7 +1585,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         MouseGetPos(&x, &y)
 
-        MouseMove(191, 900)
+        MouseMove(191 * 1.5, 900 * 1.5)
         Sleep(30)
         Loop 10
         {
@@ -1587,7 +1595,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         Click("109 922")
         Sleep(50)
 
-        MouseMove(x, y)
+        MouseMove(x * 1.5, y * 1.5)
     }
 
     ~p::
@@ -1596,7 +1604,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         KeyWait("LButton", "D")
         KeyWait("LButton", "U")
 
-        MouseMove(194, 820)
+        MouseMove(194 * 1.5, 820 * 1.5)
         Sleep(50)
         Click("194 820")
 
@@ -1604,7 +1612,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
         KeyWait("Enter", "U")
 
         Send("gy")
-        MouseMove(1084, 848)
+        MouseMove(1084 * 1.5, 848 * 1.5)
     }
 
 ; Dead By Daylight
@@ -1635,15 +1643,25 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
 
     .::
     {
+        codebase.Tool("Starting right-click loop...")
+
         Loop
         {
-            if (!GetKeyState("SC034", "P"))
-            {
-                break
-            }
+            breakout()
 
-            Send("{Space}")
-            Sleep(620)
+            Send("{RButton down}")
+            Sleep(Random(8000, 14000))
+            Send("{RButton up}")
+            Sleep(Random(200, 300))
+        }
+
+        breakout()
+        {
+            if (!WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
+            {
+                ; Send("")
+                Exit()
+            }
         }
     }
     
@@ -1705,6 +1723,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     Numpad1::
     Numpad2::
     Numpad3::
+    Numpad4::
     dbdTimer(hk)
     {
         static dbdTimerActive := false
@@ -1769,7 +1788,7 @@ AppsKey & F12::DllCall("powrprof\SetSuspendState", "Int", 0, "Int", 1, "Int", 0)
     {
         Send("{Tab}")
         Sleep(50)
-        Send("{Tab}")
+        Send("{RButton}")
     }
 
 ; Rocksmith 2014
@@ -2675,3 +2694,7 @@ GetIsHelldiversActive()
             Sleep(50)
         }
     }
+
+#HotIf WinActive("ahk_exe EscapeMemoirsMS-Win64-Shipping.exe")
+Insert::Send("{WheelUp 100}")
+Delete::Send("{WheelDown 100}")

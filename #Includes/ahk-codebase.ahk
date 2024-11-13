@@ -648,7 +648,7 @@ class codebase
         _value := ""
 
         /**
-         * Instantiates a new `DateTime` object.
+         * Initializes a new `DateTime` object.
          * @param dateparts The parts of the date and time which will be used to construct the `DateTime` object. How these values are interpreted depends on how many are passed. Values not passed are taken from the current time.
          * - ` `: The current time is used.
          * - `int`: year
@@ -1121,7 +1121,7 @@ class codebase
         }
 
         /**
-         * Instantiates a new `Path` object.
+         * Initializes a new `Path` object.
          * @param pathparts Any number of path parts to join and store in this `Path` object.
          * @note If `pathparts.Length == 1` and it is a `codebase.Path` object, the returned object will be an exact copy of the passed `Path`.
          * @note If `pathparts[1]` is exactly one uppercase letter, it is assumed to be a drive letter and formatted as such.
@@ -1294,7 +1294,7 @@ class codebase
             mode := ""
 
             /**
-            * Instantiates an `ErrorHandler` object.
+            * Initializes an `ErrorHandler` object.
             * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
             * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
             * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.errors.ErrorHandler.notify` if omitted.
@@ -1422,7 +1422,7 @@ class codebase
         class NotImplementedError extends Error
         {
             /**
-             * Instantiates a new `NotImplementedError` with the given target 
+             * Initializes a new `NotImplementedError` with the given target 
              * @param target The full name of the method, function or class that is not implemented. Defaults to an empty string if omitted.
              * @param message The error message to display. Defaults to `"The given target method, function or class is not implemented."` if omitted.
              */
@@ -1544,7 +1544,7 @@ class codebase
     class StandardIO
     {
         /**
-         * Instantiates a new `StandardIO` object.
+         * Initializes a new `StandardIO` object.
          *
          * Use its properties `stdin`, `stdout` and `stderr` to access the standard input, output and error streams respectively.
          * - Data can be read from the input stream using the stream's read methods and typing in the console window.
@@ -1705,10 +1705,20 @@ class codebase
     {
         class LockError extends Error
         {
+            /**
+             * The object that was attempted to be locked.
+             */
+            lockOn := ""
+
             __New(message, obj)
             {
-                this := super()
-                Message := message
+                super.Message := message
+                super.Extra := ""
+                super.Line := A_LineNumber
+                super.File := A_ScriptFullPath
+                super.What := "Lock.__New(Object)"
+
+                this.lockOn := obj
             }
         }
 
@@ -1731,7 +1741,7 @@ class codebase
         lockOn := ""
 
          /**
-         * Instantiates a new `Lock` object on the given object.
+         * Initializes a new `Lock` object on the given object.
          * @param obj The object to obtain a `Lock` on.
          */
         __New(obj)
@@ -1819,7 +1829,7 @@ class codebase
     class Binary
     {
         /**
-         * Instantiates a new `codebase.Binary` object.
+         * Initializes a new `codebase.Binary` object.
          * @param bits
          * - Value mode: Any number of values for the `codebase.Binary` to hold. All passed values are translated into simple boolean values, i.e. contents of strings or numerical values are lost.
          * - String mode: A string of any length with single digits to identify the bits the object should hold, e.g. "00010100".
@@ -3201,7 +3211,7 @@ class codebase
                 imaginary := 0
 
                 /**
-                 * Instantiates a new `codebase.math.complex.Number` object.
+                 * Initializes a new `codebase.math.complex.Number` object.
                  * @param a The real component of the complex number.
                  * @param b The imaginary / complex component of the complex number.
                  * @note Complex numbers with complex component `b = 0` are still treated as complex by all functions in `codebase.math.complex`. This might produce unexpected results.
@@ -3881,7 +3891,7 @@ class codebase
             class Vector
             {
                 /**
-                 * Instantiates a new `codebase.math.vectorGeometry.Vector` from a series of passed coordinates.
+                 * Initializes a new `codebase.math.vectorGeometry.Vector` from a series of passed coordinates.
                  * It defines a Vector as described below.
                  * @param args The new Vector's coordinates. They can later be get or set using property accessor syntax. The properties' names follow the pattern `vn`, where `n` is an integer between `1` and the number of coordinates passed (`args.Length`). The order they are passed in is preserved when it comes to naming the properties.
                  * @note Vectors of dimensions `0` and `1` are not supported, meaning at least `2` coordinates must be passed to successfully instantiate an object of the class.
@@ -4641,7 +4651,7 @@ class codebase
             class Matrix
             {
                 /**
-                 * Instantiates a new `codebase.math.matrixComputation.Matrix` from a series of passed values.
+                 * Initializes a new `codebase.math.matrixComputation.Matrix` from a series of passed values.
                  * It defines a Matrix as described below.
                  * @param arrsOrVectors Any number of Arrays or Vectors which comprise the matrix.
                  * - Row mode (all passed elements must be Arrays): The amount of Arrays and the amount of elements in the largest dictate the dimension of the matrix. The resulting elements may later be get or set using property accessor syntax. The properties' names follow the pattern `xy`, where `x` is an integer between `1` and the number of elements in the largest Array passed, and `y` is an integer between `1` and the number of Arrays passed (`arrsOrVectors.Length`). The order they are passed in is preserved when it comes to naming the properties.
@@ -6799,7 +6809,7 @@ class codebase
         ahk_id := 0
 
         /**
-         * Instantiates a new `codebase.WinInfo` object.
+         * Initializes a new `codebase.WinInfo` object.
          * @param identifier An AHKv2 _WinTitle_ parameter to identify the window the data is to be retrieved about / from.
          * @throws `TargetError` if the HWND of the target window could not be retrieved.
          * @returns An instance of the `WinInfo` class with data about the window specified by `identifier`.

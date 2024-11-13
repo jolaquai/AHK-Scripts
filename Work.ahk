@@ -247,6 +247,10 @@ InsertLangword(hk)
     A_Clipboard := old
 }
 
+:*?:__gagr::.GetAwaiter().GetResult()
+:*?:__caf::.ConfigureAwait(false)
+:*?:__fgagr::.ConfigureAwait(false).GetAwaiter().GetResult()
+
 :*?:__guid::
 {
     A_Clipboard := codebase.getGuids()[1]
@@ -276,44 +280,6 @@ InsertLangword(hk)
 {
     WinSetAlwaysOnTop(-1, 'A')
 }
-
-/*
-presentGui := Gui('AlwaysOnTop', 'Present GUI')
-presentGui.Add('Text', 'Center w150 r1', 'Clock-in')
-rc := presentGui.Add('Button', 'x155 y5 Center w150 r1', 'Reset clock-in')
-rc.OnEvent('Click', (*) => ci.Text := SubStr(A_Now, 1, 8))
-ci := presentGui.Add('Edit', 'x5 Center w300 r1', SubStr(A_Now, 1, 8))
-presentGui.Add('Text', 'Center w300 r1', 'Break')
-br := presentGui.Add('Edit', 'Center w300 r1', "30")
-doUpdate := presentGui.Add('Checkbox', 'Center w300 r2 Border', 'Update')
-SetTimer(update, 950, -1) ; Timer should always be interruptible
-update()
-{
-    if (!(doUpdate.Value))
-    {
-        return
-    }
-    try
-    {
-        v := Round((DateDiff(A_Now, ci.Text ? ci.Text : 0, 's') / 3600) - ((br.Text ? br.Text : 0) / 60), 4)
-        dt.Text := v . ' = ' . codebase.formatMilliseconds(v * 3600000, false, 0)
-    }
-    try
-    {
-        pl.Text := FormatTime(DateAdd(ci.Text, 7.75 + (wp.Value / 60) + (br.Text ? br.Text : 0) / 60, "H"), "HH:mm:ss")
-    }
-}
-presentGui.Add('Text', 'Center w300 r1', 'Delta')
-dt := presentGui.Add('Edit', 'ReadOnly Center w300 r1')
-
-presentGui.Add('Text', 'Center w300 r1', 'Wanted plus')
-wp := presentGui.Add('Edit', 'Center w300 r1', "30")
-presentGui.Add('Text', 'Center w300 r1', 'Until')
-pl := presentGui.Add('Edit', 'ReadOnly Center w300 r1')
-
-presentGui.Show('X1925 Y5')
-ci.Focus()
-*/
 
 >^>+ü::
 {
