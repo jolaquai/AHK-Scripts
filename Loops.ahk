@@ -16,17 +16,7 @@ clipProcess(type)
         return
     }
 
-    if (InStr(A_Clipboard, "open.spotify.com") && RegExMatch(A_Clipboard, "\?.*=") && !InStr(A_Clipboard, "spotify:"))
-    {
-        changed := true
-        str := RegExReplace(A_Clipboard, "\?.*", "")
-        A_Clipboard := str . "`n" . StrReplace(StrReplace(StrReplace(StrReplace(str,
-            "https://", "spotify:"),
-            "/", ":"),
-            "open.spotify.com", ""),
-            "::", ":")
-    }
-    else if (InStr(A_Clipboard, "cdn.discordapp.com/avatars") && RegExMatch(A_Clipboard, "webp(\?size=).*"))
+    if (InStr(A_Clipboard, "cdn.discordapp.com/avatars") && RegExMatch(A_Clipboard, "webp(\?size=).*"))
     {
         changed := true
         A_Clipboard := RegExReplace(A_Clipboard, "webp(\?size=).*", "png$1" . 4096)
@@ -348,261 +338,6 @@ fastMonitor()
             robloxAfk.Value := str
         }
     }
-
-    ; Monitors
-    /* DISABLED UNTIL IT WORKS CORRECTLY
-    static dontmove, winlist
-    old := A_CoordModeMouse
-    CoordMode("Mouse", "Screen")
-    MouseGetPos(&x, &y)
-    dontmove := false
-    winlist := WinGetList()
-    if (winlist.Length !== (new := WinGetList()).Length)
-    {
-        winlist := new
-    
-        for win in winlist
-        {
-            ; If a window's client width and height are the monitor's resolution, it's a game running in Fullscreen or Windowed Borderless
-            try
-            {
-                WinGetClientPos(, , &w, &h, win)
-                if (WinActive(win) && w == 3840 && h == 2160)
-                {
-                    dontmove := true
-                }
-            }
-        }
-    }
-    if (y >= 1080 && y !== 2159 && (x == 0 || x == 3839))
-    {
-        if (!dontmove)
-        {
-            MouseMove(x, y / 2, 0)
-        }
-    }
-    CoordMode("Mouse", old)
-    */
-
-    ; Dead By Daylight progress bar monitor
-    /*
-    static DBD_WIDTH := 0
-    static DBD_HEIGHT := 0
-    if (DBD_WIDTH == 0 || DBD_HEIGHT == 0)
-    {
-        MonitorGet(MonitorGetPrimary(), , , &DBD_WIDTH, &DBD_HEIGHT)
-    }
-
-    DBD_X1 := Floor(1671 * (DBD_WIDTH / 3840))
-    DBD_Y1 := Floor(1735 * (DBD_HEIGHT / 2160))
-    DBD_X2 := Floor(2262 * (DBD_WIDTH / 3840))
-    PB_DBD_WIDTH := DBD_X2 - DBD_X1
-
-    static dbdLastUpdate := A_TickCount
-    static dbdRate := 0.0
-    static dbdRates := []
-    static dbdPrev := "0.00"
-    try
-    {
-        if (
-            (WinActive("ahk_exe DeadByDaylight-Win64-Shipping.exe"))
-            && (GetKeyState("LButton", "P") || GetKeyState("E", "P") || GetKeyState("RButton", "P"))
-            && PixelSearch(&cx, &cy, DBD_X1, DBD_Y1, DBD_X2, DBD_Y1, "0x3C4347", 50)    ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
-        )
-        {
-            ; (cx, cy) is the left-most pixel of the progress bar that is _not_ filled
-            percent := Round((100 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2)
-            c := [
-                Round((90 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/90`t[Gen]",
-                Round((32 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/32`t[Recover]",
-                Round((20 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/20`t[Gate]",
-                Round((16 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/16`t[Heal]",
-                Round((14 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/14`t[Totem]",
-                Round((12 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/12`t[S. Mend]",
-                Round((8 * (cx - DBD_X1)) / PB_DBD_WIDTH, 2) . "/8`t[Mend]"
-            ]
-
-            if (percent !== dbdPrev)
-            {
-                ; Average only the last 10 rates, discard the older ones
-                if ((n := Round((Abs(dbdPrev - percent) / ((A_TickCount - dbdLastUpdate) / 1000)), 2)) < 50)
-                {
-                    dbdRates.Push(n)
-                }
-                if (dbdRates.Length > 10)
-                {
-                    dbdRates.RemoveAt(1)
-                }
-                try dbdRate := Round(codebase.math.sum(1, dbdRates.Length, (p) => dbdRates[p]) / dbdRates.Length, 2)
-
-                codebase.Tool(
-                    codebase.stringOperations.strJoin("`n", , c*)
-                    . "`n" . percent . "%"
-                    . "`t@ ~" . dbdRate . "%/s",
-                    codebase.Tool.coords, 400, cx, DBD_Y1 + 20
-                )
-
-                dbdPrev := percent
-                dbdLastUpdate := A_TickCount
-            }
-        }
-    }
-
-    ; Approach 1 (WIP): Uses PixelSearch to find white pixels in the bomb timer
-    static approach := 0
-    if (approach == 1)
-    {
-        static R6BOMB_WIDTH := 0
-        static R6BOMB_HEIGHT := 0
-        if (R6BOMB_WIDTH == 0 || R6BOMB_HEIGHT == 0)
-        {
-            MonitorGet(MonitorGetPrimary(), , , &R6BOMB_WIDTH, &R6BOMB_HEIGHT)
-        }
-
-        static R6BOMB_RIGHT_X1 := Floor(1921 * (R6BOMB_WIDTH / 3840))
-        static R6BOMB_RIGHT_Y1 := Floor(30 * (R6BOMB_HEIGHT / 2160))
-        static R6BOMB_RIGHT_X2 := Floor(1959 * (R6BOMB_WIDTH / 3840))
-        static R6BOMB_RIGHT_Y2 := Floor(114 * (R6BOMB_HEIGHT / 2160))
-        static R6BOMB_LEFT_X1 := Floor(1921 * (R6BOMB_WIDTH / 3840))
-        static R6BOMB_LEFT_Y1 := Floor(114 * (R6BOMB_HEIGHT / 2160))
-        static R6BOMB_LEFT_X2 := Floor(1881 * (R6BOMB_WIDTH / 3840))
-        static R6BOMB_LEFT_Y2 := Floor(30 * (R6BOMB_HEIGHT / 2160))
-        static R6BOMB_HEIGHT_DELTA := R6BOMB_RIGHT_Y2 - R6BOMB_RIGHT_Y1
-        static R6BOMB_YELLOW_X := Floor(1934 * (R6BOMB_WIDTH / 3840))
-        static R6BOMB_YELLOW_Y := Floor(52 * (R6BOMB_HEIGHT / 2160))
-
-        static R6BOMBPrev := "0.00"
-
-        try
-        {
-            if (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
-            {
-                resultFromRight := true
-                PixelSearch(&cx, &cy, R6BOMB_RIGHT_X1, R6BOMB_RIGHT_Y1, R6BOMB_RIGHT_X2, R6BOMB_RIGHT_Y2, "0xFFFFFF", 1)
-                if (!cx || !cy)
-                {
-                    resultFromRight := false
-                    PixelSearch(&cx, &cy, R6BOMB_LEFT_X1, R6BOMB_LEFT_Y1, R6BOMB_LEFT_X2, R6BOMB_LEFT_Y2, "0xFFFFFF", 1)
-                }
-                if ((cx >= 1912 && cx <= 1921) || (cy >= 51 && cy <= 81))
-                {
-
-                }
-                OutputDebug(Format("Found ({1}, {2})`n", cx, cy))
-
-                ; (cx, cy) is the furthest counterclockwise _filled_ pixel of the bomb timer
-                percent := 100 - ((num := Abs(Floor(((cy - R6BOMB_RIGHT_Y1) / R6BOMB_HEIGHT_DELTA) * 50))) > 50 ? -num : num)
-                OutputDebug(percent . "`n")
-
-                if (percent !== R6BOMBPrev)
-                {
-                    codebase.Tool(
-                        Round(45 * (percent / 100), 2) . "sec"
-                        . "`n" . percent . "%",
-                        codebase.Tool.coords, 1000, cx, cy
-                    )
-
-                    R6BOMBPrev := percent
-                }
-
-                return Sleep(0)
-            }
-        }
-    }
-    else if (approach == 2)
-    {
-        ; Approach 2 (broken): Checks for singular white pixels in the bomb timer area
-        static r6prev := "0.00"
-        static r6_radiussubconst := 3
-        static indices := codebase.range(-22, 68)
-        if (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
-        {
-            if (true)
-            {
-                for j in indices
-                {
-                    searchx := 1920 + ((41 - r6_radiussubconst) * Cos((j / 90) * 2 * codebase.math.constants.pi))
-                    searchy := 72 + ((43 - r6_radiussubconst) * Sin((j / 90) * 2 * codebase.math.constants.pi))
-                    codebase.Tool(c := PixelGetColor(searchx, searchy), codebase.Tool.coords, 1000, searchx, searchy)
-                    if (c == "0x767676")
-                    {
-                        continue
-                    }
-
-                    if (codebase.convert.colors.between(c, "0xF0F0F0", "0xFFFFFF"))
-                    {
-                        timeleft := Round(45 * ((89 - (j + 22)) / 89), 2)
-                        OutputDebug(timeleft . "sec`n")
-                        if (timeleft !== r6prev)
-                        {
-                            r6prev := timeleft
-                        }
-                        break
-                    }
-                }
-            }
-        }
-    }
-
-    ; Siege progress bar monitor
-    ; Always make this the last thing to do and return if there is a bomb timer, as that is more important than a progress bar
-    static R6PROG_WIDTH := 0
-    static R6PROG_HEIGHT := 0
-    if (R6PROG_WIDTH == 0 || R6PROG_HEIGHT == 0)
-    {
-        MonitorGet(MonitorGetPrimary(), , , &R6PROG_WIDTH, &R6PROG_HEIGHT)
-    }
-
-    R6PROG_X1 := Floor(857 * (R6PROG_WIDTH / 1920))
-    R6PROG_Y1 := Floor(628 * (R6PROG_HEIGHT / 1080))
-    R6PROG_X2 := Floor(1064 * (R6PROG_WIDTH / 1920))
-    PB_R6PROG_WIDTH := R6PROG_X2 - R6PROG_X1
-
-    static R6PROGLastUpdate := A_TickCount
-    static R6PROGRate := 0.0
-    static R6PROGRates := []
-    static R6PROGPrev := "0.00"
-    try
-    {
-        if (
-            (WinActive("ahk_exe RainbowSix.exe") || WinActive("ahk_exe vlc.exe"))
-            && (GetKeyState("F", "P") || GetKeyState("MButton", "P") || GetKeyState("CapsLock", "P") || GetKeyState("LButton", "P"))
-            && PixelSearch(&cx, &cy, R6PROG_X2, R6PROG_Y1, R6PROG_X1, R6PROG_Y1, "0xFFFFFF", 15)    ; very high tolerance, but may improve detection rates when there actually is a progress bar being filled
-        )
-        {
-            ; (cx, cy) is the right-most pixel of the progress bar that _is_ filled
-            percent := Round((100 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2)
-            c := [
-                Round((7 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2) . "/7`t[Defuser]",
-                Round((5 * (cx - R6PROG_X1)) / PB_R6PROG_WIDTH, 2) . "/5`t[Reinforce]",
-            ]
-
-            if (percent !== R6PROGPrev)
-            {
-                ; Average only the last 10 rates, discard the older ones
-                if ((n := Round((Abs(R6PROGPrev - percent) / ((A_TickCount - R6PROGLastUpdate) / 1000)), 2)) < 50)
-                {
-                    R6PROGRates.Push(n)
-                }
-                if (R6PROGRates.Length > 10)
-                {
-                    R6PROGRates.RemoveAt(1)
-                }
-                try R6PROGRate := Round(codebase.math.sum(1, R6PROGRates.Length, (p) => R6PROGRates[p]) / R6PROGRates.Length, 2)
-
-                codebase.Tool(
-                    codebase.stringOperations.strJoin("`n", , c*)
-                    . "`n" . percent . "%"
-                    . "`t@ ~" . R6PROGRate . "%/s",
-                    codebase.Tool.coords, 1000, cx, R6PROG_Y1 + 15
-                )
-
-                R6PROGPrev := percent
-                R6PROGLastUpdate := A_TickCount
-            }
-        }
-    }
-    */
 }
 
 disClick(obj, *)
@@ -674,7 +409,6 @@ functions()
     }
 
     killList := [
-        "ahk_exe msedge.exe",
         "Feedback Hub",
         "Steam - News",
         "Special Offers",
@@ -757,9 +491,11 @@ functions()
     ]
     for f in readOnlyFiles
     {
-        if (!InStr(FileGetAttrib(f), "R"))
-        {
-            FileSetAttrib("+R", f)
+        try {
+            if (!InStr(FileGetAttrib(f), "R"))
+            {
+                FileSetAttrib("+R", f)
+            }
         }
     }
 
@@ -868,18 +604,6 @@ rsnloop:
         }
     }
 
-    if (WinExist("LonelyScreen AirPlay Receiver"))
-    {
-        for win in WinGetList("LonelyScreen AirPlay Receiver")
-        {
-            WinGetPos(, , &w, &h, "LonelyScreen AirPlay Receiver")
-            if (w == 422 && h == 236)
-            {
-                WinKill("LonelyScreen AirPlay Receiver")
-            }
-        }
-    }
-
     if (WinExist("ahk_exe sndvol.exe"))
     {
         try
@@ -915,30 +639,13 @@ rsnloop:
             DirDelete("C:\Users\user\Downloads\*valorant*")
         }
     }
-    
+
     if (FileExist("C:\Users\user\Downloads\*valorant*"))
     {
         try
         {
             FileDelete("C:\Users\user\Downloads\*valorant*")
         }
-    }
-
-    if (WinActive("Trial Expired VideoPad Professional"))
-    {
-        Click("888 544")
-        WinWaitActive("Register VideoPad")
-        typeRegistration()
-    }
-    if (WinActive("Register VideoPad"))
-    {
-        typeRegistration()
-    }
-
-    static typeRegistration()
-    {
-        Send("{RAW}210870705-mnrdenzi")
-        Send("{Enter}")
     }
 
     Sleep(0)
@@ -949,17 +656,6 @@ rsnloop:
  */
 slowMonitor()
 {
-    Loop Parse FileRead("C:\Users\User\Desktop\Share\remote.txt"), "`n", "`r"
-    {
-        switch (StrLower(A_LoopField))
-        {
-            case "overwatch":
-                Run("C:\Users\User\Documents\Gayms\Overwatch.lnk")
-            case "dbd":
-                Run("steam://rungameid/381210")
-        }
-    }
-    FileOpen("C:\Users\User\Desktop\Share\remote.txt", "w")
 }
 
 #HotIf    ; #HotIf WinActive("ahk_group lock")

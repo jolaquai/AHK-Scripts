@@ -1,9 +1,9 @@
 ﻿/**
  * My codebase library for most of my other AHK scripts.
- *
+ * 
  * Notes:
  * - Dates should be interpreted as MM/DD/YYYY or MM/DD/YY.
- *
+ * 
  * Coding conventions:
  * - The entire library is written to allow for easy modification and expansion, making the functions somewhat prone to changes. The idea is, however, to ensure that either all calls to functions only produce different results while leaving the function's syntax untouched (or only changed so that calls to it do not have to be changed to be valid, such as adding optional parameters), or that a syntax change is easy enough to fix using regex Find-and-Replace.
  * - Most comparisons are hard-coded case-sensitive (operator `==` instead of `=`). This does _not_ apply to functions the express use of which is string comparison, in which case an optional parameter allows for control over this. Most, if not all, default to `true`, i.e. a case-sensitive comparison. Additionally (as per AHKv2 behavior), case-sense is ignored for comparisons where one of the operands is not of type `String` (ex. objects).
@@ -11,11 +11,11 @@
  * - Most, if not all, cases where braces (`{ }`) _may_ be omitted, they _are_ present. I've recently (1/19/2022) noticed some extremely odd behavior relating to `if`s in any form of loop, be it introduced by `Loop` or `for`. The loop would sometimes be left prematurely, even though no `return` or `break` keywords were encountered. Adding braces prevented this from happening, which probably means the AHKv2 parser messes up somewhere and breaks out of the loop if an `if` clause executed incorrectly. It also did not _always_ do this, causing some confusion as to what this "incorrect execution" even is. I still haven't found an answer for that, but omitting braces seems to cause it, which is why I've decided to add them wherever appropriate (or possible, rather), even if this is only technically necessary when there's an `if` construct in the loop: `( {2,})((?:loop|for|if|else|try|catch|while).*\n)(.*)` and `$1$2$1{\n$3\n$1}`.
  * - The "Lower Camel Case" naming convention is followed (e.g. `mapOperations`, not `MapOperations`), except in class definitions when the intention of these is _not_ solely to hold `static` functions and constants, but to actually be instantiated into an object (e.g. `codebase.math.vectorGeometry.Vector`, not `codebase.math.vectorGeometry.vector`).
  * - On 8/19/2022, I made the switch to the `.ahk` file extension. You will very likely have to associate it with your AHKv2 executable in Windows before
- *
+ * 
  * The functions and some classes are sometimes only annotated, usually fully documented though, using comments, allowing IntelliSense to display parameter and other information. Basically, to get the most out of this, use the following commands (Windows):
  * - `code --install-extension zero-plusplus.vscode-autohotkey-debug`
  * - `code --install-extension thqby.vscode-autohotkey2-lsp`
- *
+ * 
  * This "script" is a pure library. While it does technically contain an autorun section to set directives or similar, it will exit immediately upon finishing this.
  */
 notes := ""
@@ -48,30 +48,30 @@ CoordMode("ToolTip", "Screen")
 CoordMode("Mouse", "Screen")
 CoordMode("Pixel", "Screen")
 
-SetKeyDelay(30, 10)
-SetKeyDelay(30, 10, "Play")
-SetMouseDelay(30)
-SetMouseDelay(30, "Play")
-SetWinDelay(150)
+SetKeyDelay(codebase.constants.globalKeyDelay, 10)
+SetKeyDelay(codebase.constants.globalKeyDelay, 10, "Play")
+SetMouseDelay(codebase.constants.globalMouseDelay)
+SetMouseDelay(codebase.constants.globalMouseDelay, "Play")
+SetWinDelay(codebase.constants.globalWinDelay)
 SetScrollLockState(false)
 
 scriptStartupDate := A_Now
 scriptStartupTick := A_TickCount
 /**
  * Whether a debugger has been attached to the script since script launch or reload (the latter of which is nearly impossible).
- *
+ * 
  * Allows full control over what a script does and does not do if a debugger is attached. For example, timers may interrupt debugging sessions if their periods expire while the script is in break mode.
  * @note This is not 100% reliable:
  * - Does not update in real-time (that is also impossible using the method used to determine this, which is the only one there even is, to my knowledge at least).
  * - Does not reflect the actual status if a debugger has attached to a running script.
  * - If the script calls `Reload` or is reloaded through `PostMessage`, a debug session, if any, is terminated. After a reload in this manner, this variable will most likely be `false` unless the reload/restart was caused by the debugger itself.
- *
+ * 
  * Because of this, it is discouraged to attach a debugger to a script that is running.
  */
 A_IsDebuggerAttached := !!InStr(codebase.WinInfo(A_ScriptHwnd, false).processQueryResult.CommandLine, "/Debug")
 
 ; Support the AHKv2-native practice of calling an object's `ToString` method if it cannot be stringified directly (which makes no sense if you think about it, cause there is no native `ToString` method)
-DefProp := { }.DefineProp
+DefProp := {}.DefineProp
 DefProp(Object.Prototype, "ToString", { Call: codebase.collectionOperations.objectOperations.toString })
 
 /**
@@ -572,6 +572,19 @@ class codebase
 
     class constants
     {
+        /**
+         * The value passed to `SetKeyDelay` by default in the autorun section of this script.
+         */
+        static globalKeyDelay := 10
+        /**
+         * The value passed to `SetMouseDelay` by default in the autorun section of this script.
+         */
+        static globalMouseDelay := codebase.constants.globalKeyDelay
+        /**
+         * The value passed to `SetWinDelay` by default in the autorun section of this script.
+         */
+        static globalWinDelay := 150
+
         /**
          * The Unix time (seconds since midnight, January 1, 1970) `0` in YYYYMMDDHH24MISS format to use in date / time comparisons.
          */
@@ -1294,14 +1307,14 @@ class codebase
             mode := ""
 
             /**
-            * Initializes an `ErrorHandler` object.
-            * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
-            * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
-            * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.errors.ErrorHandler.notify` if omitted.
-            * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
-            * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
-            * @returns An `ErrorHandler` object.
-            */
+             * Initializes an `ErrorHandler` object.
+             * It keeps track of any errors that are thrown and takes a predefined action upon catching one.
+             * @param types An Array of `Error` subclasses that this `ErrorHandler` should watch for. Specifying `[Error]` causes it to watch for all errors. Defaults to `[Error]` if omitted.
+             * @param mode How this `ErrorHandler` should react to an incoming error. Refer to `ErrorHandler.setMode` for possible values and their meanings. Defaults to `codebase.errors.ErrorHandler.notify` if omitted.
+             * @param custom A custom function to pass incoming `Error` objects to, if the chosen `mode` dictates to do so. The stipulations for this function's return value are the same as for any other `OnError` callback function. If a value is passed but it is not a function, it is ignored.
+             * @note When the object is destroyed, the function registered to be called in this `ErrorHandler` object is unregistered. Creating a "one-off" `ErrorHandler`, i.e. using its functionality without keeping a reference to it, is not possible.
+             * @returns An `ErrorHandler` object.
+             */
             __New(types?, mode := 1, custom?)
             {
                 OnError(this.handle.Bind(this), 1)
@@ -1363,18 +1376,18 @@ class codebase
             }
 
             /**
-            * Formats the information contained in an `Error` object.
-            * @param e The `Error` object the information of which to format into a string.
-            * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
-            * @returns A string with the information contained in `e`.
-            */
+             * Formats the information contained in an `Error` object.
+             * @param e The `Error` object the information of which to format into a string.
+             * @param stack Whether to include the call stack contained in the `Error` object. Defaults to `true` if omitted.
+             * @returns A string with the information contained in `e`.
+             */
             static output(e, stack := true) => e.Message . "`nExtra:`t" . e.Extra . "`nLine:`t" . e.Line . "`nfrom:`t" . e.What . (stack ? "`n`n" . StrReplace(e.Stack, " : ", '`n') : "")
 
             /**
-            * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
-            * @param types An Array of types.
-            * @throws `TypeError` if `var` is not a `expected type`.
-            */
+             * Evaluates a series of passed types/class names and checks if they are `Error` or subclasses of it.
+             * @param types An Array of types.
+             * @throws `TypeError` if `var` is not a `expected type`.
+             */
             setTypes(types)
             {
                 errtypes := [Error, IndexError, MemberError, MemoryError, MethodError, OSError, PropertyError, TargetError, TimeoutError, TypeError, UnsetError, UnsetItemError, ValueError, ZeroDivisionError]
@@ -1388,16 +1401,16 @@ class codebase
             }
 
             /**
-            * Changes how this `ErrorHandler` should react to an incoming error.
-            * @param mode One of the following values.
-            * - `codebase.errors.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
-            * - `codebase.errors.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
-            * - `codebase.errors.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
-            * - `codebase.errors.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
-            * - `codebase.errors.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
-            * - `codebase.errors.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
-            * - `codebase.errors.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
-            */
+             * Changes how this `ErrorHandler` should react to an incoming error.
+             * @param mode One of the following values.
+             * - `codebase.errors.ErrorHandler.custom`: Collect errors and pass the `Error` objects to a passed function, the return value of which dictates whether execution may continue.
+             * - `codebase.errors.ErrorHandler.reload`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and reload the script.
+             * - `codebase.errors.ErrorHandler.suppress`: Collect errors, but do not notify the user of them. Allows programmatic checking if errors occured and is of no further use than debugging. If the error allows, continue execution.
+             * - `codebase.errors.ErrorHandler.rethrow`: Collect errors and let AHKv2 handle them. Execution is continued as defined by AHKv2's default error handling, meaning execution _will_ continue if the error allows it.
+             * - `codebase.errors.ErrorHandler.notify`: Collect errors and notify the user of them. If the error allows, continue execution.
+             * - `codebase.errors.ErrorHandler.stop`: Collect errors and notify the user of then. Even if the error would allow it, stop execution and terminate the underlying (calling) thread.
+             * - `codebase.errors.ErrorHandler.exit`: Notify the user of any errors that occur. Even if the error would allow it, stop execution and terminate the script.
+             */
             setMode(mode)
             {
                 modes := [
@@ -1545,14 +1558,14 @@ class codebase
     {
         /**
          * Initializes a new `StandardIO` object.
-         *
+         * 
          * Use its properties `stdin`, `stdout` and `stderr` to access the standard input, output and error streams respectively.
          * - Data can be read from the input stream using the stream's read methods and typing in the console window.
          * - Data can be written to the output stream using the stream's write methods.
          * - Data can be read from _and_ written to the error stream using the stream's read and write methods.
-         *
+         * 
          * Output streams must be closed (`this.invalidateHandles`) or flushed (`this.flush`) before any data is actually written from the buffers. This can be done manually and occurs automatically when the `StandardIO` object is destroyed.
-         *
+         * 
          * By reading and tokenizing user input via `stdin`, this can be used to emulate CLI behavior.
          */
         __New()
@@ -1740,7 +1753,7 @@ class codebase
          */
         lockOn := ""
 
-         /**
+        /**
          * Initializes a new `Lock` object on the given object.
          * @param obj The object to obtain a `Lock` on.
          */
@@ -1763,28 +1776,28 @@ class codebase
 
     /**
      * A class to make styling and setting options for message boxes easier.
-     *
+     * 
      * To use options from the subclasses, add them in the message box's `options` parameter.
      */
     class msgboxopt
     {
         class buttons
         {
-            static ok :=                        0x000000
-            static okcancel :=                  0x000001
-            static abortretryignore :=          0x000002
-            static yesnocancel :=               0x000003
-            static yesno :=                     0x000004
-            static retrycancel :=               0x000005
-            static canceltryagaincontinue :=    0x000006
+            static ok := 0x000000
+            static okcancel := 0x000001
+            static abortretryignore := 0x000002
+            static yesnocancel := 0x000003
+            static yesno := 0x000004
+            static retrycancel := 0x000005
+            static canceltryagaincontinue := 0x000006
         }
 
         class icons
         {
-            static error :=         0x000010
-            static question :=      0x000020
-            static exclamation :=   0x000030
-            static info :=          0x000040
+            static error := 0x000010
+            static question := 0x000020
+            static exclamation := 0x000030
+            static info := 0x000040
         }
 
         class defaultButton
@@ -1796,16 +1809,16 @@ class codebase
 
         class modality
         {
-            static system :=        0x001000
-            static task :=          0x002000
-            static alwaysontop :=   0x040000
+            static system := 0x001000
+            static task := 0x002000
+            static alwaysontop := 0x040000
         }
 
         class other
         {
-            static help :=              0x004000
-            static rightjustify :=      0x080000
-            static rtlreadingorder :=   0x100000
+            static help := 0x004000
+            static rightjustify := 0x080000
+            static rtlreadingorder := 0x100000
         }
 
         class results
@@ -1971,7 +1984,7 @@ class codebase
             while (A_Index < StrLen(str))
             {
                 splt := StrSplit(input)
-                input := codebase.stringOperations.strConcat(codebase.collectionOperations.arrayOperations.subarray(splt, 2, )*) . splt[1]
+                input := codebase.stringOperations.strConcat(codebase.collectionOperations.arrayOperations.subarray(splt, 2,)*) . splt[1]
 
                 if (utf16 && !Mod(A_Index + 1, 2))
                 {
@@ -2370,13 +2383,13 @@ class codebase
             }
 
             /**
-              * Finds all elements in a source Map that are _not_ present in any of the other input Maps.
-              * @param src The source Map to iterate over.
-              * @param arrs Any number of Maps to look for elements from `maps` in.
-              * @note This function is not commutative (i.e. `mapNotIntersect(map_1, map_2)` is not equivalent to `mapNotIntersect(map_2, map_1)`) as the source Map `src` determines which items are even candidates to be returned.
-              * @note This function complements `codebase.collectionOperations.mapOperations.mapIntersect`. Combining the results of the function calls `mapIntersect(map_1, map_2)` and `mapNotIntersect(map_1, map_2)` yields `map_1` extended by `map_2`'s values for the keys present in both.
-              * @returns A Map with key-value pairs from `src` that are not present in any of the other Maps.
-              */
+             * Finds all elements in a source Map that are _not_ present in any of the other input Maps.
+             * @param src The source Map to iterate over.
+             * @param arrs Any number of Maps to look for elements from `maps` in.
+             * @note This function is not commutative (i.e. `mapNotIntersect(map_1, map_2)` is not equivalent to `mapNotIntersect(map_2, map_1)`) as the source Map `src` determines which items are even candidates to be returned.
+             * @note This function complements `codebase.collectionOperations.mapOperations.mapIntersect`. Combining the results of the function calls `mapIntersect(map_1, map_2)` and `mapNotIntersect(map_1, map_2)` yields `map_1` extended by `map_2`'s values for the keys present in both.
+             * @returns A Map with key-value pairs from `src` that are not present in any of the other Maps.
+             */
             static mapNotIntersect(src, maps*)
             {
                 for mp in maps
@@ -2512,7 +2525,7 @@ class codebase
         {
             /**
              * A constant used by various functions in this class. For example, item removal functions set items to be removed equal to this constant and then delete them.
-             *
+             * 
              * This is deliberately... "abstract" and not something as simple as `"rem"` as it is very likely for a user to be using `"rem"` as a _wanted_ value in an Array.
              */
             static arrayRemoveItem := "###00418632R_E_M_O_V_E_I_T_E_M9456345812###"
@@ -2886,7 +2899,7 @@ class codebase
 
             /**
              * Sorts an Array.
-             *
+             * 
              * Current implementation: Quick sort (https://en.wikipedia.org/wiki/Quicksort#cite_ref-:2_16-2)
              * @param arr A `VarRef` to the Array to be sorted.
              * @param sortDesc Whether to sort the Array in descending order. Defaults to `false` if omitted.
@@ -3084,10 +3097,10 @@ class codebase
             }
 
             /**
-            * Creates an index Map of an Array, each value of it being a key of a Map object. Its corresponding value is the amount of times it is present in the Array.
-            * @param arr The Array to analyze.
-            * @returns The Map object as described above.
-            */
+             * Creates an index Map of an Array, each value of it being a key of a Map object. Its corresponding value is the amount of times it is present in the Array.
+             * @param arr The Array to analyze.
+             * @returns The Map object as described above.
+             */
             static arrayIndex(arr)
             {
                 m := Map()
@@ -3181,13 +3194,13 @@ class codebase
             static pi := 4 * ATan(1)
             /**
              * `Ï†` ("phi"), the golden ratio.
-             *
+             * 
              * Two quantities `a`, `b` with `a > b > 0` are said to be in the golden ratio `Ï†` if `(a + b) / a == a / b == Ï†`.
              */
             static phi := (1 + Sqrt(5)) / 2
             /**
              * `Î´_S` ("delta S"), the silver ratio.
-             *
+             * 
              * Two quantities `a`, `b` with `a > b > 0` are said to be in the silver ratio `Î´_S` if `(2a + b) / a == a / b == Î´_S`.
              */
             static delta_S := 1 + Sqrt(2)
@@ -3439,7 +3452,7 @@ class codebase
                 a := Abs(a)
                 b := Abs(b)
 
-                return a > b ? (2 * a * (a - b)) - ((a - b) ** 2) : - codebase.math.misc.squareDifference(b, a)
+                return a > b ? (2 * a * (a - b)) - ((a - b) ** 2) : -codebase.math.misc.squareDifference(b, a)
             }
 
             /**
@@ -4260,7 +4273,7 @@ class codebase
                     }
                 }
 
-                out := { }
+                out := {}
 
                 ; The entire idea of using a loop like this was absolutely disgusting to come up with, understand and then actually write
                 ; The actual solution, as in, the code, is     B  E  A  U  T  I  F  U  L, but that's about it
@@ -4281,7 +4294,7 @@ class codebase
                         lambda /= dv.GetOwnPropDesc("v" . searchx).Value
                     }
 
-                    xs := { }
+                    xs := {}
                     xs.DefineProp("x" . searchx, { Value: 0.0 })
                     xs.DefineProp("x" . base[1], { Value: pv.GetOwnPropDesc("v" . base[1]).Value + (dv.GetOwnPropDesc("v" . base[1]).Value * lambda) })
                     xs.DefineProp("x" . base[2], { Value: pv.GetOwnPropDesc("v" . base[2]).Value + (dv.GetOwnPropDesc("v" . base[2]).Value * lambda) })
@@ -5141,9 +5154,9 @@ class codebase
                     {
                         ; Add all but the first row and current column to the sub-matrix Array
                         k.Push(codebase.collectionOperations.arrayOperations.arrayConcat(
-                                codebase.collectionOperations.arrayOperations.subarray(col, , column - 1),
-                                codebase.collectionOperations.arrayOperations.subarray(col, column + 1)
-                            )
+                            codebase.collectionOperations.arrayOperations.subarray(col, , column - 1),
+                            codebase.collectionOperations.arrayOperations.subarray(col, column + 1)
+                        )
                         )
                     }
                     ; Determine the sign of the determinant
@@ -5968,7 +5981,7 @@ class codebase
                 this.tooltipTime := 4000
                 this.files := []
 
-                this.callbacks := { }
+                this.callbacks := {}
 
                 ; Find the right-most monitor
                 l := 0
@@ -6247,9 +6260,9 @@ class codebase
          * The factor used to convert radians to degrees.
          */
         static radToDeg := 180 / codebase.math.constants.pi
-         /**
-          * The factor used to convert degrees to radians.
-          */
+        /**
+         * The factor used to convert degrees to radians.
+         */
         static degToRad := codebase.math.constants.pi / 180
 
         class misc
@@ -6526,14 +6539,14 @@ class codebase
 
                 return [
                     "0x" . codebase.convert.DecToHex(((v := r - shades) < 0 ? 0 : v), 2)
-                        . SubStr(codebase.convert.DecToHex(((v := g - shades) < 0 ? 0 : v), 2), 3)
-                        . SubStr(codebase.convert.DecToHex(((v := b - shades) < 0 ? 0 : v), 2), 3)
-                        . SubStr(codebase.convert.DecToHex(((v := a - shades) < 0 ? 0 : v), 2), 3),
+                    . SubStr(codebase.convert.DecToHex(((v := g - shades) < 0 ? 0 : v), 2), 3)
+                    . SubStr(codebase.convert.DecToHex(((v := b - shades) < 0 ? 0 : v), 2), 3)
+                    . SubStr(codebase.convert.DecToHex(((v := a - shades) < 0 ? 0 : v), 2), 3),
                     color
                     "0x" . codebase.convert.DecToHex(((v := r + shades) > 255 ? 255 : v), 2)
-                        . SubStr(codebase.convert.DecToHex(((v := g + shades) > 255 ? 255 : v), 2), 3)
-                        . SubStr(codebase.convert.DecToHex(((v := b + shades) > 255 ? 255 : v), 2), 3)
-                        . SubStr(codebase.convert.DecToHex(((v := a + shades) > 255 ? 255 : v), 2), 3)
+                    . SubStr(codebase.convert.DecToHex(((v := g + shades) > 255 ? 255 : v), 2), 3)
+                    . SubStr(codebase.convert.DecToHex(((v := b + shades) > 255 ? 255 : v), 2), 3)
+                    . SubStr(codebase.convert.DecToHex(((v := a + shades) > 255 ? 255 : v), 2), 3)
                 ]
             }
 
@@ -6577,7 +6590,7 @@ class codebase
                     lt.Push(comp[A_Index] < ref[A_Index])
                 }
 
-                gt := (fullExclusive ? codebase.collectionOperations.and(gt*)  : codebase.collectionOperations.or(gt*))  ; Evaluates to `1` if `compColor > refColor`
+                gt := (fullExclusive ? codebase.collectionOperations.and(gt*) : codebase.collectionOperations.or(gt*))  ; Evaluates to `1` if `compColor > refColor`
                 lt := (fullExclusive ? -codebase.collectionOperations.and(lt*) : -codebase.collectionOperations.or(lt*)) ; Evaluates to `-1` if `compColor < refColor`
                 return codebase.collectionOperations.true(gt, lt, 0)
             }
@@ -6685,26 +6698,26 @@ class codebase
          * @returns The escaped string.
          */
         static urlEscape(str) => codebase.stringOperations.strReplace(str, Map(':', '%3A',
-                                                                               '/', '%2F',
-                                                                               '?', '%3F',
-                                                                               '#', '%23',
-                                                                               '[', '%5B',
-                                                                               ']', '%5D',
-                                                                               '@', '%40',
-                                                                               '!', '%21',
-                                                                               '$', '%24',
-                                                                               '&', '%26',
-                                                                               "'", '%27',
-                                                                               '(', '%28',
-                                                                               ')', '%29',
-                                                                               '*', '%2A',
-                                                                               '+', '%2B',
-                                                                               ',', '%2C',
-                                                                               ';', '%3B',
-                                                                               '=', '%3D',
-                                                                               '%', '%25',
-                                                                               ' ', '%20'
-            ))
+            '/', '%2F',
+            '?', '%3F',
+            '#', '%23',
+            '[', '%5B',
+            ']', '%5D',
+            '@', '%40',
+            '!', '%21',
+            '$', '%24',
+            '&', '%26',
+            "'", '%27',
+            '(', '%28',
+            ')', '%29',
+            '*', '%2A',
+            '+', '%2B',
+            ',', '%2C',
+            ';', '%3B',
+            '=', '%3D',
+            '%', '%25',
+            ' ', '%20'
+        ))
 
         /**
          * Send a HTTP request and return its response data as well as a parsed version of the JSON response.
@@ -6870,7 +6883,7 @@ class codebase
                 this.textStatusAll := ""
             }
 
-            this.processQueryResult := { }
+            this.processQueryResult := {}
             for p in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
             {
                 ; https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process
@@ -7037,7 +7050,7 @@ class codebase
          * @param signed Whether the storage may be signed.
          * @returns The minimum value of the data type. This is always `0` if `signed` is `false`.
          */
-        static getMin(width, signed) => (signed == 1 ? - (2 ** width) : 0)
+        static getMin(width, signed) => (signed == 1 ? -(2 ** width) : 0)
 
         /**
          * Calculates the minimum value a variable of a data type with the given width can have.
@@ -7078,7 +7091,7 @@ class codebase
             signed := false
             width := 8
 
-            min_value := (this.signed ? - (2 ** this.width) : 0)
+            min_value := (this.signed ? -(2 ** this.width) : 0)
             max_value := (this.signed ? 2 ** (this.width - 1) - 1 : 2 ** this.width - 1)
         }
 
@@ -7092,7 +7105,7 @@ class codebase
             signed := true
             width := 8
 
-            min_value := (this.signed ? - (2 ** this.width) : 0)
+            min_value := (this.signed ? -(2 ** this.width) : 0)
             max_value := (this.signed ? 2 ** (this.width - 1) - 1 : 2 ** this.width - 1)
         }
 
